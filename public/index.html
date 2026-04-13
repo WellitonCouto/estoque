@@ -504,7 +504,7 @@ function renderHist() {
     ? movimentos.map(m => `<tr>
         <td class="mono">${m.data}</td>
         <td><span class="badge ${m.tipo}">${m.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span></td>
-        <td>${m.itemNome}</td>
+        <td>${m.item_nome}</td>
         <td class="mono">${m.qtd}</td>
         <td>${m.resp}</td>
         <td style="color:var(--text-muted)">${m.obs || '—'}</td>
@@ -514,7 +514,7 @@ function renderHist() {
 
 function exportCSV() {
   const rows = [['Data','Tipo','Item','Quantidade','Responsável','Observação'],
-    ...cache.movimentos.map(m => [m.data, m.tipo, m.itemNome, m.qtd, m.resp, m.obs])];
+    ...cache.movimentos.map(m => [m.data, m.tipo, m.item_nome, m.qtd, m.resp, m.obs])];
   const csv = rows.map(r => r.map(v => `"${v || ''}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
