@@ -21,6 +21,11 @@ async function iniciarBanco() {
       qtd INTEGER DEFAULT 0,
       min INTEGER DEFAULT 0
     );
+    CREATE TABLE IF NOT EXISTS responsaveis (
+      id SERIAL PRIMARY KEY,
+      nome TEXT NOT NULL,
+      setor TEXT DEFAULT ''
+    );
     CREATE TABLE IF NOT EXISTS movimentos (
       id SERIAL PRIMARY KEY,
       tipo TEXT NOT NULL,
@@ -70,7 +75,25 @@ const server = http.createServer(async (req, res) => {
         if (req.method === 'GET' && pathname === '/api/dados') {
           const itens = await pool.query('SELECT * FROM itens ORDER BY nome ASC');
           const movs = await pool.query('SELECT * FROM movimentos ORDER BY criado_em DESC');
-          return json(res, 200, { itens: itens.rows, movimentos: movs.rows });
+          const resps = await pool.query('SELECT * FROM responsaveis ORDER BY nome ASC');
+          return json(res, 200, { itens: itens.rows, movimentos: movs.rows, responsaveis: resps.rows });
+        }
+
+        // POST /api/responsaveis
+        if (req.method === 'POST' && pathname === '/api/responsaveis') {
+          const { nome, setor } = JSON.parse(body);
+          const r = await pool.query(
+            'INSERT INTO responsaveis (nome, setor) VALUES ($1,$2) RETURNING *',
+            [nome, setor || '']
+          );
+          return json(res, 201, r.rows[0]);
+        }
+
+        // DELETE /api/responsaveis/:id
+        if (req.method === 'DELETE' && pathname.startsWith('/api/responsaveis/')) {
+          const id = parseInt(pathname.split('/')[3]);
+          await pool.query('DELETE FROM responsaveis WHERE id=$1', [id]);
+          return json(res, 200, { ok: true });
         }
 
         // POST /api/itens
