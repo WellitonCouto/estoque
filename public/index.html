@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estoque — Controle de Material de Consumo</title>
+<title>Sistema de Gestão — JS Contadores</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -152,8 +152,42 @@ tbody tr:hover td { background: var(--bg); }
 /* Divisor no form */
 .form-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
-/* Spinner */
-.loading { text-align: center; padding: 40px; color: var(--text-hint); font-family: var(--mono); font-size: 13px; }
+/* Seletor de módulo */
+.module-selector {
+  display: flex; gap: 4px; padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 4px;
+}
+.mod-btn {
+  flex: 1; padding: 7px 6px; border-radius: 6px; border: none;
+  font-size: 11px; font-weight: 600; cursor: pointer; font-family: var(--sans);
+  color: rgba(255,255,255,0.45); background: transparent;
+  text-align: center; transition: all 0.15s; letter-spacing: 0.03em;
+}
+.mod-btn:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.8); }
+.mod-btn.active { background: rgba(255,255,255,0.13); color: #fff; }
+.mod-btn .mod-icon { display: block; font-size: 16px; margin-bottom: 3px; }
+.nav-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 6px 10px; }
+
+/* Badge corretiva/preventiva */
+.badge.corretiva { background: var(--red-bg); color: var(--red); }
+.badge.corretiva::before { background: var(--red); }
+.badge.preventiva { background: var(--green-bg); color: var(--green); }
+.badge.preventiva::before { background: var(--green); }
+.badge.aberto { background: var(--orange-bg); color: var(--orange); }
+.badge.aberto::before { background: var(--orange); }
+.badge.concluido { background: var(--green-bg); color: var(--green); }
+.badge.concluido::before { background: var(--green); }
+
+/* Print / PDF */
+@media print {
+  .sidebar, .no-print { display: none !important; }
+  .main { padding: 0 !important; max-width: 100% !important; }
+  .page { display: block !important; }
+  .page:not(#page-relatorio-pdf) { display: none !important; }
+  body { background: white !important; font-size: 12px; }
+  .card { border: 1px solid #ccc !important; margin-bottom: 10px !important; padding: 14px !important; break-inside: avoid; }
+  .pdf-header { display: flex !important; }
+}
 
 /* Modal de edição */
 .modal-overlay {
@@ -179,11 +213,19 @@ tbody tr:hover td { background: var(--bg); }
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-icon">E</div>
-      <h1>Estoque</h1>
-      <p>Material de consumo</p>
+      <div class="logo-icon" id="mod-icon">E</div>
+      <h1 id="mod-titulo">Estoque</h1>
+      <p id="mod-sub">Material de consumo</p>
     </div>
-    <nav>
+    <div class="module-selector">
+      <button class="mod-btn active" id="btn-mod-estoque" onclick="trocarModulo('estoque')">
+        <span class="mod-icon">📦</span>Estoque
+      </button>
+      <button class="mod-btn" id="btn-mod-clima" onclick="trocarModulo('clima')">
+        <span class="mod-icon">❄️</span>Climatização
+      </button>
+    </div>
+    <nav id="nav-estoque">
       <button class="nav-item active" onclick="showPage('dashboard', this)">
         <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="1.5"/></svg>
         Painel
@@ -209,8 +251,22 @@ tbody tr:hover td { background: var(--bg); }
         Responsáveis
       </button>
     </nav>
+    <nav id="nav-clima" style="display:none">
+      <button class="nav-item" onclick="showPage('clima-chamados', this)">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 2a7 7 0 00-7 7c0 3.5 2 6 5 7.4V18h4v-1.6c3-1.4 5-3.9 5-7.4a7 7 0 00-7-7z"/><path stroke-width="1.5" d="M9 21h6"/></svg>
+        Chamados
+      </button>
+      <button class="nav-item" onclick="showPage('clima-aparelhos', this)">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="7" width="20" height="10" rx="2" stroke-width="1.5"/><path stroke-width="1.5" d="M6 11h1M9 11h1M6 14h12"/></svg>
+        Aparelhos
+      </button>
+      <button class="nav-item" onclick="showPage('clima-relatorio', this)">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        Relatório PDF
+      </button>
+    </nav>
     <div class="sidebar-footer">
-      <p>Servidor local ativo</p>
+      <p>Servidor ativo</p>
       <span class="server-badge" id="server-ip">carregando...</span>
     </div>
   </aside>
@@ -391,10 +447,115 @@ tbody tr:hover td { background: var(--bg); }
       </div>
     </div>
 
+    <!-- ===== CLIMATIZAÇÃO: CHAMADOS ===== -->
+    <div id="page-clima-chamados" class="page">
+      <div class="page-header"><h2>Chamados de manutenção</h2><p>Registre e acompanhe os chamados de ar condicionado</p></div>
+      <div class="card">
+        <div class="card-title">Novo chamado</div>
+        <div class="form-grid cols-2">
+          <div class="field">
+            <label>Aparelho / Sala</label>
+            <select id="ch-aparelho" onchange="preencherAparelho()">
+              <option value="">Selecione o aparelho...</option>
+            </select>
+          </div>
+          <div class="field"><label>Tipo de manutenção</label>
+            <select id="ch-tipo">
+              <option value="corretiva">Corretiva</option>
+              <option value="preventiva">Preventiva</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid cols-3" style="margin-bottom:6px">
+          <div class="field"><label>Departamento</label><input id="ch-depto" readonly style="background:#f0ede8;color:var(--text-muted)"></div>
+          <div class="field"><label>Marca</label><input id="ch-marca" readonly style="background:#f0ede8;color:var(--text-muted)"></div>
+          <div class="field"><label>Potência</label><input id="ch-potencia" readonly style="background:#f0ede8;color:var(--text-muted)"></div>
+        </div>
+        <div class="form-grid cols-2">
+          <div class="field"><label>Problema apresentado</label><input id="ch-problema" placeholder="Descreva o problema ou serviço"></div>
+          <div class="field"><label>Data do chamado</label><input id="ch-data-chamado" type="date"></div>
+        </div>
+        <div class="form-grid cols-2">
+          <div class="field"><label>Data do conserto <span style="font-weight:400;color:var(--text-hint)">(opcional)</span></label><input id="ch-data-conserto" type="date"></div>
+          <div class="field"><label>Observação</label><input id="ch-obs" placeholder="Informações adicionais..."></div>
+        </div>
+        <button class="btn primary" onclick="addChamado()">Registrar chamado</button>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <span class="card-title" style="margin:0">Chamados registrados</span>
+          <select id="ch-filtro-status" onchange="renderChamados()" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--bg);color:var(--text)">
+            <option value="">Todos</option>
+            <option value="aberto">Em aberto</option>
+            <option value="concluido">Concluídos</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Data chamado</th><th>Sala</th><th>Depto</th><th>Tipo</th><th>Problema</th><th>Status</th><th></th></tr></thead>
+          <tbody id="tbl-chamados"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CLIMATIZAÇÃO: APARELHOS ===== -->
+    <div id="page-clima-aparelhos" class="page">
+      <div class="page-header"><h2>Aparelhos cadastrados</h2><p>Cadastre e edite os aparelhos de ar condicionado</p></div>
+      <div class="card">
+        <div class="card-title">Cadastrar aparelho</div>
+        <div class="form-grid cols-3">
+          <div class="field"><label>Nº da sala</label><input id="ap-sala" placeholder="Ex: 2101"></div>
+          <div class="field"><label>Departamento</label><input id="ap-depto" placeholder="Ex: Tecnologia"></div>
+          <div class="field"><label>Localização</label><input id="ap-local" placeholder="Ex: Próximo à janela"></div>
+        </div>
+        <div class="form-grid cols-3">
+          <div class="field"><label>Marca</label><input id="ap-marca" placeholder="Ex: Daikin"></div>
+          <div class="field"><label>Modelo</label><input id="ap-modelo" placeholder="Ex: Split Inverter"></div>
+          <div class="field"><label>Potência (BTUs)</label><input id="ap-potencia" placeholder="Ex: 12.000 BTUs"></div>
+        </div>
+        <button class="btn primary" onclick="addAparelho()">Cadastrar aparelho</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Aparelhos</div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Sala</th><th>Departamento</th><th>Localização</th><th>Marca</th><th>Modelo</th><th>Potência</th><th></th></tr></thead>
+          <tbody id="tbl-aparelhos"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CLIMATIZAÇÃO: RELATÓRIO ===== -->
+    <div id="page-clima-relatorio" class="page">
+      <div class="page-header no-print"><h2>Relatório mensal PDF</h2><p>Gere o relatório de manutenções do mês</p></div>
+      <div class="card no-print" style="margin-bottom:20px">
+        <div class="card-title">Configurar relatório</div>
+        <div class="form-grid cols-3">
+          <div class="field"><label>Empresa</label><input id="rel-empresa" placeholder="Ex: JS Contadores" value="JS Contadores"></div>
+          <div class="field"><label>Mês</label>
+            <select id="rel-mes">
+              <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+              <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+              <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+              <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+            </select>
+          </div>
+          <div class="field"><label>Ano</label><input id="rel-ano" type="number" value="2026" min="2020" max="2099"></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn primary" onclick="gerarRelatorio()">Visualizar relatório</button>
+          <button class="btn" onclick="imprimirRelatorio()">Imprimir / Salvar PDF</button>
+        </div>
+      </div>
+      <!-- Área de preview do relatório -->
+      <div id="relatorio-preview" style="display:none">
+        <div id="relatorio-conteudo" style="background:white;border:1px solid var(--border);border-radius:12px;padding:36px 40px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;line-height:1.6;color:#1a1916;max-width:780px">
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
-<!-- Modal de edição -->
+<!-- Modal edição de item (estoque) -->
 <div class="modal-overlay" id="modal-edicao">
   <div class="modal">
     <div class="modal-title">Editar item</div>
@@ -419,9 +580,45 @@ tbody tr:hover td { background: var(--bg); }
   </div>
 </div>
 
+<!-- Modal edição de aparelho climatização -->
+<div class="modal-overlay" id="modal-aparelho">
+  <div class="modal">
+    <div class="modal-title">Editar aparelho</div>
+    <div class="form-grid cols-3">
+      <div class="field"><label>Nº da sala</label><input id="eap-sala"></div>
+      <div class="field"><label>Departamento</label><input id="eap-depto"></div>
+      <div class="field"><label>Localização</label><input id="eap-local"></div>
+    </div>
+    <div class="form-grid cols-3">
+      <div class="field"><label>Marca</label><input id="eap-marca"></div>
+      <div class="field"><label>Modelo</label><input id="eap-modelo"></div>
+      <div class="field"><label>Potência (BTUs)</label><input id="eap-potencia"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModalAp()">Cancelar</button>
+      <button class="btn primary" onclick="salvarAparelho()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal concluir chamado -->
+<div class="modal-overlay" id="modal-concluir">
+  <div class="modal">
+    <div class="modal-title">Concluir chamado</div>
+    <div class="form-grid cols-2">
+      <div class="field"><label>Data do conserto</label><input id="conc-data" type="date"></div>
+      <div class="field"><label>Observação</label><input id="conc-obs" placeholder="Detalhes do serviço realizado..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModalConc()">Cancelar</button>
+      <button class="btn primary" onclick="salvarConclusao()">Marcar como concluído</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = '';
-let cache = { itens: [], movimentos: [], responsaveis: [] };
+let cache = { itens: [], movimentos: [], responsaveis: [], aparelhos: [], chamados: [] };
 let movsFiltrados = [];
 
 async function api(method, path, body) {
@@ -749,16 +946,323 @@ function exportCSV() {
   a.download = 'historico_estoque.csv'; a.click();
 }
 
+// ===================== CLIMATIZAÇÃO =====================
+
+// Aparelhos
+function renderAparelhos() {
+  const tb = document.getElementById('tbl-aparelhos');
+  tb.innerHTML = cache.aparelhos.length
+    ? cache.aparelhos.map(a => `<tr>
+        <td><strong>${a.sala}</strong></td><td>${a.departamento}</td><td style="color:var(--text-muted)">${a.localizacao||'—'}</td>
+        <td>${a.marca}</td><td>${a.modelo||'—'}</td><td class="mono">${a.potencia}</td>
+        <td style="display:flex;gap:6px">
+          <button class="btn sm edit" onclick="abrirModalAp(${a.id})">Editar</button>
+          <button class="btn sm danger" onclick="removerAparelho(${a.id})">Remover</button>
+        </td>
+      </tr>`).join('')
+    : '<tr><td colspan="7" class="empty">Nenhum aparelho cadastrado ainda</td></tr>';
+  // Atualiza select de chamados
+  const sel = document.getElementById('ch-aparelho');
+  if (sel) {
+    sel.innerHTML = '<option value="">Selecione o aparelho...</option>' +
+      cache.aparelhos.map(a => `<option value="${a.id}">Sala ${a.sala} — ${a.departamento}</option>`).join('');
+  }
+}
+
+async function addAparelho() {
+  const sala = document.getElementById('ap-sala').value.trim();
+  const departamento = document.getElementById('ap-depto').value.trim();
+  const localizacao = document.getElementById('ap-local').value.trim();
+  const marca = document.getElementById('ap-marca').value.trim();
+  const modelo = document.getElementById('ap-modelo').value.trim();
+  const potencia = document.getElementById('ap-potencia').value.trim();
+  if (!sala || !departamento || !marca || !potencia) { alert('Preencha sala, departamento, marca e potência.'); return; }
+  try {
+    await api('POST', '/aparelhos', { sala, departamento, localizacao, marca, modelo, potencia });
+    await carregarClima(); renderAparelhos();
+    ['ap-sala','ap-depto','ap-local','ap-marca','ap-modelo','ap-potencia'].forEach(id => document.getElementById(id).value = '');
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+let editandoApId = null;
+function abrirModalAp(id) {
+  const a = cache.aparelhos.find(x => x.id === id); if (!a) return;
+  editandoApId = id;
+  document.getElementById('eap-sala').value = a.sala;
+  document.getElementById('eap-depto').value = a.departamento;
+  document.getElementById('eap-local').value = a.localizacao || '';
+  document.getElementById('eap-marca').value = a.marca;
+  document.getElementById('eap-modelo').value = a.modelo || '';
+  document.getElementById('eap-potencia').value = a.potencia;
+  document.getElementById('modal-aparelho').classList.add('open');
+}
+function fecharModalAp() { document.getElementById('modal-aparelho').classList.remove('open'); editandoApId = null; }
+async function salvarAparelho() {
+  if (!editandoApId) return;
+  const updates = {
+    sala: document.getElementById('eap-sala').value.trim(),
+    departamento: document.getElementById('eap-depto').value.trim(),
+    localizacao: document.getElementById('eap-local').value.trim(),
+    marca: document.getElementById('eap-marca').value.trim(),
+    modelo: document.getElementById('eap-modelo').value.trim(),
+    potencia: document.getElementById('eap-potencia').value.trim(),
+  };
+  if (!updates.sala || !updates.departamento) { alert('Sala e departamento são obrigatórios.'); return; }
+  try {
+    await api('PUT', `/aparelhos/${editandoApId}`, updates);
+    await carregarClima(); fecharModalAp(); renderAparelhos();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+async function removerAparelho(id) {
+  if (!confirm('Remover este aparelho? Os chamados associados serão mantidos.')) return;
+  try { await api('DELETE', `/aparelhos/${id}`); await carregarClima(); renderAparelhos(); }
+  catch(e) { alert('Erro: ' + e.message); }
+}
+
+// Preenche campos automáticos ao selecionar aparelho no chamado
+function preencherAparelho() {
+  const id = parseInt(document.getElementById('ch-aparelho').value);
+  const a = cache.aparelhos.find(x => x.id === id);
+  document.getElementById('ch-depto').value = a ? a.departamento : '';
+  document.getElementById('ch-marca').value = a ? a.marca : '';
+  document.getElementById('ch-potencia').value = a ? a.potencia : '';
+}
+
+// Chamados
+function renderChamados() {
+  const filtro = document.getElementById('ch-filtro-status')?.value || '';
+  const lista = filtro ? cache.chamados.filter(c => c.status === filtro) : cache.chamados;
+  const tb = document.getElementById('tbl-chamados');
+  tb.innerHTML = lista.length
+    ? lista.map(c => `<tr>
+        <td class="mono">${c.data_chamado||'—'}</td>
+        <td><strong>${c.sala||'—'}</strong></td>
+        <td>${c.departamento||'—'}</td>
+        <td><span class="badge ${c.tipo}">${c.tipo==='corretiva'?'Corretiva':'Preventiva'}</span></td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.problema||'—'}</td>
+        <td><span class="badge ${c.status}">${c.status==='aberto'?'Em aberto':'Concluído'}</span></td>
+        <td style="display:flex;gap:5px">
+          ${c.status==='aberto' ? `<button class="btn sm primary" onclick="abrirModalConc(${c.id})">Concluir</button>` : `<span class="mono" style="font-size:11px;color:var(--text-muted)">${c.data_conserto||''}</span>`}
+          <button class="btn sm danger" onclick="removerChamado(${c.id})">✕</button>
+        </td>
+      </tr>`).join('')
+    : '<tr><td colspan="7" class="empty">Nenhum chamado encontrado</td></tr>';
+}
+
+async function addChamado() {
+  const aparelhoId = parseInt(document.getElementById('ch-aparelho').value);
+  const tipo = document.getElementById('ch-tipo').value;
+  const problema = document.getElementById('ch-problema').value.trim();
+  const data_chamado = document.getElementById('ch-data-chamado').value;
+  const data_conserto = document.getElementById('ch-data-conserto').value;
+  const obs = document.getElementById('ch-obs').value.trim();
+  if (!aparelhoId) { alert('Selecione um aparelho.'); return; }
+  if (!problema) { alert('Descreva o problema ou serviço.'); return; }
+  if (!data_chamado) { alert('Informe a data do chamado.'); return; }
+  const ap = cache.aparelhos.find(x => x.id === aparelhoId);
+  try {
+    await api('POST', '/chamados', {
+      aparelho_id: aparelhoId, tipo, problema, data_chamado, data_conserto, obs,
+      sala: ap.sala, departamento: ap.departamento, marca: ap.marca,
+      modelo: ap.modelo, potencia: ap.potencia,
+      status: data_conserto ? 'concluido' : 'aberto'
+    });
+    await carregarClima(); renderChamados();
+    ['ch-problema','ch-data-conserto','ch-obs'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('ch-aparelho').value = '';
+    preencherAparelho();
+    alert('Chamado registrado com sucesso!');
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+let concluindoId = null;
+function abrirModalConc(id) {
+  concluindoId = id;
+  document.getElementById('conc-data').value = new Date().toISOString().split('T')[0];
+  document.getElementById('conc-obs').value = '';
+  document.getElementById('modal-concluir').classList.add('open');
+}
+function fecharModalConc() { document.getElementById('modal-concluir').classList.remove('open'); concluindoId = null; }
+async function salvarConclusao() {
+  if (!concluindoId) return;
+  const data_conserto = document.getElementById('conc-data').value;
+  const obs = document.getElementById('conc-obs').value;
+  if (!data_conserto) { alert('Informe a data do conserto.'); return; }
+  try {
+    await api('PUT', `/chamados/${concluindoId}`, { status: 'concluido', data_conserto, obs });
+    await carregarClima(); fecharModalConc(); renderChamados();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+async function removerChamado(id) {
+  if (!confirm('Remover este chamado?')) return;
+  try { await api('DELETE', `/chamados/${id}`); await carregarClima(); renderChamados(); }
+  catch(e) { alert('Erro: ' + e.message); }
+}
+
+// Relatório PDF
+const mesesNome = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function gerarRelatorio() {
+  const empresa = document.getElementById('rel-empresa').value || 'JS Contadores';
+  const mes = parseInt(document.getElementById('rel-mes').value);
+  const ano = parseInt(document.getElementById('rel-ano').value);
+  const mesStr = `${String(mes).padStart(2,'0')}/${ano}`;
+  const chamadosMes = cache.chamados.filter(c => {
+    const d = c.data_chamado || '';
+    const [y,m] = d.split('-');
+    return parseInt(y) === ano && parseInt(m) === mes;
+  }).sort((a,b) => (a.data_chamado||'').localeCompare(b.data_chamado||''));
+
+  const linhasTabela = chamadosMes.map((c,i) => `
+    <tr style="border-bottom:1px solid #e0ddd6">
+      <td style="padding:8px 10px;font-size:12px;white-space:nowrap">${formatarData(c.data_chamado)}</td>
+      <td style="padding:8px 10px;font-size:12px;text-transform:capitalize">${c.tipo}</td>
+      <td style="padding:8px 10px;font-size:12px">${c.sala} — ${c.departamento}</td>
+      <td style="padding:8px 10px;font-size:12px">${c.marca}${c.modelo ? ' ' + c.modelo : ''} ${c.potencia}</td>
+      <td style="padding:8px 10px;font-size:12px">${c.problema}${c.obs ? ' — ' + c.obs : ''}</td>
+    </tr>`).join('');
+
+  const preventivas = chamadosMes.filter(c => c.tipo === 'preventiva').length;
+  const corretivas = chamadosMes.filter(c => c.tipo === 'corretiva').length;
+  const concluidos = chamadosMes.filter(c => c.status === 'concluido').length;
+
+  const html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #1a1916">
+      <div>
+        <div style="font-size:20px;font-weight:600;letter-spacing:-0.02em">Relatório de Manutenções – Ar Condicionado</div>
+        <div style="font-size:13px;color:#6b6860;margin-top:4px">Empresa: ${empresa} &nbsp;|&nbsp; Período: ${mesesNome[mes]} de ${ano}</div>
+      </div>
+      <div style="font-size:11px;color:#a8a49e;text-align:right">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <div style="font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.07em;color:#6b6860;margin-bottom:10px">Resumo das Atividades</div>
+      <p style="font-size:13px;color:#1a1916">Durante o período de ${mesesNome[mes]} de ${ano}, foram realizadas <strong>${chamadosMes.length}</strong> manutenção(ões) nos aparelhos de ar condicionado da empresa, sendo <strong>${preventivas}</strong> preventiva(s) e <strong>${corretivas}</strong> corretiva(s), com foco no bom funcionamento e conservação dos equipamentos.</p>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <div style="font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.07em;color:#6b6860;margin-bottom:10px">Manutenções Realizadas</div>
+      ${chamadosMes.length ? `
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:#f5f4f0">
+            <th style="padding:9px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6b6860;border-bottom:2px solid #e0ddd6;white-space:nowrap">Data</th>
+            <th style="padding:9px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Tipo</th>
+            <th style="padding:9px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Sala / Setor</th>
+            <th style="padding:9px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Equipamento</th>
+            <th style="padding:9px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Descrição</th>
+          </tr>
+        </thead>
+        <tbody>${linhasTabela}</tbody>
+      </table>` : '<p style="color:#a8a49e;font-size:13px">Nenhuma manutenção registrada neste período.</p>'}
+    </div>
+
+    <div style="margin-bottom:8px">
+      <div style="font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.07em;color:#6b6860;margin-bottom:10px">Resumo do Período</div>
+      <div style="display:flex;gap:16px">
+        <div style="flex:1;background:#f5f4f0;border-radius:8px;padding:12px 16px;text-align:center">
+          <div style="font-size:24px;font-weight:600">${chamadosMes.length}</div>
+          <div style="font-size:11px;color:#6b6860;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px">Total</div>
+        </div>
+        <div style="flex:1;background:#eaf5ef;border-radius:8px;padding:12px 16px;text-align:center">
+          <div style="font-size:24px;font-weight:600;color:#1a7f4e">${preventivas}</div>
+          <div style="font-size:11px;color:#1a7f4e;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px">Preventivas</div>
+        </div>
+        <div style="flex:1;background:#fdecea;border-radius:8px;padding:12px 16px;text-align:center">
+          <div style="font-size:24px;font-weight:600;color:#c0392b">${corretivas}</div>
+          <div style="font-size:11px;color:#c0392b;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px">Corretivas</div>
+        </div>
+        <div style="flex:1;background:#eef2fd;border-radius:8px;padding:12px 16px;text-align:center">
+          <div style="font-size:24px;font-weight:600;color:#2a5bd7">${concluidos}</div>
+          <div style="font-size:11px;color:#2a5bd7;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px">Concluídos</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('relatorio-conteudo').innerHTML = html;
+  document.getElementById('relatorio-preview').style.display = 'block';
+}
+
+function imprimirRelatorio() {
+  if (document.getElementById('relatorio-preview').style.display === 'none') {
+    alert('Gere o relatório antes de imprimir.');
+    return;
+  }
+  const conteudo = document.getElementById('relatorio-conteudo').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'IBM Plex Sans', sans-serif; padding: 32px 40px; color: #1a1916; font-size: 13px; }
+      @page { size: A4; margin: 20mm 22mm; }
+      @media print { body { padding: 0; } }
+    </style>
+    </head><body>${conteudo}</body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+}
+
+function formatarData(d) {
+  if (!d) return '—';
+  const [y,m,dia] = d.split('-');
+  return `${dia}/${m}/${y}`;
+}
+
+// Carregar dados de climatização
+async function carregarClima() {
+  try {
+    const r = await api('GET', '/clima');
+    cache.aparelhos = r.aparelhos || [];
+    cache.chamados = r.chamados || [];
+  } catch(e) { console.error('Erro ao carregar clima:', e); }
+}
+
+// Trocar módulo
+function trocarModulo(mod) {
+  const isEstoque = mod === 'estoque';
+  document.getElementById('nav-estoque').style.display = isEstoque ? 'block' : 'none';
+  document.getElementById('nav-clima').style.display = isEstoque ? 'none' : 'block';
+  document.getElementById('btn-mod-estoque').classList.toggle('active', isEstoque);
+  document.getElementById('btn-mod-clima').classList.toggle('active', !isEstoque);
+  document.getElementById('mod-icon').textContent = isEstoque ? 'E' : '❄';
+  document.getElementById('mod-titulo').textContent = isEstoque ? 'Estoque' : 'Climatização';
+  document.getElementById('mod-sub').textContent = isEstoque ? 'Material de consumo' : 'Ar condicionado';
+
+  // Ativa a primeira página do módulo
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  if (isEstoque) {
+    document.getElementById('page-dashboard').classList.add('active');
+    document.querySelector('#nav-estoque .nav-item').classList.add('active');
+    renderDash();
+  } else {
+    document.getElementById('page-clima-chamados').classList.add('active');
+    document.querySelector('#nav-clima .nav-item').classList.add('active');
+    // Preenche data de hoje no chamado
+    document.getElementById('ch-data-chamado').value = new Date().toISOString().split('T')[0];
+    // Preenche mês/ano atual no relatório
+    const hoje = new Date();
+    document.getElementById('rel-mes').value = hoje.getMonth() + 1;
+    document.getElementById('rel-ano').value = hoje.getFullYear();
+    renderAparelhos(); renderChamados();
+  }
+}
+
 // Navegação
 const renders = {
   dashboard: renderDash, estoque: renderEstoque,
   entrada: renderSelects, saida: renderSelects,
   historico: () => { renderSelects(); aplicarFiltros(); },
-  responsaveis: renderResp
+  responsaveis: renderResp,
+  'clima-chamados': () => { renderAparelhos(); renderChamados(); document.getElementById('ch-data-chamado').value = new Date().toISOString().split('T')[0]; },
+  'clima-aparelhos': renderAparelhos,
+  'clima-relatorio': () => { const h = new Date(); document.getElementById('rel-mes').value = h.getMonth()+1; document.getElementById('rel-ano').value = h.getFullYear(); }
 };
 function showPage(name, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  // Limpar apenas os nav-items do nav correto
+  document.querySelectorAll('#nav-estoque .nav-item, #nav-clima .nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   btn.classList.add('active');
   renders[name]?.();
@@ -768,6 +1272,7 @@ document.getElementById('server-ip').textContent = window.location.host;
 
 (async () => {
   await carregar();
+  await carregarClima();
   renderDash();
 })();
 </script>
