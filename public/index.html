@@ -269,6 +269,22 @@ tbody tr:hover td { background: var(--bg); }
           <tbody id="tbl-estoque"></tbody></table>
         </div>
       </div>
+      <div class="card">
+        <div class="card-title">Backup e restauração</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Exporte todos os dados (itens, responsáveis e histórico) para um arquivo de backup. Use o mesmo arquivo para importar em outro banco de dados.</p>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn primary" onclick="exportarBackup()">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Exportar backup
+          </button>
+          <label class="btn" style="cursor:pointer">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Importar backup
+            <input type="file" accept=".json" style="display:none" onchange="importarBackup(event)">
+          </label>
+          <span style="font-size:12px;color:var(--text-hint)">Arquivo .json gerado pelo próprio sistema</span>
+        </div>
+      </div>
     </div>
 
     <!-- Entrada -->
@@ -572,8 +588,8 @@ function renderSelects() {
   }
   const fr = document.getElementById('f-resp-hist');
   if(fr) {
-    const resps = [...new Set(cache.movimentos.map(m => m.resp).filter(r => r && r !== '—'))];
-    fr.innerHTML = '<option value="">Todos</option>' + resps.map(r => `<option value="${r}">${r}</option>`).join('');
+    fr.innerHTML = '<option value="">Todos</option>' +
+      cache.responsaveis.map(r => `<option value="${r.nome}">${r.nome}${r.setor ? ' — ' + r.setor : ''}</option>`).join('');
   }
 }
 
@@ -657,6 +673,71 @@ function renderHist() {
         <td style="color:var(--text-muted)">${m.obs || '—'}</td>
       </tr>`).join('')
     : '<tr><td colspan="6" class="empty">Nenhum movimento encontrado</td></tr>';
+}
+
+// Backup e restauração
+function exportarBackup() {
+  const dados = {
+    versao: '1.0',
+    exportado_em: new Date().toISOString(),
+    itens: cache.itens,
+    responsaveis: cache.responsaveis,
+    movimentos: cache.movimentos
+  };
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `backup_estoque_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+
+async function importarBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const texto = await file.text();
+  let dados;
+  try { dados = JSON.parse(texto); } catch(e) { alert('Arquivo inválido. Use um backup gerado pelo sistema.'); return; }
+  if (!dados.itens || !dados.movimentos) { alert('Arquivo de backup inválido ou incompleto.'); return; }
+
+  const confirm1 = confirm(
+    `Importar backup de ${dados.exportado_em ? new Date(dados.exportado_em).toLocaleString('pt-BR') : 'data desconhecida'}?\n\n` +
+    `• ${dados.itens.length} itens\n` +
+    `• ${(dados.responsaveis||[]).length} responsáveis\n` +
+    `• ${dados.movimentos.length} movimentos\n\n` +
+    `Os dados existentes NÃO serão apagados — os do backup serão adicionados.`
+  );
+  if (!confirm1) { event.target.value = ''; return; }
+
+  let erros = 0, ok = 0;
+  // Importar itens
+  for (const item of dados.itens) {
+    try {
+      await api('POST', '/itens', { nome: item.nome, cat: item.cat, unid: item.unid, qtd: item.qtd, min: item.min });
+      ok++;
+    } catch(e) { erros++; }
+  }
+  // Importar responsáveis
+  for (const r of (dados.responsaveis || [])) {
+    try { await api('POST', '/responsaveis', { nome: r.nome, setor: r.setor }); } catch(e) {}
+  }
+  // Recarregar para pegar os novos IDs
+  await carregar();
+  // Importar movimentos ligando ao novo item pelo nome
+  for (const m of dados.movimentos) {
+    const itemAtual = cache.itens.find(i => i.nome === m.item_nome);
+    if (!itemAtual) continue;
+    try {
+      await fetch('/api/movimentos/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: m.tipo, itemId: itemAtual.id, qtd: m.qtd, data: m.data, resp: m.resp, obs: m.obs, semAjuste: true })
+      });
+    } catch(e) {}
+  }
+  await carregar();
+  renderEstoque(); renderDash();
+  event.target.value = '';
+  alert(`Backup importado!\n${ok} itens adicionados.${erros > 0 ? `\n${erros} itens ignorados (já existiam ou erro).` : ''}`);
 }
 
 function exportCSV() {
