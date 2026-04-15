@@ -37,6 +37,31 @@ async function iniciarBanco() {
       obs TEXT,
       criado_em TIMESTAMP DEFAULT NOW()
     );
+    CREATE TABLE IF NOT EXISTS aparelhos (
+      id SERIAL PRIMARY KEY,
+      sala TEXT NOT NULL,
+      departamento TEXT NOT NULL,
+      localizacao TEXT DEFAULT '',
+      marca TEXT NOT NULL,
+      modelo TEXT DEFAULT '',
+      potencia TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS chamados (
+      id SERIAL PRIMARY KEY,
+      aparelho_id INTEGER REFERENCES aparelhos(id) ON DELETE SET NULL,
+      sala TEXT,
+      departamento TEXT,
+      marca TEXT,
+      modelo TEXT,
+      potencia TEXT,
+      tipo TEXT NOT NULL,
+      problema TEXT,
+      data_chamado TEXT,
+      data_conserto TEXT,
+      status TEXT DEFAULT 'aberto',
+      obs TEXT,
+      criado_em TIMESTAMP DEFAULT NOW()
+    );
   `);
   console.log('Banco de dados pronto.');
 }
@@ -152,6 +177,70 @@ const server = http.createServer(async (req, res) => {
             [tipo, itemId, item.nome, qtd, data, resp || '—', obs || '']
           );
           return json(res, 201, mov.rows[0]);
+        }
+
+        // GET /api/clima
+        if (req.method === 'GET' && pathname === '/api/clima') {
+          const aparelhos = await pool.query('SELECT * FROM aparelhos ORDER BY sala ASC');
+          const chamados = await pool.query('SELECT * FROM chamados ORDER BY criado_em DESC');
+          return json(res, 200, { aparelhos: aparelhos.rows, chamados: chamados.rows });
+        }
+
+        // POST /api/aparelhos
+        if (req.method === 'POST' && pathname === '/api/aparelhos') {
+          const { sala, departamento, localizacao, marca, modelo, potencia } = JSON.parse(body);
+          const r = await pool.query(
+            'INSERT INTO aparelhos (sala,departamento,localizacao,marca,modelo,potencia) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+            [sala, departamento, localizacao||'', marca, modelo||'', potencia]
+          );
+          return json(res, 201, r.rows[0]);
+        }
+
+        // PUT /api/aparelhos/:id
+        if (req.method === 'PUT' && pathname.startsWith('/api/aparelhos/')) {
+          const id = parseInt(pathname.split('/')[3]);
+          const { sala, departamento, localizacao, marca, modelo, potencia } = JSON.parse(body);
+          const r = await pool.query(
+            'UPDATE aparelhos SET sala=$1,departamento=$2,localizacao=$3,marca=$4,modelo=$5,potencia=$6 WHERE id=$7 RETURNING *',
+            [sala, departamento, localizacao||'', marca, modelo||'', potencia, id]
+          );
+          if (!r.rows.length) return erro(res, 404, 'Aparelho não encontrado');
+          return json(res, 200, r.rows[0]);
+        }
+
+        // DELETE /api/aparelhos/:id
+        if (req.method === 'DELETE' && pathname.startsWith('/api/aparelhos/')) {
+          const id = parseInt(pathname.split('/')[3]);
+          await pool.query('DELETE FROM aparelhos WHERE id=$1', [id]);
+          return json(res, 200, { ok: true });
+        }
+
+        // POST /api/chamados
+        if (req.method === 'POST' && pathname === '/api/chamados') {
+          const { aparelho_id, tipo, problema, data_chamado, data_conserto, obs, sala, departamento, marca, modelo, potencia, status } = JSON.parse(body);
+          const r = await pool.query(
+            'INSERT INTO chamados (aparelho_id,tipo,problema,data_chamado,data_conserto,obs,sala,departamento,marca,modelo,potencia,status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *',
+            [aparelho_id||null, tipo, problema, data_chamado, data_conserto||null, obs||'', sala||'', departamento||'', marca||'', modelo||'', potencia||'', status||'aberto']
+          );
+          return json(res, 201, r.rows[0]);
+        }
+
+        // PUT /api/chamados/:id
+        if (req.method === 'PUT' && pathname.startsWith('/api/chamados/')) {
+          const id = parseInt(pathname.split('/')[3]);
+          const fields = JSON.parse(body);
+          const sets = Object.keys(fields).map((k,i) => `${k}=$${i+1}`).join(',');
+          const vals = [...Object.values(fields), id];
+          const r = await pool.query(`UPDATE chamados SET ${sets} WHERE id=$${vals.length} RETURNING *`, vals);
+          if (!r.rows.length) return erro(res, 404, 'Chamado não encontrado');
+          return json(res, 200, r.rows[0]);
+        }
+
+        // DELETE /api/chamados/:id
+        if (req.method === 'DELETE' && pathname.startsWith('/api/chamados/')) {
+          const id = parseInt(pathname.split('/')[3]);
+          await pool.query('DELETE FROM chamados WHERE id=$1', [id]);
+          return json(res, 200, { ok: true });
         }
 
         erro(res, 404, 'Rota não encontrada');
