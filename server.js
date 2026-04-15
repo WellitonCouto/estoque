@@ -141,6 +141,19 @@ const server = http.createServer(async (req, res) => {
           return json(res, 201, { mov: mov.rows[0], item: { ...item, qtd: novaQtd } });
         }
 
+        // POST /api/movimentos/import — importa histórico sem alterar estoque
+        if (req.method === 'POST' && pathname === '/api/movimentos/import') {
+          const { tipo, itemId, qtd, data, obs, resp } = JSON.parse(body);
+          const itemR = await pool.query('SELECT * FROM itens WHERE id=$1', [itemId]);
+          if (!itemR.rows.length) return erro(res, 404, 'Item não encontrado');
+          const item = itemR.rows[0];
+          const mov = await pool.query(
+            'INSERT INTO movimentos (tipo, item_id, item_nome, qtd, data, resp, obs) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+            [tipo, itemId, item.nome, qtd, data, resp || '—', obs || '']
+          );
+          return json(res, 201, mov.rows[0]);
+        }
+
         erro(res, 404, 'Rota não encontrada');
       } catch (e) {
         console.error(e);
