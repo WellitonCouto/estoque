@@ -62,6 +62,18 @@ async function iniciarBanco() {
       obs TEXT,
       criado_em TIMESTAMP DEFAULT NOW()
     );
+    CREATE TABLE IF NOT EXISTS pedidos (
+      id SERIAL PRIMARY KEY,
+      item_id INTEGER REFERENCES itens(id) ON DELETE SET NULL,
+      item_nome TEXT,
+      qtd INTEGER DEFAULT 1,
+      solicitante TEXT,
+      data_pedido TEXT,
+      data_entrega TEXT,
+      status TEXT DEFAULT 'aberto',
+      obs TEXT,
+      criado_em TIMESTAMP DEFAULT NOW()
+    );
   `);
   console.log('Banco de dados pronto.');
 }
@@ -101,7 +113,37 @@ const server = http.createServer(async (req, res) => {
           const itens = await pool.query('SELECT * FROM itens ORDER BY nome ASC');
           const movs = await pool.query('SELECT * FROM movimentos ORDER BY criado_em DESC');
           const resps = await pool.query('SELECT * FROM responsaveis ORDER BY nome ASC');
-          return json(res, 200, { itens: itens.rows, movimentos: movs.rows, responsaveis: resps.rows });
+          const pedidos = await pool.query('SELECT * FROM pedidos ORDER BY criado_em ASC');
+          return json(res, 200, { itens: itens.rows, movimentos: movs.rows, responsaveis: resps.rows, pedidos: pedidos.rows });
+        }
+
+        // POST /api/pedidos
+        if (req.method === 'POST' && pathname === '/api/pedidos') {
+          const { item_id, item_nome, qtd, solicitante, data_pedido, obs, status } = JSON.parse(body);
+          const r = await pool.query(
+            'INSERT INTO pedidos (item_id,item_nome,qtd,solicitante,data_pedido,obs,status) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+            [item_id||null, item_nome||'', qtd||1, solicitante||'', data_pedido, obs||'', status||'aberto']
+          );
+          return json(res, 201, r.rows[0]);
+        }
+
+        // PUT /api/pedidos/:id
+        if (req.method === 'PUT' && pathname.startsWith('/api/pedidos/')) {
+          const id = parseInt(pathname.split('/')[3]);
+          const fields = JSON.parse(body);
+          const keys = Object.keys(fields);
+          const sets = keys.map((k,i) => `${k}=$${i+1}`).join(',');
+          const vals = [...Object.values(fields), id];
+          const r = await pool.query(`UPDATE pedidos SET ${sets} WHERE id=$${vals.length} RETURNING *`, vals);
+          if (!r.rows.length) return erro(res, 404, 'Pedido não encontrado');
+          return json(res, 200, r.rows[0]);
+        }
+
+        // DELETE /api/pedidos/:id
+        if (req.method === 'DELETE' && pathname.startsWith('/api/pedidos/')) {
+          const id = parseInt(pathname.split('/')[3]);
+          await pool.query('DELETE FROM pedidos WHERE id=$1', [id]);
+          return json(res, 200, { ok: true });
         }
 
         // POST /api/responsaveis
