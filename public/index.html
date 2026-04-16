@@ -1413,37 +1413,6 @@ async function carregarClima() {
   } catch(e) { console.error('Erro ao carregar clima:', e); }
 }
 
-// Trocar módulo
-function trocarModulo(mod) {
-  const isEstoque = mod === 'estoque';
-  document.getElementById('nav-estoque').style.display = isEstoque ? 'block' : 'none';
-  document.getElementById('nav-clima').style.display = isEstoque ? 'none' : 'block';
-  document.getElementById('btn-mod-estoque').classList.toggle('active', isEstoque);
-  document.getElementById('btn-mod-clima').classList.toggle('active', !isEstoque);
-  document.getElementById('mod-icon').textContent = isEstoque ? 'E' : '❄';
-  document.getElementById('mod-titulo').textContent = isEstoque ? 'Estoque' : 'Climatização';
-  document.getElementById('mod-sub').textContent = isEstoque ? 'Material de consumo' : 'Ar condicionado';
-
-  // Ativa a primeira página do módulo
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-  if (isEstoque) {
-    document.getElementById('page-dashboard').classList.add('active');
-    document.querySelector('#nav-estoque .nav-item').classList.add('active');
-    renderDash();
-  } else {
-    document.getElementById('page-clima-chamados').classList.add('active');
-    document.querySelector('#nav-clima .nav-item').classList.add('active');
-    // Preenche data de hoje no chamado
-    document.getElementById('ch-data-chamado').value = new Date().toISOString().split('T')[0];
-    // Preenche mês/ano atual no relatório
-    const hoje = new Date();
-    document.getElementById('rel-mes').value = hoje.getMonth() + 1;
-    document.getElementById('rel-ano').value = hoje.getFullYear();
-    renderAparelhos(); renderChamados();
-  }
-}
-
 // Navegação
 const renders = {
   dashboard: renderDash, estoque: renderEstoque,
@@ -1455,13 +1424,45 @@ const renders = {
   'clima-aparelhos': renderAparelhos,
   'clima-relatorio': () => { const h = new Date(); document.getElementById('rel-mes').value = h.getMonth()+1; document.getElementById('rel-ano').value = h.getFullYear(); }
 };
+
 function showPage(name, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  // Limpar apenas os nav-items do nav correto
   document.querySelectorAll('#nav-estoque .nav-item, #nav-clima .nav-item').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  btn.classList.add('active');
+  const pg = document.getElementById('page-' + name);
+  if (pg) pg.classList.add('active');
+  if (btn) btn.classList.add('active');
   renders[name]?.();
+}
+
+// Trocar módulo
+function trocarModulo(mod) {
+  const isEstoque = mod === 'estoque';
+  const navE = document.getElementById('nav-estoque');
+  const navC = document.getElementById('nav-clima');
+  navE.style.display = isEstoque ? 'block' : 'none';
+  navC.style.display = isEstoque ? 'none' : 'block';
+  document.getElementById('btn-mod-estoque').classList.toggle('active', isEstoque);
+  document.getElementById('btn-mod-clima').classList.toggle('active', !isEstoque);
+  document.getElementById('mod-icon').textContent = isEstoque ? 'E' : '❄';
+  document.getElementById('mod-titulo').textContent = isEstoque ? 'Estoque' : 'Climatização';
+  document.getElementById('mod-sub').textContent = isEstoque ? 'Material de consumo' : 'Ar condicionado';
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#nav-estoque .nav-item, #nav-clima .nav-item').forEach(b => b.classList.remove('active'));
+
+  if (isEstoque) {
+    document.getElementById('page-dashboard').classList.add('active');
+    navE.querySelector('.nav-item').classList.add('active');
+    renderDash();
+  } else {
+    document.getElementById('page-clima-chamados').classList.add('active');
+    navC.querySelector('.nav-item').classList.add('active');
+    document.getElementById('ch-data-chamado').value = new Date().toISOString().split('T')[0];
+    const hoje = new Date();
+    document.getElementById('rel-mes').value = hoje.getMonth() + 1;
+    document.getElementById('rel-ano').value = hoje.getFullYear();
+    renderAparelhos(); renderChamados();
+  }
 }
 
 document.getElementById('server-ip').textContent = window.location.host;
