@@ -250,7 +250,10 @@ tbody tr:hover td { background: var(--bg); }
         <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="1.5"/><path stroke-width="1.5" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         Responsáveis
       </button>
-    </nav>
+      <button class="nav-item" onclick="showPage('pedidos', this)">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path stroke-width="1.5" d="M9 12h6M9 16h4"/></svg>
+        Pedidos
+      </button>
     <nav id="nav-clima" style="display:none">
       <button class="nav-item" onclick="showPage('clima-chamados', this)">
         <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 2a7 7 0 00-7 7c0 3.5 2 6 5 7.4V18h4v-1.6c3-1.4 5-3.9 5-7.4a7 7 0 00-7-7z"/><path stroke-width="1.5" d="M9 21h6"/></svg>
@@ -365,12 +368,30 @@ tbody tr:hover td { background: var(--bg); }
       <div class="page-header"><h2>Registrar saída</h2><p>Retirada de material para uso interno</p></div>
       <div class="card">
         <div class="card-title">Dados da saída</div>
+
+        <!-- Toggle pedido -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;padding:12px 14px;background:var(--accent-bg);border-radius:10px;border:1px solid #c5d4f7">
+          <input type="checkbox" id="s-tem-pedido" onchange="togglePedido()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent)">
+          <label for="s-tem-pedido" style="font-size:13.5px;cursor:pointer;color:var(--accent);font-weight:500">Esta saída atende a um pedido em aberto</label>
+        </div>
+
+        <!-- Seletor de pedido (oculto por padrão) -->
+        <div id="s-bloco-pedido" style="display:none;margin-bottom:18px">
+          <div class="field">
+            <label>Pedido em aberto</label>
+            <select id="s-pedido-sel" onchange="preencherDoPedido()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;font-family:var(--sans);background:var(--bg);color:var(--text)">
+              <option value="">Selecione o pedido...</option>
+            </select>
+          </div>
+          <div id="s-pedido-info" style="display:none;margin-top:10px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text-muted)"></div>
+        </div>
+
         <div class="form-grid cols-2">
           <div class="field"><label>Item</label><select id="s-item"></select></div>
           <div class="field"><label>Quantidade retirada</label><input id="s-qtd" type="number" min="1" placeholder="0"></div>
         </div>
         <div class="form-grid cols-2">
-          <div class="field"><label>Retirado por</label><select id="s-resp"></select></div>
+          <div class="field"><label>Retirado por / Solicitante</label><select id="s-resp"></select></div>
           <div class="field"><label>Data</label><input id="s-data" type="date"></div>
         </div>
         <div class="field" style="margin-bottom:20px"><label>Observação</label><input id="s-obs" placeholder="Ex: Uso setor financeiro, reunião..."></div>
@@ -444,6 +465,40 @@ tbody tr:hover td { background: var(--bg); }
         <div class="card-title">Responsáveis cadastrados</div>
         <table><thead><tr><th>Nome</th><th>Setor</th><th></th></tr></thead>
         <tbody id="tbl-resp"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ===== PEDIDOS ===== -->
+    <div id="page-pedidos" class="page">
+      <div class="page-header"><h2>Pedidos de colaboradores</h2><p>Registre solicitações e acompanhe a fila de entrega</p></div>
+      <div class="card">
+        <div class="card-title">Novo pedido</div>
+        <div class="form-grid cols-2">
+          <div class="field"><label>Item solicitado</label><select id="ped-item"></select></div>
+          <div class="field"><label>Quantidade</label><input id="ped-qtd" type="number" min="1" value="1" placeholder="1"></div>
+        </div>
+        <div class="form-grid cols-2">
+          <div class="field"><label>Solicitante</label><select id="ped-resp"></select></div>
+          <div class="field"><label>Data da solicitação</label><input id="ped-data" type="date"></div>
+        </div>
+        <div class="field" style="margin-bottom:20px"><label>Observação</label><input id="ped-obs" placeholder="Ex: Para home office, substituição..."></div>
+        <button class="btn primary" onclick="addPedido()">Registrar pedido</button>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <span class="card-title" style="margin:0">Fila de pedidos</span>
+          <div style="display:flex;gap:8px">
+            <select id="ped-filtro" onchange="renderPedidos()" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--bg);color:var(--text)">
+              <option value="aberto">Em aberto</option>
+              <option value="entregue">Entregues</option>
+              <option value="">Todos</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>#</th><th>Data pedido</th><th>Item</th><th>Qtd</th><th>Solicitante</th><th>Obs.</th><th>Status</th><th></th></tr></thead>
+          <tbody id="tbl-pedidos"></tbody></table>
+        </div>
       </div>
     </div>
 
@@ -618,7 +673,7 @@ tbody tr:hover td { background: var(--bg); }
 
 <script>
 const API = '';
-let cache = { itens: [], movimentos: [], responsaveis: [], aparelhos: [], chamados: [] };
+let cache = { itens: [], movimentos: [], responsaveis: [], aparelhos: [], chamados: [], pedidos: [] };
 let movsFiltrados = [];
 
 async function api(method, path, body) {
@@ -630,8 +685,14 @@ async function api(method, path, body) {
 }
 
 async function carregar() {
-  try { cache = await api('GET', '/dados'); movsFiltrados = cache.movimentos; }
-  catch(e) { alert('Erro ao conectar ao servidor: ' + e.message); }
+  try {
+    const d = await api('GET', '/dados');
+    cache.itens = d.itens || [];
+    cache.movimentos = d.movimentos || [];
+    cache.responsaveis = d.responsaveis || [];
+    cache.pedidos = d.pedidos || [];
+    movsFiltrados = cache.movimentos;
+  } catch(e) { alert('Erro ao conectar ao servidor: ' + e.message); }
 }
 
 function sit(item) {
@@ -766,16 +827,20 @@ function renderSelects() {
   const optsItens = cache.itens.length
     ? cache.itens.map(i => `<option value="${i.id}">${i.nome} — ${i.qtd} ${i.unid}</option>`).join('')
     : '<option>Nenhum item cadastrado</option>';
-  ['e-item','s-item'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = optsItens; });
+  ['e-item','s-item','ped-item'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = optsItens; });
 
   const optsResp = cache.responsaveis.length
     ? cache.responsaveis.map(r => `<option value="${r.nome}">${r.nome}${r.setor ? ' — ' + r.setor : ''}</option>`).join('')
     : '<option>Nenhum responsável cadastrado</option>';
   const sr = document.getElementById('s-resp'); if(sr) sr.innerHTML = '<option value="—">Selecione...</option>' + optsResp;
   const er = document.getElementById('e-resp'); if(er) er.innerHTML = '<option value="—">Selecione...</option>' + optsResp;
+  const pr = document.getElementById('ped-resp'); if(pr) pr.innerHTML = '<option value="—">Selecione...</option>' + optsResp;
 
   const hoje = new Date().toISOString().split('T')[0];
-  ['e-data','s-data'].forEach(id => { const el = document.getElementById(id); if(el) el.value = hoje; });
+  ['e-data','s-data','ped-data'].forEach(id => { const el = document.getElementById(id); if(el) el.value = hoje; });
+
+  // Atualiza select de pedidos em aberto na tela de saída
+  renderSelectPedidos();
 
   // Filtros do histórico
   const fi = document.getElementById('f-item-hist');
@@ -790,6 +855,51 @@ function renderSelects() {
   }
 }
 
+function renderSelectPedidos() {
+  const sel = document.getElementById('s-pedido-sel');
+  if (!sel) return;
+  const abertos = (cache.pedidos || []).filter(p => p.status === 'aberto')
+    .sort((a,b) => (a.data_pedido||'').localeCompare(b.data_pedido||''));
+  sel.innerHTML = '<option value="">Selecione o pedido...</option>' +
+    abertos.map(p => {
+      const item = cache.itens.find(i => i.id === p.item_id);
+      const nomeItem = item ? item.nome : p.item_nome || '?';
+      return `<option value="${p.id}">#${p.id} — ${p.data_pedido||''} — ${nomeItem} (${p.qtd}) — ${p.solicitante}</option>`;
+    }).join('');
+}
+
+function togglePedido() {
+  const checked = document.getElementById('s-tem-pedido').checked;
+  document.getElementById('s-bloco-pedido').style.display = checked ? 'block' : 'none';
+  if (checked) renderSelectPedidos();
+  else {
+    document.getElementById('s-pedido-info').style.display = 'none';
+    // Limpa preenchimento automático
+    document.getElementById('s-qtd').value = '';
+  }
+}
+
+function preencherDoPedido() {
+  const id = parseInt(document.getElementById('s-pedido-sel').value);
+  const ped = (cache.pedidos || []).find(p => p.id === id);
+  if (!ped) { document.getElementById('s-pedido-info').style.display = 'none'; return; }
+  const item = cache.itens.find(i => i.id === ped.item_id);
+  // Preenche campos da saída
+  if (item) {
+    const sel = document.getElementById('s-item');
+    if (sel) sel.value = item.id;
+  }
+  document.getElementById('s-qtd').value = ped.qtd;
+  const sr = document.getElementById('s-resp');
+  if (sr && ped.solicitante) {
+    for (let opt of sr.options) { if (opt.value === ped.solicitante) { sr.value = ped.solicitante; break; } }
+  }
+  // Info box
+  const info = document.getElementById('s-pedido-info');
+  info.style.display = 'block';
+  info.innerHTML = `📋 Pedido #${ped.id} — solicitado em ${ped.data_pedido||'?'} por <strong>${ped.solicitante}</strong>${ped.obs ? ` — "${ped.obs}"` : ''}`;
+}
+
 async function registrar(tipo) {
   const p = tipo === 'entrada' ? 'e' : 's';
   const itemId = parseInt(document.getElementById(p + '-item').value);
@@ -798,13 +908,28 @@ async function registrar(tipo) {
   const obs = document.getElementById(p + '-obs').value;
   const resp = document.getElementById(p + '-resp') ? document.getElementById(p + '-resp').value : '—';
   if (!qtd || qtd < 1) { alert('Informe uma quantidade válida.'); return; }
+
+  // Verifica se está vinculado a um pedido
+  const temPedido = tipo === 'saida' && document.getElementById('s-tem-pedido')?.checked;
+  const pedidoId = temPedido ? parseInt(document.getElementById('s-pedido-sel').value) : null;
+  if (temPedido && !pedidoId) { alert('Selecione o pedido em aberto.'); return; }
+
   try {
     await api('POST', '/movimentos', { tipo, itemId, qtd, data, obs, resp });
+    // Marca o pedido como entregue
+    if (pedidoId) {
+      await api('PUT', `/pedidos/${pedidoId}`, { status: 'entregue', data_entrega: data });
+    }
     await carregar();
     document.getElementById(p + '-qtd').value = '';
     document.getElementById(p + '-obs').value = '';
+    // Reseta o toggle de pedido
+    if (tipo === 'saida') {
+      const chk = document.getElementById('s-tem-pedido');
+      if (chk) { chk.checked = false; togglePedido(); }
+    }
     renderSelects();
-    alert(`${tipo === 'entrada' ? 'Entrada' : 'Saída'} registrada com sucesso!`);
+    alert(`${tipo === 'entrada' ? 'Entrada' : 'Saída'} registrada com sucesso!${pedidoId ? '\nPedido marcado como entregue.' : ''}`);
   } catch(e) { alert('Erro: ' + e.message); }
 }
 
@@ -944,6 +1069,76 @@ function exportCSV() {
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
   a.download = 'historico_estoque.csv'; a.click();
+}
+
+// ===================== PEDIDOS =====================
+
+function renderPedidos() {
+  const filtro = document.getElementById('ped-filtro')?.value ?? 'aberto';
+  const lista = filtro === ''
+    ? [...cache.pedidos]
+    : cache.pedidos.filter(p => p.status === filtro);
+  // Ordena por data de pedido (mais antigos primeiro = prioridade)
+  lista.sort((a,b) => (a.data_pedido||'').localeCompare(b.data_pedido||''));
+  const tb = document.getElementById('tbl-pedidos');
+  tb.innerHTML = lista.length
+    ? lista.map((p, idx) => {
+        const item = cache.itens.find(i => i.id === p.item_id);
+        const nomeItem = item ? item.nome : p.item_nome || '?';
+        const entregue = p.status === 'entregue';
+        return `<tr style="${entregue ? 'opacity:0.55' : ''}">
+          <td class="mono" style="color:var(--text-muted)">#${p.id}</td>
+          <td class="mono">${p.data_pedido||'—'}</td>
+          <td><strong>${nomeItem}</strong></td>
+          <td class="mono">${p.qtd}</td>
+          <td>${p.solicitante||'—'}</td>
+          <td style="color:var(--text-muted);font-size:13px">${p.obs||'—'}</td>
+          <td>
+            ${entregue
+              ? `<span class="badge ok">Entregue${p.data_entrega ? ' ' + p.data_entrega : ''}</span>`
+              : `<span class="badge low">Em aberto</span>`}
+          </td>
+          <td style="display:flex;gap:5px">
+            ${!entregue ? `<button class="btn sm primary" onclick="entregarPedido(${p.id})">Entregar</button>` : ''}
+            <button class="btn sm danger" onclick="removerPedido(${p.id})">✕</button>
+          </td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="8" class="empty">Nenhum pedido encontrado</td></tr>';
+}
+
+async function addPedido() {
+  const item_id = parseInt(document.getElementById('ped-item').value);
+  const qtd = parseInt(document.getElementById('ped-qtd').value) || 1;
+  const solicitante = document.getElementById('ped-resp').value;
+  const data_pedido = document.getElementById('ped-data').value;
+  const obs = document.getElementById('ped-obs').value.trim();
+  if (!item_id) { alert('Selecione um item.'); return; }
+  if (!solicitante || solicitante === '—') { alert('Selecione o solicitante.'); return; }
+  if (!data_pedido) { alert('Informe a data da solicitação.'); return; }
+  const item = cache.itens.find(i => i.id === item_id);
+  try {
+    await api('POST', '/pedidos', { item_id, item_nome: item?.nome||'', qtd, solicitante, data_pedido, obs, status: 'aberto' });
+    await carregar();
+    renderPedidos(); renderSelectPedidos();
+    ['ped-qtd','ped-obs'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('ped-qtd').value = '1';
+    alert('Pedido registrado!');
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+async function entregarPedido(id) {
+  const hoje = new Date().toISOString().split('T')[0];
+  try {
+    await api('PUT', `/pedidos/${id}`, { status: 'entregue', data_entrega: hoje });
+    await carregar(); renderPedidos(); renderSelectPedidos();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+async function removerPedido(id) {
+  if (!confirm('Remover este pedido?')) return;
+  try { await api('DELETE', `/pedidos/${id}`); await carregar(); renderPedidos(); renderSelectPedidos(); }
+  catch(e) { alert('Erro: ' + e.message); }
 }
 
 // ===================== CLIMATIZAÇÃO =====================
@@ -1255,6 +1450,7 @@ const renders = {
   entrada: renderSelects, saida: renderSelects,
   historico: () => { renderSelects(); aplicarFiltros(); },
   responsaveis: renderResp,
+  pedidos: () => { renderSelects(); renderPedidos(); },
   'clima-chamados': () => { renderAparelhos(); renderChamados(); document.getElementById('ch-data-chamado').value = new Date().toISOString().split('T')[0]; },
   'clima-aparelhos': renderAparelhos,
   'clima-relatorio': () => { const h = new Date(); document.getElementById('rel-mes').value = h.getMonth()+1; document.getElementById('rel-ano').value = h.getFullYear(); }
