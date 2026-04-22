@@ -1,1478 +1,513 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema de Gestão — JS Contadores</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JS Contadores — Sistema de Gestão</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #f5f4f0;
-  --surface: #ffffff;
-  --border: #e0ddd6;
-  --border-strong: #c8c4bb;
-  --text: #1a1916;
-  --text-muted: #6b6860;
-  --text-hint: #a8a49e;
-  --accent: #2a5bd7;
-  --accent-bg: #eef2fd;
-  --green: #1a7f4e;
-  --green-bg: #eaf5ef;
-  --orange: #b85c00;
-  --orange-bg: #fef3e8;
-  --red: #c0392b;
-  --red-bg: #fdecea;
-  --mono: 'IBM Plex Mono', monospace;
-  --sans: 'IBM Plex Sans', sans-serif;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+:root{--bg:#f5f4f0;--sf:#fff;--bd:#e0ddd6;--bds:#c8c4bb;--tx:#1a1916;--tm:#6b6860;--th:#a8a49e;--ac:#2a5bd7;--acb:#eef2fd;--gn:#1a7f4e;--gnb:#eaf5ef;--or:#b85c00;--orb:#fef3e8;--rd:#c0392b;--rdb:#fdecea;--pu:#6d28d9;--pub:#f5f3ff;--mn:'IBM Plex Mono',monospace;--sn:'IBM Plex Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sn);background:var(--bg);color:var(--tx);font-size:14px;line-height:1.5;min-height:100vh}
 
-/* Layout */
-.layout { display: flex; min-height: 100vh; }
-.sidebar {
-  width: 220px; min-height: 100vh; background: var(--text);
-  display: flex; flex-direction: column; flex-shrink: 0; position: sticky; top: 0; height: 100vh;
-}
-.sidebar-logo {
-  padding: 28px 20px 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-.sidebar-logo .logo-icon {
-  width: 36px; height: 36px; background: var(--accent); border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 16px; font-weight: 500; color: #fff;
-  margin-bottom: 12px;
-}
-.sidebar-logo h1 { font-size: 14px; font-weight: 600; color: #fff; letter-spacing: -0.01em; }
-.sidebar-logo p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; font-family: var(--mono); }
-nav { padding: 12px 10px; flex: 1; }
-.nav-item {
-  display: flex; align-items: center; gap: 10px; padding: 9px 12px;
-  border-radius: 8px; cursor: pointer; color: rgba(255,255,255,0.55);
-  font-size: 13.5px; font-weight: 400; transition: all 0.15s; margin-bottom: 2px;
-  border: none; background: none; width: 100%; text-align: left; font-family: var(--sans);
-}
-.nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
-.nav-item.active { background: rgba(255,255,255,0.12); color: #fff; font-weight: 500; }
-.nav-icon { width: 18px; height: 18px; opacity: 0.7; flex-shrink: 0; }
-.nav-item.active .nav-icon { opacity: 1; }
-.sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
-.sidebar-footer p { font-size: 11px; color: rgba(255,255,255,0.3); font-family: var(--mono); }
-.server-badge { display: inline-block; margin-top: 6px; padding: 3px 8px; background: rgba(255,255,255,0.07); border-radius: 4px; font-size: 10px; font-family: var(--mono); color: rgba(255,255,255,0.5); }
+/* ── LOGIN ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.lbox{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:40px;width:100%;max-width:400px}
+.llogo{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.llogo-ico{width:42px;height:42px;background:var(--ac);border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:var(--mn);font-size:19px;font-weight:500;color:#fff}
+.llogo h1{font-size:18px;font-weight:600;letter-spacing:-.02em}
+.llogo p{font-size:12px;color:var(--tm)}
+.lerr{background:var(--rdb);color:var(--rd);border:1px solid #f5c6c3;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
+.llink{font-size:12px;color:var(--ac);cursor:pointer;text-decoration:underline;margin-top:12px;display:block;text-align:center}
 
-.main { flex: 1; padding: 32px 36px; max-width: 900px; }
-.page { display: none; }
-.page.active { display: block; }
+/* ── APP ── */
+#app{display:none;min-height:100vh}
+#app.vis{display:flex}
+.sidebar{width:216px;min-height:100vh;background:var(--tx);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.slogo{padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.slogo-ico{width:28px;height:28px;background:var(--ac);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--mn);font-size:12px;font-weight:500;color:#fff;margin-bottom:6px}
+.slogo h1{font-size:12.5px;font-weight:600;color:#fff}
+.slogo p{font-size:10px;color:rgba(255,255,255,.4);font-family:var(--mn)}
+.ubadge{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.uav{width:24px;height:24px;border-radius:50%;background:var(--ac);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.uinfo p{font-size:11.5px;color:#fff;font-weight:500;line-height:1.2}
+.uinfo span{font-size:10px;color:rgba(255,255,255,.4)}
+.blogout{margin-left:auto;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.4);font-size:15px;padding:2px}
+.blogout:hover{color:#fff}
+.modsw{display:flex;gap:3px;padding:7px 7px 0}
+.mbtn{flex:1;padding:5px 2px;border-radius:6px;border:none;font-size:10px;font-weight:600;cursor:pointer;font-family:var(--sn);color:rgba(255,255,255,.45);background:transparent;text-align:center;transition:all .15s}
+.mbtn:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
+.mbtn.on{background:rgba(255,255,255,.13);color:#fff}
+.mbtn .mi{display:block;font-size:13px;margin-bottom:2px}
+nav{padding:6px 8px;flex:1}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.55);font-size:12px;transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;font-family:var(--sn)}
+.ni:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+.ni.on{background:rgba(255,255,255,.12);color:#fff;font-weight:500}
+.nico{width:15px;height:15px;opacity:.7;flex-shrink:0}
+.ni.on .nico{opacity:1}
+.sft{padding:10px 14px;border-top:1px solid rgba(255,255,255,.08)}
+.sft p{font-size:10px;color:rgba(255,255,255,.3);font-family:var(--mn)}
+.sipbadge{display:inline-block;margin-top:3px;padding:2px 6px;background:rgba(255,255,255,.07);border-radius:4px;font-size:9px;font-family:var(--mn);color:rgba(255,255,255,.4)}
 
-/* Header da página */
-.page-header { margin-bottom: 28px; }
-.page-header h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
-.page-header p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+.main{flex:1;padding:26px 30px;max-width:960px}
+.page{display:none}.page.on{display:block}
+.ph{margin-bottom:20px}
+.ph h2{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.ph p{font-size:13px;color:var(--tm);margin-top:3px}
 
-/* Métricas */
-.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
-.metric-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 16px 20px;
-}
-.metric-val { font-size: 28px; font-weight: 600; font-family: var(--mono); letter-spacing: -0.03em; }
-.metric-lbl { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
-.metric-card.ok .metric-val { color: var(--green); }
-.metric-card.low .metric-val { color: var(--orange); }
-.metric-card.out .metric-val { color: var(--red); }
-
-/* Cards */
-.card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 24px; margin-bottom: 16px;
-}
-.card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 20px; }
-
-/* Forms */
-.form-grid { display: grid; gap: 14px; margin-bottom: 20px; }
-.form-grid.cols-2 { grid-template-columns: 1fr 1fr; }
-.form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
-.form-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
-.field label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 6px; }
-.field input, .field select {
-  width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
-  font-size: 13.5px; font-family: var(--sans); color: var(--text); background: var(--bg);
-  transition: border-color 0.15s;
-}
-.field input:focus, .field select:focus { outline: none; border-color: var(--accent); background: var(--surface); }
-
-/* Botões */
-.btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 9px 18px; border-radius: 8px; font-size: 13.5px;
-  font-family: var(--sans); font-weight: 500; cursor: pointer;
-  border: 1px solid var(--border); background: var(--surface); color: var(--text);
-  transition: all 0.15s;
-}
-.btn:hover { background: var(--bg); border-color: var(--border-strong); }
-.btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
-.btn.primary:hover { opacity: 0.85; }
-.btn.danger { color: var(--red); border-color: #f5c6c3; }
-.btn.danger:hover { background: var(--red-bg); }
-.btn.sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
-.btn-row { display: flex; gap: 8px; align-items: center; }
-
-/* Tabela */
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-thead th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
-tbody td { padding: 12px 12px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: var(--bg); }
-.mono { font-family: var(--mono); }
-
-/* Badges */
-.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 500; }
-.badge::before { content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%; }
-.badge.ok { background: var(--green-bg); color: var(--green); }
-.badge.ok::before { background: var(--green); }
-.badge.low { background: var(--orange-bg); color: var(--orange); }
-.badge.low::before { background: var(--orange); }
-.badge.out { background: var(--red-bg); color: var(--red); }
-.badge.out::before { background: var(--red); }
-.badge.entrada { background: var(--green-bg); color: var(--green); }
-.badge.entrada::before { background: var(--green); }
-.badge.saida { background: var(--orange-bg); color: var(--orange); }
-.badge.saida::before { background: var(--orange); }
-
-/* Alerta */
-.alert-banner {
-  display: flex; align-items: center; gap: 10px;
-  padding: 12px 16px; background: var(--orange-bg); border: 1px solid #f5d9b8;
-  border-radius: 10px; margin-bottom: 20px; font-size: 13px; color: var(--orange);
-}
-.empty { text-align: center; padding: 40px; color: var(--text-hint); font-size: 13px; }
-
-/* Divisor no form */
-.form-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-
-/* Seletor de módulo */
-.module-selector {
-  display: flex; gap: 4px; padding: 8px 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 4px;
-}
-.mod-btn {
-  flex: 1; padding: 7px 6px; border-radius: 6px; border: none;
-  font-size: 11px; font-weight: 600; cursor: pointer; font-family: var(--sans);
-  color: rgba(255,255,255,0.45); background: transparent;
-  text-align: center; transition: all 0.15s; letter-spacing: 0.03em;
-}
-.mod-btn:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.8); }
-.mod-btn.active { background: rgba(255,255,255,0.13); color: #fff; }
-.mod-btn .mod-icon { display: block; font-size: 16px; margin-bottom: 3px; }
-.nav-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 6px 10px; }
-
-/* Badge corretiva/preventiva */
-.badge.corretiva { background: var(--red-bg); color: var(--red); }
-.badge.corretiva::before { background: var(--red); }
-.badge.preventiva { background: var(--green-bg); color: var(--green); }
-.badge.preventiva::before { background: var(--green); }
-.badge.aberto { background: var(--orange-bg); color: var(--orange); }
-.badge.aberto::before { background: var(--orange); }
-.badge.concluido { background: var(--green-bg); color: var(--green); }
-.badge.concluido::before { background: var(--green); }
-
-/* Print / PDF */
-@media print {
-  .sidebar, .no-print { display: none !important; }
-  .main { padding: 0 !important; max-width: 100% !important; }
-  .page { display: block !important; }
-  .page:not(#page-relatorio-pdf) { display: none !important; }
-  body { background: white !important; font-size: 12px; }
-  .card { border: 1px solid #ccc !important; margin-bottom: 10px !important; padding: 14px !important; break-inside: avoid; }
-  .pdf-header { display: flex !important; }
-}
-
-/* Modal de edição */
-.modal-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.4); z-index: 100;
-  align-items: center; justify-content: center;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 14px; padding: 28px; width: 100%; max-width: 500px;
-  margin: 20px;
-}
-.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; }
-.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
-.btn.edit { color: var(--accent); border-color: #c5d4f7; }
-.btn.edit:hover { background: var(--accent-bg); }
+/* ── COMPONENTS ── */
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:12px}
+.ct{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);margin-bottom:13px}
+.mets{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.met{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:13px 16px}
+.mv{font-size:24px;font-weight:600;font-family:var(--mn);letter-spacing:-.03em}
+.ml{font-size:10px;color:var(--tm);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+.met.ok .mv{color:var(--gn)}.met.lw .mv{color:var(--or)}.met.ot .mv{color:var(--rd)}
+.fg{display:grid;gap:11px;margin-bottom:13px}
+.fg.c2{grid-template-columns:1fr 1fr}
+.fg.c3{grid-template-columns:1fr 1fr 1fr}
+.fg.c4{grid-template-columns:1fr 1fr 1fr 1fr}
+.f label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);margin-bottom:4px}
+.f input,.f select,.f textarea{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;font-family:var(--sn);color:var(--tx);background:var(--bg);transition:border-color .15s}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--ac);background:var(--sf)}
+.f textarea{resize:vertical;min-height:64px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:13px;font-family:var(--sn);font-weight:500;cursor:pointer;border:1px solid var(--bd);background:var(--sf);color:var(--tx);transition:all .15s}
+.btn:hover{background:var(--bg);border-color:var(--bds)}
+.btn.p{background:var(--tx);color:#fff;border-color:var(--tx)}.btn.p:hover{opacity:.86}
+.btn.d{color:var(--rd);border-color:#f5c6c3}.btn.d:hover{background:var(--rdb)}
+.btn.e{color:var(--ac);border-color:#c5d4f7}.btn.e:hover{background:var(--acb)}
+.btn.s{color:var(--gn);border-color:#a7d7bb}.btn.s:hover{background:var(--gnb)}
+.btn.sm{padding:4px 10px;font-size:12px;border-radius:6px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{padding:8px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);white-space:nowrap}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--bd);font-size:13px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg)}
+.mn{font-family:var(--mn)}
+.bdg{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500}
+.bdg::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%}
+.bdg.ok{background:var(--gnb);color:var(--gn)}.bdg.ok::before{background:var(--gn)}
+.bdg.lw{background:var(--orb);color:var(--or)}.bdg.lw::before{background:var(--or)}
+.bdg.ot{background:var(--rdb);color:var(--rd)}.bdg.ot::before{background:var(--rd)}
+.bdg.en{background:var(--gnb);color:var(--gn)}.bdg.en::before{background:var(--gn)}
+.bdg.sd{background:var(--orb);color:var(--or)}.bdg.sd::before{background:var(--or)}
+.bdg.co{background:var(--rdb);color:var(--rd)}.bdg.co::before{background:var(--rd)}
+.bdg.pv{background:var(--gnb);color:var(--gn)}.bdg.pv::before{background:var(--gn)}
+.bdg.ab{background:var(--orb);color:var(--or)}.bdg.ab::before{background:var(--or)}
+.bdg.cn{background:var(--gnb);color:var(--gn)}.bdg.cn::before{background:var(--gn)}
+.bdg.et{background:var(--gnb);color:var(--gn)}.bdg.et::before{background:var(--gn)}
+.bdg.al{background:var(--rdb);color:var(--rd)}.bdg.al::before{background:var(--rd)}
+.bdg.av{background:var(--orb);color:var(--or)}.bdg.av::before{background:var(--or)}
+.bdg.adm{background:var(--pub);color:var(--pu)}.bdg.adm::before{background:var(--pu)}
+.ab2{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px}
+.ab2.or{background:var(--orb);border:1px solid #f5d9b8;color:var(--or)}
+.ab2.rd{background:var(--rdb);border:1px solid #f5c6c3;color:var(--rd)}
+.empty{text-align:center;padding:32px;color:var(--th);font-size:13px}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center}
+.mo.op{display:flex}
+.mbox{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:22px;width:100%;max-width:520px;margin:14px;max-height:90vh;overflow-y:auto}
+.mbox.lg{max-width:680px}
+.mtit{font-size:15px;font-weight:600;margin-bottom:15px}
+.mft{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.anot{border-left:3px solid var(--ac);padding:7px 11px;margin-bottom:7px;background:var(--bg);border-radius:0 8px 8px 0}
+.anot-d{font-size:11px;color:var(--tm);font-family:var(--mn);margin-bottom:2px}
+.anot-t{font-size:13px}
+.ro{background:#f0ede8!important;color:var(--tm)!important}
+.fl{display:flex;align-items:center;gap:8px}
+.mla{margin-left:auto}
 </style>
 </head>
 <body>
-<div class="layout">
 
-  <!-- Sidebar -->
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="lbox">
+    <div class="llogo"><div class="llogo-ico">J</div><div><h1>JS Contadores</h1><p>Sistema de Gestão</p></div></div>
+    <div class="lerr" id="lerr"></div>
+    <div id="lform">
+      <div class="f" style="margin-bottom:11px"><label>E-mail</label><input type="email" id="le" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')login()"></div>
+      <div class="f" style="margin-bottom:18px"><label>Senha</label><input type="password" id="ls" placeholder="Sua senha" onkeydown="if(event.key==='Enter')login()"></div>
+      <button class="btn p" style="width:100%;justify-content:center" onclick="login()">Entrar</button>
+      <span class="llink" onclick="showRec()">Esqueci minha senha (somente administrador)</span>
+    </div>
+    <div id="rform" style="display:none">
+      <p style="font-size:13px;color:var(--tm);margin-bottom:13px">Redefinir senha do administrador.</p>
+      <div class="f" style="margin-bottom:11px"><label>E-mail do administrador</label><input type="email" id="re"></div>
+      <div class="f" style="margin-bottom:18px"><label>Nova senha</label><input type="password" id="rs"></div>
+      <button class="btn p" style="width:100%;justify-content:center" onclick="recSenha()">Redefinir senha</button>
+      <span class="llink" onclick="showLogin()">Voltar ao login</span>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
   <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-icon" id="mod-icon">E</div>
-      <h1 id="mod-titulo">Estoque</h1>
-      <p id="mod-sub">Material de consumo</p>
+    <div class="slogo">
+      <div class="slogo-ico" id="mid">E</div>
+      <h1 id="mtit">Estoque</h1>
+      <p id="msub">Material de consumo</p>
     </div>
-    <div class="module-selector">
-      <button class="mod-btn active" id="btn-mod-estoque" onclick="trocarModulo('estoque')">
-        <span class="mod-icon">📦</span>Estoque
-      </button>
-      <button class="mod-btn" id="btn-mod-clima" onclick="trocarModulo('clima')">
-        <span class="mod-icon">❄️</span>Climatização
-      </button>
+    <div class="ubadge">
+      <div class="uav" id="uav">?</div>
+      <div class="uinfo"><p id="unome">—</p><span id="uemail">—</span></div>
+      <button class="blogout" onclick="logout()" title="Sair">⏻</button>
     </div>
-    <nav id="nav-estoque">
-      <button class="nav-item active" onclick="showPage('dashboard', this)">
-        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="1.5"/></svg>
-        Painel
-      </button>
-      <button class="nav-item" onclick="showPage('estoque', this)">
-        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M20 7H4a1 1 0 00-1 1v10a1 1 0 001 1h16a1 1 0 001-1V8a1 1 0 00-1-1z"/><path stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-        Estoque
-      </button>
-      <button class="nav-item" onclick="showPage('entrada', this)">
-        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 5v14M5 12l7 7 7-7"/></svg>
-        Entrada
-      </button>
-      <button class="nav-item" onclick="showPage('saida', this)">
-        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 19V5M5 12l7-7 7 7"/></svg>
-        Saída
-      </button>
-      <button class="nav-item" onclick="showPage('historico', this)">
-        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        Histórico
-      </button>
-      <button class="nav-item" onclick="showPage('responsaveis', this)">
-        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="1.5"/><path stroke-width="1.5" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-        Responsáveis
-      </button>
-      <button class="nav-item" onclick="showPage('pedidos', this)">
-        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path stroke-width="1.5" d="M9 12h6M9 16h4"/></svg>
-        Pedidos
-      </button>
+    <div class="modsw">
+      <button class="mbtn on" id="bme" onclick="tmod('est')"><span class="mi">📦</span>Estoque</button>
+      <button class="mbtn" id="bmc" onclick="tmod('cli')"><span class="mi">❄️</span>Clima</button>
+      <button class="mbtn" id="bma" onclick="tmod('adm')"><span class="mi">🗂️</span>Adm</button>
+    </div>
+    <nav id="ne">
+      <button class="ni on" onclick="sp('dashboard',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="1.5"/></svg>Painel</button>
+      <button class="ni" onclick="sp('estoque',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M20 7H4a1 1 0 00-1 1v10a1 1 0 001 1h16a1 1 0 001-1V8a1 1 0 00-1-1z"/><path stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>Estoque</button>
+      <button class="ni" onclick="sp('entrada',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 5v14M5 12l7 7 7-7"/></svg>Entrada</button>
+      <button class="ni" onclick="sp('saida',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 19V5M5 12l7-7 7 7"/></svg>Saída</button>
+      <button class="ni" onclick="sp('hist',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Histórico</button>
+      <button class="ni" onclick="sp('pedidos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path stroke-width="1.5" d="M9 12h6M9 16h4"/></svg>Pedidos</button>
+      <button class="ni" id="nubtn" onclick="sp('usuarios',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="1.5"/></svg>Usuários</button>
     </nav>
-    <nav id="nav-clima" style="display:none">
-      <button class="nav-item" onclick="showPage('clima-chamados', this)">
-        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 2a7 7 0 00-7 7c0 3.5 2 6 5 7.4V18h4v-1.6c3-1.4 5-3.9 5-7.4a7 7 0 00-7-7z"/><path stroke-width="1.5" d="M9 21h6"/></svg>
-        Chamados
-      </button>
-      <button class="nav-item" onclick="showPage('clima-aparelhos', this)">
-        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="7" width="20" height="10" rx="2" stroke-width="1.5"/><path stroke-width="1.5" d="M6 11h1M9 11h1M6 14h12"/></svg>
-        Aparelhos
-      </button>
-      <button class="nav-item" onclick="showPage('clima-relatorio', this)">
-        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-        Relatório PDF
-      </button>
+    <nav id="nc" style="display:none">
+      <button class="ni" onclick="sp('ccham',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 2a7 7 0 00-7 7c0 3.5 2 6 5 7.4V18h4v-1.6c3-1.4 5-3.9 5-7.4a7 7 0 00-7-7z"/><path stroke-width="1.5" d="M9 21h6"/></svg>Chamados</button>
+      <button class="ni" onclick="sp('capar',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="7" width="20" height="10" rx="2" stroke-width="1.5"/><path stroke-width="1.5" d="M6 11h1M9 11h1M6 14h12"/></svg>Aparelhos</button>
+      <button class="ni" onclick="sp('crel',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>Relatório PDF</button>
     </nav>
-    <div class="sidebar-footer">
-      <p>Servidor ativo</p>
-      <span class="server-badge" id="server-ip">carregando...</span>
-    </div>
+    <nav id="na" style="display:none">
+      <button class="ni" onclick="sp('ademdas',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path stroke-width="1.5" d="M9 12h6M9 16h4"/></svg>Demandas</button>
+      <button class="ni" onclick="sp('avencs',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Vencimentos</button>
+    </nav>
+    <div class="sft"><p>Servidor ativo</p><span class="sipbadge" id="sip">—</span></div>
   </aside>
 
-  <!-- Conteúdo -->
   <main class="main">
 
-    <!-- Painel -->
-    <div id="page-dashboard" class="page active">
-      <div class="page-header">
-        <h2>Painel geral</h2>
-        <p>Visão rápida do estoque de material de consumo</p>
-      </div>
-      <div class="metrics" id="metrics-wrap"></div>
-      <div id="alert-wrap"></div>
-      <div class="card">
-        <div class="card-title">Itens que precisam de atenção</div>
-        <div class="table-wrap">
-          <table><thead><tr><th>Item</th><th>Categoria</th><th>Qtd atual</th><th>Mínimo</th><th>Situação</th></tr></thead>
-          <tbody id="tbl-dash"></tbody></table>
-        </div>
-      </div>
+    <!-- PAINEL -->
+    <div id="page-dashboard" class="page on">
+      <div class="ph"><h2>Painel geral</h2><p>Visão rápida do estoque</p></div>
+      <div class="mets" id="mets"></div>
+      <div id="alw"></div>
+      <div class="card"><div class="ct">Itens que precisam de atenção</div><div class="tw"><table><thead><tr><th>Item</th><th>Categoria</th><th>Qtd</th><th>Mínimo</th><th>Status</th></tr></thead><tbody id="td-dash"></tbody></table></div></div>
     </div>
 
-    <!-- Estoque -->
+    <!-- ESTOQUE -->
     <div id="page-estoque" class="page">
-      <div class="page-header">
-        <h2>Cadastro de itens</h2>
-        <p>Gerencie os itens do estoque de material de consumo</p>
+      <div class="ph"><h2>Cadastro de itens</h2><p>Gerencie o estoque de material de consumo</p></div>
+      <div class="card"><div class="ct">Novo item</div>
+        <div class="fg c3"><div class="f"><label>Nome</label><input id="fn" placeholder="Ex: Papel A4"></div><div class="f"><label>Categoria</label><input id="fc" placeholder="Ex: Papelaria"></div><div class="f"><label>Unidade</label><select id="fu"><option>Unidade</option><option>Pacote</option><option>Caixa</option><option>Resma</option><option>Litro</option><option>Kg</option><option>Rolo</option></select></div></div>
+        <div class="fg c2"><div class="f"><label>Qtd inicial</label><input id="fq" type="number" min="0" placeholder="0"></div><div class="f"><label>Qtd mínima (alerta)</label><input id="fm" type="number" min="0" placeholder="5"></div></div>
+        <button class="btn p" onclick="addItem()">Adicionar item</button>
       </div>
       <div class="card">
-        <div class="card-title">Novo item</div>
-        <div class="form-grid cols-3">
-          <div class="field"><label>Nome do item</label><input id="f-nome" placeholder="Ex: Papel A4"></div>
-          <div class="field"><label>Categoria</label><input id="f-cat" placeholder="Ex: Papelaria"></div>
-          <div class="field"><label>Unidade</label>
-            <select id="f-unid">
-              <option>Unidade</option><option>Pacote</option><option>Caixa</option>
-              <option>Resma</option><option>Litro</option><option>Kg</option><option>Rolo</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-grid cols-2">
-          <div class="field"><label>Quantidade inicial</label><input id="f-qtd" type="number" min="0" placeholder="0"></div>
-          <div class="field"><label>Quantidade mínima (alerta)</label><input id="f-min" type="number" min="0" placeholder="5"></div>
-        </div>
-        <button class="btn primary" onclick="addItem()">Adicionar item</button>
+        <div class="fl" style="margin-bottom:13px"><span class="ct" style="margin:0">Itens cadastrados</span><input id="busca" placeholder="Buscar..." style="width:165px;margin-left:auto;padding:6px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;font-family:var(--sn);background:var(--bg);color:var(--tx)" oninput="rEstoque()"></div>
+        <div class="tw"><table><thead><tr><th>Item</th><th>Categoria</th><th>Unid.</th><th>Qtd</th><th>Mínimo</th><th>Status</th><th></th></tr></thead><tbody id="td-est"></tbody></table></div>
       </div>
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-          <span class="card-title" style="margin:0">Itens cadastrados</span>
-          <input id="busca" placeholder="Buscar item..." style="width:200px;padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--bg);color:var(--text)" oninput="renderEstoque()">
-        </div>
-        <div class="table-wrap">
-          <table><thead><tr><th>Item</th><th>Categoria</th><th>Unid.</th><th>Qtd</th><th>Mínimo</th><th>Situação</th><th></th></tr></thead>
-          <tbody id="tbl-estoque"></tbody></table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Backup e restauração</div>
-        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Exporte todos os dados (itens, responsáveis e histórico) para um arquivo de backup. Use o mesmo arquivo para importar em outro banco de dados.</p>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <button class="btn primary" onclick="exportarBackup()">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            Exportar backup
-          </button>
-          <label class="btn" style="cursor:pointer">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-            Importar backup
-            <input type="file" accept=".json" style="display:none" onchange="importarBackup(event)">
-          </label>
-          <span style="font-size:12px;color:var(--text-hint)">Arquivo .json gerado pelo próprio sistema</span>
-        </div>
-      </div>
+      <div class="card"><div class="ct">Backup estoque</div><p style="font-size:13px;color:var(--tm);margin-bottom:12px">Exporte ou importe todos os dados do estoque.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn p" onclick="expBkpEst()">⬇ Exportar backup</button><label class="btn" style="cursor:pointer">⬆ Importar backup<input type="file" accept=".json" style="display:none" onchange="impBkpEst(event)"></label></div></div>
     </div>
 
-    <!-- Entrada -->
+    <!-- ENTRADA -->
     <div id="page-entrada" class="page">
-      <div class="page-header"><h2>Registrar entrada</h2><p>Material recebido — compras, doações, devoluções</p></div>
-      <div class="card">
-        <div class="card-title">Dados da entrada</div>
-        <div class="form-grid cols-2">
-          <div class="field"><label>Item</label><select id="e-item"></select></div>
-          <div class="field"><label>Quantidade recebida</label><input id="e-qtd" type="number" min="1" placeholder="0"></div>
-        </div>
-        <div class="form-grid cols-2">
-          <div class="field"><label>Data</label><input id="e-data" type="date"></div>
-          <div class="field"><label>Observação</label><input id="e-obs" placeholder="Ex: Compra NF 1234, fornecedor..."></div>
-        </div>
-        <button class="btn primary" onclick="registrar('entrada')">Confirmar entrada</button>
+      <div class="ph"><h2>Registrar entrada</h2><p>Material recebido</p></div>
+      <div class="card"><div class="ct">Dados da entrada</div>
+        <div class="fg c2"><div class="f"><label>Item</label><select id="ei"></select></div><div class="f"><label>Quantidade</label><input id="eq" type="number" min="1" placeholder="0"></div></div>
+        <div class="fg c2"><div class="f"><label>Data</label><input id="ed" type="date"></div><div class="f"><label>Observação</label><input id="eo" placeholder="Ex: Compra NF 1234"></div></div>
+        <button class="btn p" onclick="reg('en')">Confirmar entrada</button>
       </div>
     </div>
 
-    <!-- Saída -->
+    <!-- SAÍDA -->
     <div id="page-saida" class="page">
-      <div class="page-header"><h2>Registrar saída</h2><p>Retirada de material para uso interno</p></div>
-      <div class="card">
-        <div class="card-title">Dados da saída</div>
-
-        <!-- Toggle pedido -->
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;padding:12px 14px;background:var(--accent-bg);border-radius:10px;border:1px solid #c5d4f7">
-          <input type="checkbox" id="s-tem-pedido" onchange="togglePedido()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent)">
-          <label for="s-tem-pedido" style="font-size:13.5px;cursor:pointer;color:var(--accent);font-weight:500">Esta saída atende a um pedido em aberto</label>
+      <div class="ph"><h2>Registrar saída</h2><p>Retirada de material para uso interno</p></div>
+      <div class="card"><div class="ct">Dados da saída</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;padding:9px 13px;background:var(--acb);border-radius:10px;border:1px solid #c5d4f7">
+          <input type="checkbox" id="stped" onchange="togPed()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--ac)">
+          <label for="stped" style="font-size:13px;cursor:pointer;color:var(--ac);font-weight:500">Esta saída atende a um pedido em aberto</label>
         </div>
-
-        <!-- Seletor de pedido (oculto por padrão) -->
-        <div id="s-bloco-pedido" style="display:none;margin-bottom:18px">
-          <div class="field">
-            <label>Pedido em aberto</label>
-            <select id="s-pedido-sel" onchange="preencherDoPedido()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;font-family:var(--sans);background:var(--bg);color:var(--text)">
-              <option value="">Selecione o pedido...</option>
-            </select>
-          </div>
-          <div id="s-pedido-info" style="display:none;margin-top:10px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text-muted)"></div>
+        <div id="sblped" style="display:none;margin-bottom:13px">
+          <div class="f"><label>Pedido em aberto</label><select id="spsel" onchange="preePed()"></select></div>
+          <div id="spinfo" style="display:none;margin-top:7px;padding:8px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;font-size:13px;color:var(--tm)"></div>
         </div>
-
-        <div class="form-grid cols-2">
-          <div class="field"><label>Item</label><select id="s-item"></select></div>
-          <div class="field"><label>Quantidade retirada</label><input id="s-qtd" type="number" min="1" placeholder="0"></div>
-        </div>
-        <div class="form-grid cols-2">
-          <div class="field"><label>Retirado por / Solicitante</label><select id="s-resp"></select></div>
-          <div class="field"><label>Data</label><input id="s-data" type="date"></div>
-        </div>
-        <div class="field" style="margin-bottom:20px"><label>Observação</label><input id="s-obs" placeholder="Ex: Uso setor financeiro, reunião..."></div>
-        <button class="btn primary" onclick="registrar('saida')">Confirmar saída</button>
+        <div class="fg c2"><div class="f"><label>Item</label><select id="si"></select></div><div class="f"><label>Quantidade</label><input id="sq" type="number" min="1" placeholder="0"></div></div>
+        <div class="fg c2"><div class="f"><label>Retirado por</label><select id="sr"></select></div><div class="f"><label>Data</label><input id="sd" type="date"></div></div>
+        <div class="f" style="margin-bottom:13px"><label>Observação</label><input id="so" placeholder="Ex: Uso setor financeiro"></div>
+        <button class="btn p" onclick="reg('sa')">Confirmar saída</button>
       </div>
     </div>
 
-    <!-- Histórico -->
-    <div id="page-historico" class="page">
-      <div class="page-header"><h2>Histórico de movimentos</h2><p>Todas as entradas e saídas registradas</p></div>
-      <div class="card">
-        <div class="card-title">Filtros</div>
-        <div class="form-grid cols-3" style="margin-bottom:12px">
-          <div class="field"><label>Período</label>
-            <select id="f-periodo" onchange="aplicarFiltros()">
-              <option value="">Todos</option>
-              <option value="hoje">Hoje</option>
-              <option value="semana">Esta semana</option>
-              <option value="mes">Este mês</option>
-              <option value="personalizado">Personalizado</option>
-            </select>
-          </div>
-          <div class="field"><label>Item</label>
-            <select id="f-item-hist" onchange="aplicarFiltros()">
-              <option value="">Todos os itens</option>
-            </select>
-          </div>
-          <div class="field"><label>Responsável</label>
-            <select id="f-resp-hist" onchange="aplicarFiltros()">
-              <option value="">Todos</option>
-            </select>
-          </div>
+    <!-- HISTÓRICO -->
+    <div id="page-hist" class="page">
+      <div class="ph"><h2>Histórico de movimentos</h2><p>Todas as entradas e saídas registradas</p></div>
+      <div class="card"><div class="ct">Filtros</div>
+        <div class="fg c3" style="margin-bottom:10px">
+          <div class="f"><label>Período</label><select id="fper" onchange="apFilt()"><option value="">Todos</option><option value="hj">Hoje</option><option value="sm">Esta semana</option><option value="ms">Este mês</option><option value="pe">Personalizado</option></select></div>
+          <div class="f"><label>Item</label><select id="fite" onchange="apFilt()"><option value="">Todos</option></select></div>
+          <div class="f"><label>Responsável</label><select id="fres" onchange="apFilt()"><option value="">Todos</option></select></div>
         </div>
-        <div class="form-grid cols-3" id="datas-personalizadas" style="display:none;margin-bottom:12px">
-          <div class="field"><label>Data inicial</label><input type="date" id="f-data-ini" onchange="aplicarFiltros()"></div>
-          <div class="field"><label>Data final</label><input type="date" id="f-data-fim" onchange="aplicarFiltros()"></div>
-          <div class="field"><label>Tipo</label>
-            <select id="f-tipo-hist" onchange="aplicarFiltros()">
-              <option value="">Todos</option>
-              <option value="entrada">Entrada</option>
-              <option value="saida">Saída</option>
-            </select>
-          </div>
+        <div class="fg c3" id="fdats" style="display:none;margin-bottom:10px">
+          <div class="f"><label>Data inicial</label><input type="date" id="fdi" onchange="apFilt()"></div>
+          <div class="f"><label>Data final</label><input type="date" id="fdf" onchange="apFilt()"></div>
+          <div class="f"><label>Tipo</label><select id="ftip" onchange="apFilt()"><option value="">Todos</option><option value="en">Entrada</option><option value="sa">Saída</option></select></div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn sm" onclick="limparFiltros()">Limpar filtros</button>
-          <span id="f-contagem" style="font-size:12px;color:var(--text-muted)"></span>
-          <button class="btn sm primary" style="margin-left:auto" onclick="exportCSV()">Exportar CSV</button>
-        </div>
+        <div class="fl"><button class="btn sm" onclick="limFilt()">Limpar</button><span id="fcnt" style="font-size:12px;color:var(--tm)"></span><button class="btn sm p" style="margin-left:auto" onclick="expCSV()">Exportar CSV</button></div>
       </div>
-      <div class="card">
-        <div class="table-wrap">
-          <table><thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd</th><th>Responsável</th><th>Observação</th></tr></thead>
-          <tbody id="tbl-hist"></tbody></table>
-        </div>
-      </div>
+      <div class="card"><div class="tw"><table><thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd</th><th>Responsável</th><th>Obs.</th></tr></thead><tbody id="td-hist"></tbody></table></div></div>
     </div>
 
-    <!-- Responsáveis -->
-    <div id="page-responsaveis" class="page">
-      <div class="page-header"><h2>Responsáveis</h2><p>Pessoas autorizadas a registrar movimentos</p></div>
-      <div class="card">
-        <div class="card-title">Cadastrar responsável</div>
-        <div class="form-grid cols-2">
-          <div class="field"><label>Nome completo</label><input id="r-nome" placeholder="Ex: João Silva"></div>
-          <div class="field"><label>Setor (opcional)</label><input id="r-setor" placeholder="Ex: Financeiro"></div>
-        </div>
-        <button class="btn primary" onclick="addResp()">Adicionar responsável</button>
-      </div>
-      <div class="card">
-        <div class="card-title">Responsáveis cadastrados</div>
-        <table><thead><tr><th>Nome</th><th>Setor</th><th></th></tr></thead>
-        <tbody id="tbl-resp"></tbody></table>
-      </div>
-    </div>
-
-    <!-- ===== PEDIDOS ===== -->
+    <!-- PEDIDOS -->
     <div id="page-pedidos" class="page">
-      <div class="page-header"><h2>Pedidos de colaboradores</h2><p>Registre solicitações e acompanhe a fila de entrega</p></div>
-      <div class="card">
-        <div class="card-title">Novo pedido</div>
-        <div class="form-grid cols-2">
-          <div class="field"><label>Item solicitado</label><select id="ped-item"></select></div>
-          <div class="field"><label>Quantidade</label><input id="ped-qtd" type="number" min="1" value="1" placeholder="1"></div>
-        </div>
-        <div class="form-grid cols-2">
-          <div class="field"><label>Solicitante</label><select id="ped-resp"></select></div>
-          <div class="field"><label>Data da solicitação</label><input id="ped-data" type="date"></div>
-        </div>
-        <div class="field" style="margin-bottom:20px"><label>Observação</label><input id="ped-obs" placeholder="Ex: Para home office, substituição..."></div>
-        <button class="btn primary" onclick="addPedido()">Registrar pedido</button>
+      <div class="ph"><h2>Pedidos de colaboradores</h2><p>Gerencie a fila de solicitações</p></div>
+      <div class="card"><div class="ct">Novo pedido</div>
+        <div class="fg c2"><div class="f"><label>Item solicitado</label><select id="pi"></select></div><div class="f"><label>Quantidade</label><input id="pq" type="number" min="1" value="1"></div></div>
+        <div class="fg c2"><div class="f"><label>Solicitante</label><select id="pr"></select></div><div class="f"><label>Data da solicitação</label><input id="pd" type="date"></div></div>
+        <div class="f" style="margin-bottom:13px"><label>Observação</label><input id="po" placeholder="Ex: Para home office, substituição..."></div>
+        <button class="btn p" onclick="addPed()">Registrar pedido</button>
       </div>
       <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-          <span class="card-title" style="margin:0">Fila de pedidos</span>
-          <div style="display:flex;gap:8px">
-            <select id="ped-filtro" onchange="renderPedidos()" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--bg);color:var(--text)">
-              <option value="aberto">Em aberto</option>
-              <option value="entregue">Entregues</option>
-              <option value="">Todos</option>
-            </select>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table><thead><tr><th>#</th><th>Data pedido</th><th>Item</th><th>Qtd</th><th>Solicitante</th><th>Obs.</th><th>Status</th><th></th></tr></thead>
-          <tbody id="tbl-pedidos"></tbody></table>
-        </div>
+        <div class="fl" style="margin-bottom:13px"><span class="ct" style="margin:0">Fila de pedidos</span><select id="pfil" onchange="rPeds()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="ab">Em aberto</option><option value="et">Entregues</option><option value="">Todos</option></select></div>
+        <div class="tw"><table><thead><tr><th>#</th><th>Data</th><th>Item</th><th>Qtd</th><th>Solicitante</th><th>Obs.</th><th>Status</th><th></th></tr></thead><tbody id="td-ped"></tbody></table></div>
       </div>
     </div>
 
-    <!-- ===== CLIMATIZAÇÃO: CHAMADOS ===== -->
-    <div id="page-clima-chamados" class="page">
-      <div class="page-header"><h2>Chamados de manutenção</h2><p>Registre e acompanhe os chamados de ar condicionado</p></div>
-      <div class="card">
-        <div class="card-title">Novo chamado</div>
-        <div class="form-grid cols-2">
-          <div class="field">
-            <label>Aparelho / Sala</label>
-            <select id="ch-aparelho" onchange="preencherAparelho()">
-              <option value="">Selecione o aparelho...</option>
-            </select>
-          </div>
-          <div class="field"><label>Tipo de manutenção</label>
-            <select id="ch-tipo">
-              <option value="corretiva">Corretiva</option>
-              <option value="preventiva">Preventiva</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-grid cols-3" style="margin-bottom:6px">
-          <div class="field"><label>Departamento</label><input id="ch-depto" readonly style="background:#f0ede8;color:var(--text-muted)"></div>
-          <div class="field"><label>Marca</label><input id="ch-marca" readonly style="background:#f0ede8;color:var(--text-muted)"></div>
-          <div class="field"><label>Potência</label><input id="ch-potencia" readonly style="background:#f0ede8;color:var(--text-muted)"></div>
-        </div>
-        <div class="form-grid cols-2">
-          <div class="field"><label>Problema apresentado</label><input id="ch-problema" placeholder="Descreva o problema ou serviço"></div>
-          <div class="field"><label>Data do chamado</label><input id="ch-data-chamado" type="date"></div>
-        </div>
-        <div class="form-grid cols-2">
-          <div class="field"><label>Data do conserto <span style="font-weight:400;color:var(--text-hint)">(opcional)</span></label><input id="ch-data-conserto" type="date"></div>
-          <div class="field"><label>Observação</label><input id="ch-obs" placeholder="Informações adicionais..."></div>
-        </div>
-        <button class="btn primary" onclick="addChamado()">Registrar chamado</button>
+    <!-- USUÁRIOS -->
+    <div id="page-usuarios" class="page">
+      <div class="ph"><h2>Usuários do sistema</h2><p>Somente o administrador pode gerenciar usuários</p></div>
+      <div class="card" id="cadd"><div class="ct">Adicionar usuário</div>
+        <div class="fg c2"><div class="f"><label>Nome completo</label><input id="un" placeholder="Ex: João Silva"></div><div class="f"><label>E-mail de acesso</label><input id="ue" type="email" placeholder="joao@empresa.com.br"></div></div>
+        <div class="fg c2"><div class="f"><label>Senha inicial</label><input id="up" type="password" placeholder="Mínimo 6 caracteres"></div><div class="f"><label>Setor</label><input id="us" placeholder="Ex: Financeiro"></div></div>
+        <button class="btn p" onclick="addUsr()">Adicionar usuário</button>
+      </div>
+      <div class="card"><div class="ct">Usuários cadastrados</div><div class="tw"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Setor</th><th>Perfil</th><th></th></tr></thead><tbody id="td-usr"></tbody></table></div></div>
+    </div>
+
+    <!-- CLIMA: CHAMADOS -->
+    <div id="page-ccham" class="page">
+      <div class="ph"><h2>Chamados de manutenção</h2><p>Registre e acompanhe os chamados de ar condicionado</p></div>
+      <div class="card"><div class="ct">Novo chamado</div>
+        <div class="fg c2"><div class="f"><label>Aparelho / Sala</label><select id="cha" onchange="preeAp()"><option value="">Selecione o aparelho...</option></select></div><div class="f"><label>Tipo de manutenção</label><select id="cht"><option value="corretiva">Corretiva</option><option value="preventiva">Preventiva</option></select></div></div>
+        <div class="fg c3" style="margin-bottom:4px"><div class="f"><label>Departamento</label><input id="chd" class="ro" readonly></div><div class="f"><label>Marca</label><input id="chm" class="ro" readonly></div><div class="f"><label>Potência</label><input id="chp" class="ro" readonly></div></div>
+        <div class="fg c2"><div class="f"><label>Problema apresentado</label><input id="chpr" placeholder="Descreva o problema ou serviço"></div><div class="f"><label>Data do chamado</label><input id="chdc" type="date"></div></div>
+        <div class="fg c2"><div class="f"><label>Data do conserto (opcional)</label><input id="chds" type="date"></div><div class="f"><label>Observação</label><input id="cho" placeholder="Informações adicionais..."></div></div>
+        <button class="btn p" onclick="addCham()">Registrar chamado</button>
       </div>
       <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-          <span class="card-title" style="margin:0">Chamados registrados</span>
-          <select id="ch-filtro-status" onchange="renderChamados()" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--sans);background:var(--bg);color:var(--text)">
-            <option value="">Todos</option>
-            <option value="aberto">Em aberto</option>
-            <option value="concluido">Concluídos</option>
-          </select>
-        </div>
-        <div class="table-wrap">
-          <table><thead><tr><th>Data chamado</th><th>Sala</th><th>Depto</th><th>Tipo</th><th>Problema</th><th>Status</th><th></th></tr></thead>
-          <tbody id="tbl-chamados"></tbody></table>
-        </div>
+        <div class="fl" style="margin-bottom:13px"><span class="ct" style="margin:0">Chamados registrados</span><select id="chfil" onchange="rChams()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos</option><option value="ab">Em aberto</option><option value="cn">Concluídos</option></select></div>
+        <div class="tw"><table><thead><tr><th>Data</th><th>Sala</th><th>Depto</th><th>Tipo</th><th>Problema</th><th>Status</th><th></th></tr></thead><tbody id="td-cham"></tbody></table></div>
       </div>
     </div>
 
-    <!-- ===== CLIMATIZAÇÃO: APARELHOS ===== -->
-    <div id="page-clima-aparelhos" class="page">
-      <div class="page-header"><h2>Aparelhos cadastrados</h2><p>Cadastre e edite os aparelhos de ar condicionado</p></div>
-      <div class="card">
-        <div class="card-title">Cadastrar aparelho</div>
-        <div class="form-grid cols-3">
-          <div class="field"><label>Nº da sala</label><input id="ap-sala" placeholder="Ex: 2101"></div>
-          <div class="field"><label>Departamento</label><input id="ap-depto" placeholder="Ex: Tecnologia"></div>
-          <div class="field"><label>Localização</label><input id="ap-local" placeholder="Ex: Próximo à janela"></div>
+    <!-- CLIMA: APARELHOS -->
+    <div id="page-capar" class="page">
+      <div class="ph"><h2>Aparelhos cadastrados</h2><p>Cadastre e edite os aparelhos de ar condicionado</p></div>
+      <div class="card"><div class="ct">Cadastrar aparelho</div>
+        <div class="fg c3"><div class="f"><label>Nº da sala</label><input id="aps" placeholder="Ex: 2101"></div><div class="f"><label>Departamento</label><input id="apd" placeholder="Ex: Tecnologia"></div><div class="f"><label>Localização</label><input id="apl" placeholder="Ex: Próximo à janela"></div></div>
+        <div class="fg c3"><div class="f"><label>Marca</label><input id="apm" placeholder="Ex: Daikin"></div><div class="f"><label>Modelo</label><input id="apmo" placeholder="Ex: Split Inverter"></div><div class="f"><label>Potência (BTUs)</label><input id="app" placeholder="Ex: 12.000 BTUs"></div></div>
+        <button class="btn p" onclick="addAp()">Cadastrar aparelho</button>
+      </div>
+      <div class="card"><div class="ct">Aparelhos</div><div class="tw"><table><thead><tr><th>Sala</th><th>Departamento</th><th>Localização</th><th>Marca</th><th>Modelo</th><th>Potência</th><th></th></tr></thead><tbody id="td-ap"></tbody></table></div></div>
+      <div class="card"><div class="ct">Backup climatização</div><p style="font-size:13px;color:var(--tm);margin-bottom:12px">Exporta aparelhos e chamados em um único arquivo JSON.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn p" onclick="expBkpCli()">⬇ Exportar backup clima</button><label class="btn" style="cursor:pointer">⬆ Importar backup clima<input type="file" accept=".json" style="display:none" onchange="impBkpCli(event)"></label></div></div>
+    </div>
+
+    <!-- CLIMA: RELATÓRIO -->
+    <div id="page-crel" class="page">
+      <div class="ph"><h2>Relatório mensal — Climatização</h2><p>Gere o relatório de manutenções em PDF</p></div>
+      <div class="card"><div class="ct">Configurar relatório</div>
+        <div class="fg c3"><div class="f"><label>Empresa</label><input id="rlemp" value="JS Contadores"></div><div class="f"><label>Mês</label><select id="rlmes"><option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></div><div class="f"><label>Ano</label><input id="rlano" type="number" value="2026"></div></div>
+        <div style="display:flex;gap:10px"><button class="btn p" onclick="genRel()">Visualizar</button><button class="btn" onclick="prtRel()">Imprimir / Salvar PDF</button></div>
+      </div>
+      <div id="relprv" style="display:none"><div id="relcnt" style="background:white;border:1px solid var(--bd);border-radius:12px;padding:34px 38px;font-size:13px;line-height:1.6;color:#1a1916;max-width:760px"></div></div>
+    </div>
+
+    <!-- ADM: DEMANDAS -->
+    <div id="page-ademdas" class="page">
+      <div class="ph"><h2>Demandas administrativas</h2><p>Acompanhe serviços e solicitações com anotações</p></div>
+      <div class="card"><div class="ct">Nova demanda</div>
+        <div class="fg c2"><div class="f"><label>O que foi solicitado</label><input id="dmt" placeholder="Ex: Consertar goteira do auditório"></div><div class="f"><label>Solicitante / Setor</label><input id="dms" placeholder="Ex: Diretoria, RH..."></div></div>
+        <div class="fg c2"><div class="f"><label>Data da solicitação</label><input id="dmd" type="date"></div><div class="f"><label>Descrição adicional</label><input id="dmde" placeholder="Detalhes..."></div></div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:9px 13px;background:var(--acb);border-radius:10px;border:1px solid #c5d4f7">
+          <input type="checkbox" id="dmca" onchange="togAprov()" style="width:15px;height:15px;accent-color:var(--ac)">
+          <label for="dmca" style="font-size:13px;color:var(--ac);font-weight:500;cursor:pointer">Precisa de aprovação de orçamento pela diretoria</label>
         </div>
-        <div class="form-grid cols-3">
-          <div class="field"><label>Marca</label><input id="ap-marca" placeholder="Ex: Daikin"></div>
-          <div class="field"><label>Modelo</label><input id="ap-modelo" placeholder="Ex: Split Inverter"></div>
-          <div class="field"><label>Potência (BTUs)</label><input id="ap-potencia" placeholder="Ex: 12.000 BTUs"></div>
+        <div id="dmapblk" style="display:none">
+          <div class="fg c3"><div class="f"><label>Valor solicitado (R$)</label><input id="dmv" type="number" step="0.01" placeholder="0,00"></div><div class="f"><label>Data da solicitação do orçamento</label><input id="dmdo" type="date"></div><div class="f"><label>Data da aprovação (opcional)</label><input id="dmda" type="date"></div></div>
         </div>
-        <button class="btn primary" onclick="addAparelho()">Cadastrar aparelho</button>
+        <button class="btn p" onclick="addDem()">Registrar demanda</button>
       </div>
       <div class="card">
-        <div class="card-title">Aparelhos</div>
-        <div class="table-wrap">
-          <table><thead><tr><th>Sala</th><th>Departamento</th><th>Localização</th><th>Marca</th><th>Modelo</th><th>Potência</th><th></th></tr></thead>
-          <tbody id="tbl-aparelhos"></tbody></table>
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Demandas</span>
+          <div style="display:flex;gap:8px;margin-left:auto">
+            <select id="dmfil" onchange="rDems()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="ab">Em andamento</option><option value="cn">Concluídas</option><option value="">Todas</option></select>
+            <button class="btn sm" onclick="abrRelAdm()">Relatório PDF</button>
+          </div>
         </div>
+        <div id="ldems"></div>
       </div>
     </div>
 
-    <!-- ===== CLIMATIZAÇÃO: RELATÓRIO ===== -->
-    <div id="page-clima-relatorio" class="page">
-      <div class="page-header no-print"><h2>Relatório mensal PDF</h2><p>Gere o relatório de manutenções do mês</p></div>
-      <div class="card no-print" style="margin-bottom:20px">
-        <div class="card-title">Configurar relatório</div>
-        <div class="form-grid cols-3">
-          <div class="field"><label>Empresa</label><input id="rel-empresa" placeholder="Ex: JS Contadores" value="JS Contadores"></div>
-          <div class="field"><label>Mês</label>
-            <select id="rel-mes">
-              <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
-              <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
-              <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
-              <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
-            </select>
-          </div>
-          <div class="field"><label>Ano</label><input id="rel-ano" type="number" value="2026" min="2020" max="2099"></div>
-        </div>
-        <div style="display:flex;gap:10px">
-          <button class="btn primary" onclick="gerarRelatorio()">Visualizar relatório</button>
-          <button class="btn" onclick="imprimirRelatorio()">Imprimir / Salvar PDF</button>
-        </div>
+    <!-- ADM: VENCIMENTOS -->
+    <div id="page-avencs" class="page">
+      <div class="ph"><h2>Controle de vencimentos</h2><p>Filtros de água e extintores de incêndio</p></div>
+      <div id="valerts"></div>
+      <div class="card"><div class="ct">Filtros de água — cadastrar</div>
+        <div class="fg c4"><div class="f"><label>Local / Identificação</label><input id="ftl" placeholder="Ex: Cozinha"></div><div class="f"><label>Descrição</label><input id="ftd" placeholder="Ex: Filtro 3M"></div><div class="f"><label>Data da última troca</label><input id="ftdt" type="date"></div><div class="f"><label>Validade (meses)</label><input id="ftv" type="number" value="6" min="1"></div></div>
+        <button class="btn p" onclick="addFilt()">Cadastrar filtro</button>
       </div>
-      <!-- Área de preview do relatório -->
-      <div id="relatorio-preview" style="display:none">
-        <div id="relatorio-conteudo" style="background:white;border:1px solid var(--border);border-radius:12px;padding:36px 40px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;line-height:1.6;color:#1a1916;max-width:780px">
-        </div>
+      <div class="card"><div class="ct">Filtros cadastrados</div><div class="tw"><table><thead><tr><th>Local</th><th>Descrição</th><th>Última troca</th><th>Validade</th><th>Próxima troca</th><th>Status</th><th></th></tr></thead><tbody id="td-filt"></tbody></table></div></div>
+      <div class="card"><div class="ct">Extintores de incêndio — cadastrar</div>
+        <div class="fg c4"><div class="f"><label>Local</label><input id="exl" placeholder="Ex: Recepção"></div><div class="f"><label>Tipo</label><input id="ext" placeholder="Ex: CO₂, Pó ABC"></div><div class="f"><label>Data de vencimento</label><input id="exd" type="date"></div><div class="f"><label>Nº de série</label><input id="exs" placeholder="Opcional"></div></div>
+        <button class="btn p" onclick="addExt()">Cadastrar extintor</button>
       </div>
+      <div class="card"><div class="ct">Extintores cadastrados</div><div class="tw"><table><thead><tr><th>Local</th><th>Tipo</th><th>Nº série</th><th>Vencimento</th><th>Status</th><th></th></tr></thead><tbody id="td-ext"></tbody></table></div></div>
     </div>
 
   </main>
 </div>
 
-<!-- Modal edição de item (estoque) -->
-<div class="modal-overlay" id="modal-edicao">
-  <div class="modal">
-    <div class="modal-title">Editar item</div>
-    <div class="form-grid cols-2">
-      <div class="field"><label>Nome do item</label><input id="ed-nome" placeholder="Nome"></div>
-      <div class="field"><label>Categoria</label><input id="ed-cat" placeholder="Categoria"></div>
-    </div>
-    <div class="form-grid cols-3">
-      <div class="field"><label>Unidade</label>
-        <select id="ed-unid">
-          <option>Unidade</option><option>Pacote</option><option>Caixa</option>
-          <option>Resma</option><option>Litro</option><option>Kg</option><option>Rolo</option>
-        </select>
-      </div>
-      <div class="field"><label>Qtd atual</label><input id="ed-qtd" type="number" min="0"></div>
-      <div class="field"><label>Qtd mínima</label><input id="ed-min" type="number" min="0"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="fecharModal()">Cancelar</button>
-      <button class="btn primary" onclick="salvarEdicao()">Salvar alterações</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal edição de aparelho climatização -->
-<div class="modal-overlay" id="modal-aparelho">
-  <div class="modal">
-    <div class="modal-title">Editar aparelho</div>
-    <div class="form-grid cols-3">
-      <div class="field"><label>Nº da sala</label><input id="eap-sala"></div>
-      <div class="field"><label>Departamento</label><input id="eap-depto"></div>
-      <div class="field"><label>Localização</label><input id="eap-local"></div>
-    </div>
-    <div class="form-grid cols-3">
-      <div class="field"><label>Marca</label><input id="eap-marca"></div>
-      <div class="field"><label>Modelo</label><input id="eap-modelo"></div>
-      <div class="field"><label>Potência (BTUs)</label><input id="eap-potencia"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="fecharModalAp()">Cancelar</button>
-      <button class="btn primary" onclick="salvarAparelho()">Salvar alterações</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal concluir chamado -->
-<div class="modal-overlay" id="modal-concluir">
-  <div class="modal">
-    <div class="modal-title">Concluir chamado</div>
-    <div class="form-grid cols-2">
-      <div class="field"><label>Data do conserto</label><input id="conc-data" type="date"></div>
-      <div class="field"><label>Observação</label><input id="conc-obs" placeholder="Detalhes do serviço realizado..."></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="fecharModalConc()">Cancelar</button>
-      <button class="btn primary" onclick="salvarConclusao()">Marcar como concluído</button>
-    </div>
-  </div>
-</div>
+<!-- MODAIS -->
+<div class="mo" id="m-edit"><div class="mbox"><div class="mtit">Editar item</div><div class="fg c2"><div class="f"><label>Nome</label><input id="een"></div><div class="f"><label>Categoria</label><input id="eec"></div></div><div class="fg c3"><div class="f"><label>Unidade</label><select id="eeu"><option>Unidade</option><option>Pacote</option><option>Caixa</option><option>Resma</option><option>Litro</option><option>Kg</option><option>Rolo</option></select></div><div class="f"><label>Qtd atual</label><input id="eeq" type="number" min="0"></div><div class="f"><label>Qtd mínima</label><input id="eem" type="number" min="0"></div></div><div class="mft"><button class="btn" onclick="cm('m-edit')">Cancelar</button><button class="btn p" onclick="saveEdit()">Salvar</button></div></div></div>
+<div class="mo" id="m-ap"><div class="mbox"><div class="mtit">Editar aparelho</div><div class="fg c3"><div class="f"><label>Nº sala</label><input id="eas"></div><div class="f"><label>Departamento</label><input id="ead"></div><div class="f"><label>Localização</label><input id="eal"></div></div><div class="fg c3"><div class="f"><label>Marca</label><input id="eam"></div><div class="f"><label>Modelo</label><input id="eamo"></div><div class="f"><label>Potência</label><input id="eap"></div></div><div class="mft"><button class="btn" onclick="cm('m-ap')">Cancelar</button><button class="btn p" onclick="saveAp()">Salvar</button></div></div></div>
+<div class="mo" id="m-cham"><div class="mbox"><div class="mtit">Concluir chamado</div><div class="fg c2"><div class="f"><label>Data do conserto</label><input id="mcd" type="date"></div><div class="f"><label>Observação</label><input id="mco" placeholder="Detalhes do serviço..."></div></div><div class="mft"><button class="btn" onclick="cm('m-cham')">Cancelar</button><button class="btn p" onclick="saveCham()">Concluir</button></div></div></div>
+<div class="mo" id="m-anot"><div class="mbox"><div class="mtit" id="m-anot-tit">Anotações</div><div id="lanots" style="margin-bottom:13px;max-height:260px;overflow-y:auto"></div><div class="ct" style="margin-bottom:7px">Nova anotação</div><div class="fg c2"><div class="f"><label>Data</label><input id="anotd" type="date"></div><div class="f"><label>Descrição</label><input id="anott" placeholder="O que foi feito..."></div></div><div class="mft"><button class="btn" onclick="cm('m-anot')">Fechar</button><button class="btn p" onclick="addAnot()">Adicionar</button></div></div></div>
+<div class="mo" id="m-cndem"><div class="mbox"><div class="mtit">Concluir demanda</div><div class="f" style="margin-bottom:14px"><label>Data de conclusão</label><input id="mcnd" type="date"></div><div class="mft"><button class="btn" onclick="cm('m-cndem')">Cancelar</button><button class="btn p" onclick="saveCnDem()">Concluir</button></div></div></div>
+<div class="mo" id="m-radm"><div class="mbox lg"><div class="mtit">Relatório de demandas administrativas</div><div class="fg c2" style="margin-bottom:13px"><div class="f"><label>Período início</label><input type="date" id="radi"></div><div class="f"><label>Período fim</label><input type="date" id="radf"></div></div><div style="display:flex;gap:8px;margin-bottom:14px"><button class="btn p" onclick="genRelAdm()">Gerar</button><button class="btn" onclick="prtRelAdm()">Imprimir / PDF</button><button class="btn" style="margin-left:auto" onclick="cm('m-radm')">Fechar</button></div><div id="radmprev"></div></div></div>
+<div class="mo" id="m-efilt"><div class="mbox"><div class="mtit">Editar filtro</div><div class="fg c2"><div class="f"><label>Local</label><input id="efl"></div><div class="f"><label>Descrição</label><input id="efd"></div></div><div class="fg c2"><div class="f"><label>Última troca</label><input id="efdt" type="date"></div><div class="f"><label>Validade (meses)</label><input id="efv" type="number" min="1"></div></div><div class="mft"><button class="btn" onclick="cm('m-efilt')">Cancelar</button><button class="btn p" onclick="saveFilt()">Salvar</button></div></div></div>
+<div class="mo" id="m-eext"><div class="mbox"><div class="mtit">Editar extintor</div><div class="fg c2"><div class="f"><label>Local</label><input id="eel"></div><div class="f"><label>Tipo</label><input id="eet"></div></div><div class="fg c2"><div class="f"><label>Vencimento</label><input id="eed" type="date"></div><div class="f"><label>Nº série</label><input id="ees"></div></div><div class="mft"><button class="btn" onclick="cm('m-eext')">Cancelar</button><button class="btn p" onclick="saveExt()">Salvar</button></div></div></div>
 
 <script>
-const API = '';
-let cache = { itens: [], movimentos: [], responsaveis: [], aparelhos: [], chamados: [], pedidos: [] };
-let movsFiltrados = [];
+const ADM='adm.welliton@jscontadores.com.br';
+let U=null;
+let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],demandas:[],anotacoes:[],filtros:[],extintores:[]};
+let MF=[];
 
-async function api(method, path, body) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
-  if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(API + '/api' + path, opts);
-  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.erro || 'Erro no servidor'); }
-  return r.json();
-}
+// ── UTILS ─────────────────────────────────────────────────
+async function A(m,p,b){const o={method:m,headers:{'Content-Type':'application/json'}};if(b)o.body=JSON.stringify(b);const r=await fetch('/api'+p,o);if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.erro||'Erro');}return r.json();}
+const fd=d=>{if(!d)return'—';const[y,mo,di]=d.split('-');return`${di}/${mo}/${y}`;};
+const fm=v=>{if(!v&&v!==0)return'—';return'R$ '+parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
+const hj=()=>new Date().toISOString().split('T')[0];
+const da=s=>{if(!s)return 9999;const d=new Date(s+'T00:00:00'),h=new Date();h.setHours(0,0,0,0);return Math.round((d-h)/(864e5));};
+const cm=id=>document.getElementById(id).classList.remove('op');
+const sit=i=>i.qtd===0?'<span class="bdg ot">Zerado</span>':i.qtd<=i.min?'<span class="bdg lw">Baixo</span>':'<span class="bdg ok">OK</span>';
 
-async function carregar() {
-  try {
-    const d = await api('GET', '/dados');
-    cache.itens = d.itens || [];
-    cache.movimentos = d.movimentos || [];
-    cache.responsaveis = d.responsaveis || [];
-    cache.pedidos = d.pedidos || [];
-    movsFiltrados = cache.movimentos;
-  } catch(e) { alert('Erro ao conectar ao servidor: ' + e.message); }
-}
+// ── LOGIN ──────────────────────────────────────────────────
+async function login(){const e=document.getElementById('le').value.trim(),s=document.getElementById('ls').value,er=document.getElementById('lerr');er.style.display='none';if(!e||!s){er.textContent='Preencha e-mail e senha.';er.style.display='block';return;}try{U=await A('POST','/login',{email:e,senha:s});sessionStorage.setItem('U',JSON.stringify(U));startApp();}catch(ex){er.textContent=ex.message;er.style.display='block';}}
+function showRec(){document.getElementById('lform').style.display='none';document.getElementById('rform').style.display='block';}
+function showLogin(){document.getElementById('rform').style.display='none';document.getElementById('lform').style.display='block';}
+async function recSenha(){const e=document.getElementById('re').value.trim(),s=document.getElementById('rs').value,er=document.getElementById('lerr');if(!e||!s){er.textContent='Preencha os campos.';er.style.display='block';return;}try{await A('POST','/recuperar-senha',{email:e,nova_senha:s});alert('Senha redefinida com sucesso!');showLogin();}catch(ex){er.textContent=ex.message;er.style.display='block';}}
+function logout(){U=null;sessionStorage.removeItem('U');document.getElementById('app').classList.remove('vis');document.getElementById('login-screen').style.display='flex';document.getElementById('ls').value='';}
 
-function sit(item) {
-  if (item.qtd === 0) return '<span class="badge out">Zerado</span>';
-  if (item.qtd <= item.min) return '<span class="badge low">Baixo</span>';
-  return '<span class="badge ok">OK</span>';
-}
+async function startApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').classList.add('vis');document.getElementById('sip').textContent=window.location.host;document.getElementById('unome').textContent=U.nome;document.getElementById('uemail').textContent=U.email;document.getElementById('uav').textContent=U.nome.charAt(0).toUpperCase();document.getElementById('nubtn').style.display=U.is_admin?'flex':'none';document.getElementById('cadd').style.display=U.is_admin?'block':'none';await load();await loadCli();await loadAdm();rDash();}
 
-// Painel
-function renderDash() {
-  const { itens } = cache;
-  const ok = itens.filter(i => i.qtd > i.min).length;
-  const baixo = itens.filter(i => i.qtd > 0 && i.qtd <= i.min).length;
-  const zero = itens.filter(i => i.qtd === 0).length;
-  document.getElementById('metrics-wrap').innerHTML = `
-    <div class="metric-card"><div class="metric-val">${itens.length}</div><div class="metric-lbl">Total de itens</div></div>
-    <div class="metric-card ok"><div class="metric-val">${ok}</div><div class="metric-lbl">Em nível OK</div></div>
-    <div class="metric-card low"><div class="metric-val">${baixo}</div><div class="metric-lbl">Estoque baixo</div></div>
-    <div class="metric-card out"><div class="metric-val">${zero}</div><div class="metric-lbl">Zerados</div></div>
-  `;
-  const alertas = itens.filter(i => i.qtd <= i.min);
-  document.getElementById('alert-wrap').innerHTML = alertas.length
-    ? `<div class="alert-banner"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-      ${alertas.length} item(ns) com estoque baixo ou zerado — verifique a lista abaixo</div>` : '';
-  const tb = document.getElementById('tbl-dash');
-  tb.innerHTML = alertas.length
-    ? alertas.map(i => `<tr><td>${i.nome}</td><td>${i.cat}</td><td class="mono">${i.qtd} ${i.unid}</td><td class="mono">${i.min}</td><td>${sit(i)}</td></tr>`).join('')
-    : '<tr><td colspan="5" class="empty">Nenhum alerta no momento</td></tr>';
-}
+// ── LOAD ───────────────────────────────────────────────────
+async function load(){const d=await A('GET','/dados');C.itens=d.itens||[];C.movimentos=d.movimentos||[];C.pedidos=d.pedidos||[];C.usuarios=d.usuarios||[];MF=C.movimentos;}
+async function loadCli(){const d=await A('GET','/clima');C.aparelhos=d.aparelhos||[];C.chamados=d.chamados||[];}
+async function loadAdm(){const d=await A('GET','/admin');C.demandas=d.demandas||[];C.anotacoes=d.anotacoes||[];C.filtros=d.filtros||[];C.extintores=d.extintores||[];}
 
-// Estoque
-function renderEstoque() {
-  const busca = (document.getElementById('busca') || { value: '' }).value.toLowerCase();
-  const lista = cache.itens.filter(i => i.nome.toLowerCase().includes(busca) || i.cat.toLowerCase().includes(busca));
-  const tb = document.getElementById('tbl-estoque');
-  tb.innerHTML = lista.length
-    ? lista.map(i => `<tr>
-        <td><strong>${i.nome}</strong></td><td>${i.cat}</td><td>${i.unid}</td>
-        <td class="mono">${i.qtd}</td><td class="mono">${i.min}</td>
-        <td>${sit(i)}</td>
-        <td style="display:flex;gap:6px">
-          <button class="btn sm edit" onclick="abrirEdicao(${i.id})">Editar</button>
-          <button class="btn sm danger" onclick="remover(${i.id})">Remover</button>
-        </td>
-      </tr>`).join('')
-    : '<tr><td colspan="7" class="empty">Nenhum item cadastrado ainda</td></tr>';
-}
+// ── PAINEL ─────────────────────────────────────────────────
+function rDash(){const it=C.itens,ok=it.filter(i=>i.qtd>i.min).length,lw=it.filter(i=>i.qtd>0&&i.qtd<=i.min).length,ot=it.filter(i=>i.qtd===0).length;document.getElementById('mets').innerHTML=`<div class="met"><div class="mv">${it.length}</div><div class="ml">Total</div></div><div class="met ok"><div class="mv">${ok}</div><div class="ml">OK</div></div><div class="met lw"><div class="mv">${lw}</div><div class="ml">Baixo</div></div><div class="met ot"><div class="mv">${ot}</div><div class="ml">Zerado</div></div>`;const al=it.filter(i=>i.qtd<=i.min);document.getElementById('alw').innerHTML=al.length?`<div class="ab2 or"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>${al.length} item(ns) com estoque baixo ou zerado</div>`:'';document.getElementById('td-dash').innerHTML=al.length?al.map(i=>`<tr><td>${i.nome}</td><td>${i.cat}</td><td class="mn">${i.qtd} ${i.unid}</td><td class="mn">${i.min}</td><td>${sit(i)}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">Nenhum alerta</td></tr>';}
 
-async function addItem() {
-  const nome = document.getElementById('f-nome').value.trim();
-  const cat = document.getElementById('f-cat').value.trim() || 'Geral';
-  const unid = document.getElementById('f-unid').value;
-  const qtd = parseInt(document.getElementById('f-qtd').value) || 0;
-  const min = parseInt(document.getElementById('f-min').value) || 0;
-  if (!nome) { alert('Informe o nome do item.'); return; }
-  try {
-    await api('POST', '/itens', { nome, cat, unid, qtd, min });
-    await carregar();
-    renderEstoque();
-    ['f-nome','f-cat','f-qtd','f-min'].forEach(id => document.getElementById(id).value = '');
-  } catch(e) { alert('Erro: ' + e.message); }
-}
+// ── ESTOQUE ────────────────────────────────────────────────
+function rEstoque(){const b=(document.getElementById('busca')||{value:''}).value.toLowerCase(),l=C.itens.filter(i=>i.nome.toLowerCase().includes(b)||i.cat.toLowerCase().includes(b));document.getElementById('td-est').innerHTML=l.length?l.map(i=>`<tr><td><strong>${i.nome}</strong></td><td>${i.cat}</td><td>${i.unid}</td><td class="mn">${i.qtd}</td><td class="mn">${i.min}</td><td>${sit(i)}</td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opEdit(${i.id})">Editar</button><button class="btn sm d" onclick="delItem(${i.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhum item cadastrado</td></tr>';}
+async function addItem(){const n=document.getElementById('fn').value.trim(),c=document.getElementById('fc').value.trim()||'Geral',u=document.getElementById('fu').value,q=parseInt(document.getElementById('fq').value)||0,m=parseInt(document.getElementById('fm').value)||0;if(!n){alert('Informe o nome.');return;}try{await A('POST','/itens',{nome:n,cat:c,unid:u,qtd:q,min:m});await load();rEstoque();['fn','fc','fq','fm'].forEach(id=>document.getElementById(id).value='');}catch(e){alert('Erro: '+e.message);}}
+let eid=null;
+function opEdit(id){const i=C.itens.find(x=>x.id===id);if(!i)return;eid=id;document.getElementById('een').value=i.nome;document.getElementById('eec').value=i.cat;document.getElementById('eeu').value=i.unid;document.getElementById('eeq').value=i.qtd;document.getElementById('eem').value=i.min;document.getElementById('m-edit').classList.add('op');}
+async function saveEdit(){if(!eid)return;const n=document.getElementById('een').value.trim();if(!n){alert('Nome obrigatório.');return;}try{await A('PUT',`/itens/${eid}`,{nome:n,cat:document.getElementById('eec').value.trim()||'Geral',unid:document.getElementById('eeu').value,qtd:parseInt(document.getElementById('eeq').value)||0,min:parseInt(document.getElementById('eem').value)||0});await load();cm('m-edit');rEstoque();rDash();}catch(e){alert('Erro: '+e.message);}}
+async function delItem(id){if(!confirm('Remover este item?'))return;try{await A('DELETE',`/itens/${id}`);await load();rEstoque();rDash();}catch(e){alert('Erro: '+e.message);}}
 
-let editandoId = null;
-function abrirEdicao(id) {
-  const item = cache.itens.find(i => i.id === id);
-  if (!item) return;
-  editandoId = id;
-  document.getElementById('ed-nome').value = item.nome;
-  document.getElementById('ed-cat').value = item.cat;
-  document.getElementById('ed-unid').value = item.unid;
-  document.getElementById('ed-qtd').value = item.qtd;
-  document.getElementById('ed-min').value = item.min;
-  document.getElementById('modal-edicao').classList.add('open');
-}
-function fecharModal() {
-  document.getElementById('modal-edicao').classList.remove('open');
-  editandoId = null;
-}
-async function salvarEdicao() {
-  if (!editandoId) return;
-  const nome = document.getElementById('ed-nome').value.trim();
-  if (!nome) { alert('Informe o nome do item.'); return; }
-  const updates = {
-    nome, cat: document.getElementById('ed-cat').value.trim() || 'Geral',
-    unid: document.getElementById('ed-unid').value,
-    qtd: parseInt(document.getElementById('ed-qtd').value) || 0,
-    min: parseInt(document.getElementById('ed-min').value) || 0,
-  };
-  try {
-    await api('PUT', `/itens/${editandoId}`, updates);
-    await carregar(); fecharModal(); renderEstoque(); renderDash();
-  } catch(e) { alert('Erro: ' + e.message); }
-}
-async function remover(id) {
-  if (!confirm('Deseja remover este item permanentemente?')) return;
-  try { await api('DELETE', `/itens/${id}`); await carregar(); renderEstoque(); renderDash(); }
-  catch(e) { alert('Erro: ' + e.message); }
-}
+// ── USUÁRIOS ───────────────────────────────────────────────
+function rUsrs(){document.getElementById('td-usr').innerHTML=C.usuarios.length?C.usuarios.map(u=>`<tr><td><strong>${u.nome}</strong></td><td style="color:var(--tm);font-family:var(--mn);font-size:11.5px">${u.email}</td><td>${u.setor||'—'}</td><td>${u.is_admin?'<span class="bdg adm">Admin</span>':'<span class="bdg ok">Usuário</span>'}</td><td>${u.email!==ADM?`<button class="btn sm d" onclick="delUsr(${u.id})">Remover</button>`:''}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">Nenhum usuário</td></tr>';}
+async function addUsr(){const n=document.getElementById('un').value.trim(),e=document.getElementById('ue').value.trim(),p=document.getElementById('up').value,s=document.getElementById('us').value.trim();if(!n||!e||!p){alert('Nome, e-mail e senha obrigatórios.');return;}if(p.length<6){alert('Senha com mínimo 6 caracteres.');return;}try{await A('POST','/usuarios',{nome:n,email:e,senha:p,setor:s});await load();rUsrs();rSels();['un','ue','up','us'].forEach(id=>document.getElementById(id).value='');alert('Usuário adicionado!');}catch(e){alert('Erro: '+e.message);}}
+async function delUsr(id){if(!confirm('Remover este usuário?'))return;try{await A('DELETE',`/usuarios/${id}`);await load();rUsrs();}catch(e){alert('Erro: '+e.message);}}
 
-// Responsáveis
-function renderResp() {
-  const tb = document.getElementById('tbl-resp');
-  const { responsaveis } = cache;
-  tb.innerHTML = responsaveis.length
-    ? responsaveis.map(r => `<tr>
-        <td><strong>${r.nome}</strong></td>
-        <td style="color:var(--text-muted)">${r.setor || '—'}</td>
-        <td><button class="btn sm danger" onclick="removerResp(${r.id})">Remover</button></td>
-      </tr>`).join('')
-    : '<tr><td colspan="3" class="empty">Nenhum responsável cadastrado ainda</td></tr>';
-}
-async function addResp() {
-  const nome = document.getElementById('r-nome').value.trim();
-  const setor = document.getElementById('r-setor').value.trim();
-  if (!nome) { alert('Informe o nome do responsável.'); return; }
-  try {
-    await api('POST', '/responsaveis', { nome, setor });
-    await carregar(); renderResp(); renderSelects();
-    document.getElementById('r-nome').value = '';
-    document.getElementById('r-setor').value = '';
-  } catch(e) { alert('Erro: ' + e.message); }
-}
-async function removerResp(id) {
-  if (!confirm('Remover este responsável?')) return;
-  try { await api('DELETE', `/responsaveis/${id}`); await carregar(); renderResp(); renderSelects(); }
-  catch(e) { alert('Erro: ' + e.message); }
-}
+// ── SELECTS ────────────────────────────────────────────────
+function rSels(){const oi=C.itens.length?C.itens.map(i=>`<option value="${i.id}">${i.nome} — ${i.qtd} ${i.unid}</option>`).join(''):'<option>Nenhum item</option>';['ei','si','pi'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=oi;});const or=C.usuarios.length?C.usuarios.map(u=>`<option value="${u.nome}">${u.nome}${u.setor?' — '+u.setor:''}</option>`).join(''):'<option>Nenhum usuário</option>';['sr','pr'].forEach(id=>{const el=document.getElementById(id);if(el){el.innerHTML='<option value="—">Selecione...</option>'+or;if(U)for(let o of el.options)if(o.value===U.nome){el.value=U.nome;break;}}});['ed','sd','pd'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=hj();});rSelPeds();const fi=document.getElementById('fite');if(fi)fi.innerHTML='<option value="">Todos</option>'+C.itens.map(i=>`<option value="${i.nome}">${i.nome}</option>`).join('');const fr=document.getElementById('fres');if(fr)fr.innerHTML='<option value="">Todos</option>'+C.usuarios.map(u=>`<option value="${u.nome}">${u.nome}</option>`).join('');}
+function rSelPeds(){const s=document.getElementById('spsel');if(!s)return;const ab=C.pedidos.filter(p=>p.status==='aberto').sort((a,b)=>(a.data_pedido||'').localeCompare(b.data_pedido||''));s.innerHTML='<option value="">Selecione o pedido...</option>'+ab.map(p=>{const it=C.itens.find(i=>i.id===p.item_id);return`<option value="${p.id}">#${p.id} — ${p.data_pedido||''} — ${it?it.nome:p.item_nome||'?'} (${p.qtd}) — ${p.solicitante}</option>`;}).join('');}
+function togPed(){const c=document.getElementById('stped').checked;document.getElementById('sblped').style.display=c?'block':'none';if(c)rSelPeds();else{document.getElementById('spinfo').style.display='none';document.getElementById('sq').value='';}}
+function preePed(){const id=parseInt(document.getElementById('spsel').value);const p=C.pedidos.find(x=>x.id===id);if(!p){document.getElementById('spinfo').style.display='none';return;}const it=C.itens.find(i=>i.id===p.item_id);if(it)document.getElementById('si').value=it.id;document.getElementById('sq').value=p.qtd;const sr=document.getElementById('sr');if(sr&&p.solicitante)for(let o of sr.options)if(o.value===p.solicitante){sr.value=p.solicitante;break;}const inf=document.getElementById('spinfo');inf.style.display='block';inf.innerHTML=`📋 Pedido #${p.id} — ${fd(p.data_pedido)} por <strong>${p.solicitante}</strong>${p.obs?' — "'+p.obs+'"':''}`;}
 
-// Selects de entrada/saída e filtros de histórico
-function renderSelects() {
-  const optsItens = cache.itens.length
-    ? cache.itens.map(i => `<option value="${i.id}">${i.nome} — ${i.qtd} ${i.unid}</option>`).join('')
-    : '<option>Nenhum item cadastrado</option>';
-  ['e-item','s-item','ped-item'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = optsItens; });
+// ── MOVIMENTOS ─────────────────────────────────────────────
+async function reg(t){const pe=t==='en',pp=pe?'e':'s';const iid=parseInt(document.getElementById(pp[0]+'i').value),q=parseInt(document.getElementById(pp[0]+'q').value),dt=document.getElementById(pp[0]+'d').value,ob=document.getElementById(pp[0]+'o').value;let resp=U?U.nome:'—';if(!pe){const sr=document.getElementById('sr');if(sr&&sr.value&&sr.value!=='—')resp=sr.value;}if(!q||q<1){alert('Quantidade inválida.');return;}const tp=pe?'en':'sa';const hasPed=!pe&&document.getElementById('stped')?.checked;const pedId=hasPed?parseInt(document.getElementById('spsel').value):null;if(hasPed&&!pedId){alert('Selecione o pedido.');return;}try{await A('POST','/movimentos',{tipo:tp,itemId:iid,qtd:q,data:dt,obs:ob,resp});if(pedId)await A('PUT',`/pedidos/${pedId}`,{status:'aberto'===''?'et':'et',data_entrega:dt});if(pedId)await A('PUT',`/pedidos/${pedId}`,{status:'et',data_entrega:dt});await load();document.getElementById(pp[0]+'q').value='';document.getElementById(pp[0]+'o').value='';if(!pe){const ck=document.getElementById('stped');if(ck){ck.checked=false;togPed();}}rSels();alert(`${pe?'Entrada':'Saída'} registrada!${pedId?'\nPedido marcado como entregue.':''}`);}catch(e){alert('Erro: '+e.message);}}
 
-  const optsResp = cache.responsaveis.length
-    ? cache.responsaveis.map(r => `<option value="${r.nome}">${r.nome}${r.setor ? ' — ' + r.setor : ''}</option>`).join('')
-    : '<option>Nenhum responsável cadastrado</option>';
-  const sr = document.getElementById('s-resp'); if(sr) sr.innerHTML = '<option value="—">Selecione...</option>' + optsResp;
-  const er = document.getElementById('e-resp'); if(er) er.innerHTML = '<option value="—">Selecione...</option>' + optsResp;
-  const pr = document.getElementById('ped-resp'); if(pr) pr.innerHTML = '<option value="—">Selecione...</option>' + optsResp;
+// ── HISTÓRICO ──────────────────────────────────────────────
+function apFilt(){const p=document.getElementById('fper').value,in2=document.getElementById('fite').value,re=document.getElementById('fres').value,ti=document.getElementById('ftip')?.value||'';document.getElementById('fdats').style.display=p==='pe'?'grid':'none';const h=new Date();h.setHours(0,0,0,0);let mv=[...C.movimentos];if(p==='hj')mv=mv.filter(m=>m.data===h.toISOString().split('T')[0]);else if(p==='sm'){const ini=new Date(h);ini.setDate(h.getDate()-h.getDay());mv=mv.filter(m=>m.data>=ini.toISOString().split('T')[0]);}else if(p==='ms'){const s=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}`;mv=mv.filter(m=>m.data&&m.data.startsWith(s));}else if(p==='pe'){const i=document.getElementById('fdi').value,f=document.getElementById('fdf').value;if(i)mv=mv.filter(m=>m.data>=i);if(f)mv=mv.filter(m=>m.data<=f);}if(in2)mv=mv.filter(m=>m.item_nome===in2);if(re)mv=mv.filter(m=>m.resp===re);if(ti)mv=mv.filter(m=>m.tipo===ti);MF=mv;rHist();}
+function limFilt(){['fper','fite','fres','ftip'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});['fdi','fdf'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('fdats').style.display='none';MF=C.movimentos;rHist();}
+function rHist(){const tb=document.getElementById('td-hist'),cnt=document.getElementById('fcnt');if(cnt)cnt.textContent=MF.length!==C.movimentos.length?`${MF.length} de ${C.movimentos.length} registros`:`${C.movimentos.length} registros`;const tnm={en:'Entrada',sa:'Saída'};tb.innerHTML=MF.length?MF.map(m=>`<tr><td class="mn">${m.data||'—'}</td><td><span class="bdg ${m.tipo}">${tnm[m.tipo]||m.tipo}</span></td><td>${m.item_nome}</td><td class="mn">${m.qtd}</td><td>${m.resp||'—'}</td><td style="color:var(--tm)">${m.obs||'—'}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">Nenhum movimento</td></tr>';}
+function expCSV(){const r=[['Data','Tipo','Item','Quantidade','Responsável','Observação'],...MF.map(m=>[m.data,m.tipo,m.item_nome,m.qtd,m.resp,m.obs])];const csv=r.map(x=>x.map(v=>`"${v||''}"`).join(',')).join('\n');const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='historico_estoque.csv';a.click();}
 
-  const hoje = new Date().toISOString().split('T')[0];
-  ['e-data','s-data','ped-data'].forEach(id => { const el = document.getElementById(id); if(el) el.value = hoje; });
+// ── BACKUP ESTOQUE ─────────────────────────────────────────
+function expBkpEst(){const d={versao:'1.0',exportado_em:new Date().toISOString(),itens:C.itens,movimentos:C.movimentos};const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(d,null,2));a.download=`backup_estoque_${hj()}.json`;a.click();}
+async function impBkpEst(ev){const f=ev.target.files[0];if(!f)return;const tx=await f.text();let d;try{d=JSON.parse(tx);}catch(e){alert('Arquivo inválido.');return;}if(!d.itens){alert('Backup inválido.');return;}if(!confirm(`Importar backup?\n• ${d.itens.length} itens\n• ${d.movimentos.length} movimentos\n\nDados existentes NÃO serão apagados.`)){ev.target.value='';return;}let ok=0,er=0;for(const i of d.itens){try{await A('POST','/itens',{nome:i.nome,cat:i.cat,unid:i.unid,qtd:i.qtd,min:i.min});ok++;}catch(e){er++;}}await load();for(const m of d.movimentos){const it=C.itens.find(x=>x.nome===m.item_nome);if(!it)continue;try{await fetch('/api/movimentos/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo:m.tipo,itemId:it.id,qtd:m.qtd,data:m.data,resp:m.resp,obs:m.obs})});}catch(e){}}await load();rEstoque();rDash();ev.target.value='';alert(`Importado! ${ok} itens adicionados.${er?' '+er+' ignorados.':''}`);}
 
-  // Atualiza select de pedidos em aberto na tela de saída
-  renderSelectPedidos();
+// ── PEDIDOS ────────────────────────────────────────────────
+function rPeds(){const fil=document.getElementById('pfil')?.value??'ab';const l=fil===''?[...C.pedidos]:C.pedidos.filter(p=>p.status===fil);l.sort((a,b)=>(a.data_pedido||'').localeCompare(b.data_pedido||''));document.getElementById('td-ped').innerHTML=l.length?l.map(p=>{const it=C.itens.find(i=>i.id===p.item_id);const et=p.status==='et';return`<tr style="${et?'opacity:.55':''}"><td class="mn" style="color:var(--tm)">#${p.id}</td><td class="mn">${p.data_pedido||'—'}</td><td><strong>${it?it.nome:p.item_nome||'?'}</strong></td><td class="mn">${p.qtd}</td><td>${p.solicitante||'—'}</td><td style="color:var(--tm);font-size:12px">${p.obs||'—'}</td><td>${et?`<span class="bdg et">Entregue</span>`:`<span class="bdg lw">Em aberto</span>`}</td><td style="display:flex;gap:4px">${!et?`<button class="btn sm s" onclick="entPed(${p.id})">Entregar</button>`:''}<button class="btn sm d" onclick="delPed(${p.id})">✕</button></td></tr>`;}).join(''):'<tr><td colspan="8" class="empty">Nenhum pedido</td></tr>';}
+async function addPed(){const iid=parseInt(document.getElementById('pi').value),q=parseInt(document.getElementById('pq').value)||1,sl=document.getElementById('pr').value,dt=document.getElementById('pd').value,ob=document.getElementById('po').value.trim();if(!iid){alert('Selecione um item.');return;}if(!sl||sl==='—'){alert('Selecione o solicitante.');return;}if(!dt){alert('Informe a data.');return;}const it=C.itens.find(i=>i.id===iid);try{await A('POST','/pedidos',{item_id:iid,item_nome:it?.nome||'',qtd:q,solicitante:sl,data_pedido:dt,obs:ob,status:'ab'});await load();rPeds();rSelPeds();document.getElementById('pq').value='1';document.getElementById('po').value='';alert('Pedido registrado!');}catch(e){alert('Erro: '+e.message);}}
+async function entPed(id){try{await A('PUT',`/pedidos/${id}`,{status:'et',data_entrega:hj()});await load();rPeds();rSelPeds();}catch(e){alert('Erro: '+e.message);}}
+async function delPed(id){if(!confirm('Remover pedido?'))return;try{await A('DELETE',`/pedidos/${id}`);await load();rPeds();rSelPeds();}catch(e){alert('Erro: '+e.message);}}
 
-  // Filtros do histórico
-  const fi = document.getElementById('f-item-hist');
-  if(fi) {
-    fi.innerHTML = '<option value="">Todos os itens</option>' +
-      cache.itens.map(i => `<option value="${i.nome}">${i.nome}</option>`).join('');
-  }
-  const fr = document.getElementById('f-resp-hist');
-  if(fr) {
-    fr.innerHTML = '<option value="">Todos</option>' +
-      cache.responsaveis.map(r => `<option value="${r.nome}">${r.nome}${r.setor ? ' — ' + r.setor : ''}</option>`).join('');
-  }
-}
+// ── CLIMATIZAÇÃO ───────────────────────────────────────────
+function rAps(){document.getElementById('td-ap').innerHTML=C.aparelhos.length?C.aparelhos.map(a=>`<tr><td><strong>${a.sala}</strong></td><td>${a.departamento}</td><td style="color:var(--tm)">${a.localizacao||'—'}</td><td>${a.marca}</td><td>${a.modelo||'—'}</td><td class="mn">${a.potencia}</td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opAp(${a.id})">Editar</button><button class="btn sm d" onclick="delAp(${a.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhum aparelho</td></tr>';const s=document.getElementById('cha');if(s)s.innerHTML='<option value="">Selecione...</option>'+C.aparelhos.map(a=>`<option value="${a.id}">Sala ${a.sala} — ${a.departamento}</option>`).join('');}
+async function addAp(){const s=document.getElementById('aps').value.trim(),d=document.getElementById('apd').value.trim(),l=document.getElementById('apl').value.trim(),m=document.getElementById('apm').value.trim(),mo=document.getElementById('apmo').value.trim(),p=document.getElementById('app').value.trim();if(!s||!d||!m||!p){alert('Preencha sala, departamento, marca e potência.');return;}try{await A('POST','/aparelhos',{sala:s,departamento:d,localizacao:l,marca:m,modelo:mo,potencia:p});await loadCli();rAps();['aps','apd','apl','apm','apmo','app'].forEach(id=>document.getElementById(id).value='');}catch(e){alert('Erro: '+e.message);}}
+let eapid=null;
+function opAp(id){const a=C.aparelhos.find(x=>x.id===id);if(!a)return;eapid=id;document.getElementById('eas').value=a.sala;document.getElementById('ead').value=a.departamento;document.getElementById('eal').value=a.localizacao||'';document.getElementById('eam').value=a.marca;document.getElementById('eamo').value=a.modelo||'';document.getElementById('eap').value=a.potencia;document.getElementById('m-ap').classList.add('op');}
+async function saveAp(){if(!eapid)return;try{await A('PUT',`/aparelhos/${eapid}`,{sala:document.getElementById('eas').value.trim(),departamento:document.getElementById('ead').value.trim(),localizacao:document.getElementById('eal').value.trim(),marca:document.getElementById('eam').value.trim(),modelo:document.getElementById('eamo').value.trim(),potencia:document.getElementById('eap').value.trim()});await loadCli();cm('m-ap');rAps();}catch(e){alert('Erro: '+e.message);}}
+async function delAp(id){if(!confirm('Remover aparelho?'))return;try{await A('DELETE',`/aparelhos/${id}`);await loadCli();rAps();}catch(e){alert('Erro: '+e.message);}}
+function preeAp(){const id=parseInt(document.getElementById('cha').value);const a=C.aparelhos.find(x=>x.id===id);document.getElementById('chd').value=a?a.departamento:'';document.getElementById('chm').value=a?a.marca:'';document.getElementById('chp').value=a?a.potencia:'';}
+function rChams(){const fil=document.getElementById('chfil')?.value||'';const l=fil?C.chamados.filter(c=>c.status===fil):C.chamados;const tn={corretiva:'Corretiva',preventiva:'Preventiva'};document.getElementById('td-cham').innerHTML=l.length?l.map(c=>`<tr><td class="mn">${c.data_chamado||'—'}</td><td><strong>${c.sala||'—'}</strong></td><td>${c.departamento||'—'}</td><td><span class="bdg ${c.tipo==='corretiva'?'co':'pv'}">${tn[c.tipo]||c.tipo}</span></td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.problema||'—'}</td><td><span class="bdg ${c.status==='aberto'||c.status==='ab'?'ab':'cn'}">${c.status==='aberto'||c.status==='ab'?'Em aberto':'Concluído'}</span></td><td style="display:flex;gap:4px">${c.status==='aberto'||c.status==='ab'?`<button class="btn sm p" onclick="opCham(${c.id})">Concluir</button>`:`<span class="mn" style="font-size:11px;color:var(--tm)">${c.data_conserto||''}</span>`}<button class="btn sm d" onclick="delCham(${c.id})">✕</button></td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhum chamado</td></tr>';}
+async function addCham(){const aid=parseInt(document.getElementById('cha').value),t=document.getElementById('cht').value,pr=document.getElementById('chpr').value.trim(),dc=document.getElementById('chdc').value,ds=document.getElementById('chds').value,ob=document.getElementById('cho').value.trim();if(!aid){alert('Selecione um aparelho.');return;}if(!pr){alert('Descreva o problema.');return;}if(!dc){alert('Informe a data do chamado.');return;}const ap=C.aparelhos.find(x=>x.id===aid);try{await A('POST','/chamados',{aparelho_id:aid,tipo:t,problema:pr,data_chamado:dc,data_conserto:ds||null,obs:ob,sala:ap.sala,departamento:ap.departamento,marca:ap.marca,modelo:ap.modelo,potencia:ap.potencia,status:ds?'cn':'ab'});await loadCli();rChams();['chpr','chds','cho'].forEach(id=>document.getElementById(id).value='');document.getElementById('cha').value='';preeAp();alert('Chamado registrado!');}catch(e){alert('Erro: '+e.message);}}
+let ecid=null;
+function opCham(id){ecid=id;document.getElementById('mcd').value=hj();document.getElementById('mco').value='';document.getElementById('m-cham').classList.add('op');}
+async function saveCham(){if(!ecid)return;const d=document.getElementById('mcd').value,o=document.getElementById('mco').value;if(!d){alert('Informe a data do conserto.');return;}try{await A('PUT',`/chamados/${ecid}`,{status:'cn',data_conserto:d,obs:o});await loadCli();cm('m-cham');rChams();}catch(e){alert('Erro: '+e.message);}}
+async function delCham(id){if(!confirm('Remover chamado?'))return;try{await A('DELETE',`/chamados/${id}`);await loadCli();rChams();}catch(e){alert('Erro: '+e.message);}}
 
-function renderSelectPedidos() {
-  const sel = document.getElementById('s-pedido-sel');
-  if (!sel) return;
-  const abertos = (cache.pedidos || []).filter(p => p.status === 'aberto')
-    .sort((a,b) => (a.data_pedido||'').localeCompare(b.data_pedido||''));
-  sel.innerHTML = '<option value="">Selecione o pedido...</option>' +
-    abertos.map(p => {
-      const item = cache.itens.find(i => i.id === p.item_id);
-      const nomeItem = item ? item.nome : p.item_nome || '?';
-      return `<option value="${p.id}">#${p.id} — ${p.data_pedido||''} — ${nomeItem} (${p.qtd}) — ${p.solicitante}</option>`;
-    }).join('');
-}
+// ── BACKUP CLIMA ───────────────────────────────────────────
+function expBkpCli(){const d={versao:'1.0',modulo:'climatizacao',exportado_em:new Date().toISOString(),aparelhos:C.aparelhos,chamados:C.chamados};const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(d,null,2));a.download=`backup_clima_${hj()}.json`;a.click();}
+async function impBkpCli(ev){const f=ev.target.files[0];if(!f)return;const tx=await f.text();let d;try{d=JSON.parse(tx);}catch(e){alert('Arquivo inválido.');return;}if(!d.aparelhos){alert('Backup de clima inválido.');return;}if(!confirm(`Importar backup de climatização?\n• ${d.aparelhos.length} aparelhos\n• ${d.chamados.length} chamados\n\nDados existentes NÃO serão apagados.`)){ev.target.value='';return;}for(const a of d.aparelhos){try{await A('POST','/aparelhos',{sala:a.sala,departamento:a.departamento,localizacao:a.localizacao||'',marca:a.marca,modelo:a.modelo||'',potencia:a.potencia});}catch(e){}}await loadCli();for(const c of d.chamados){const ap=C.aparelhos.find(x=>x.sala===c.sala&&x.departamento===c.departamento);try{await A('POST','/chamados',{aparelho_id:ap?.id||null,tipo:c.tipo,problema:c.problema,data_chamado:c.data_chamado,data_conserto:c.data_conserto||null,obs:c.obs||'',sala:c.sala,departamento:c.departamento,marca:c.marca||'',modelo:c.modelo||'',potencia:c.potencia||'',status:c.status||'ab'});}catch(e){}}await loadCli();rAps();rChams();ev.target.value='';alert('Backup de clima importado!');}
 
-function togglePedido() {
-  const checked = document.getElementById('s-tem-pedido').checked;
-  document.getElementById('s-bloco-pedido').style.display = checked ? 'block' : 'none';
-  if (checked) renderSelectPedidos();
-  else {
-    document.getElementById('s-pedido-info').style.display = 'none';
-    // Limpa preenchimento automático
-    document.getElementById('s-qtd').value = '';
-  }
-}
+// ── RELATÓRIO CLIMA ────────────────────────────────────────
+const MNM=['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function genRel(){const emp=document.getElementById('rlemp').value||'JS Contadores',mes=parseInt(document.getElementById('rlmes').value),ano=parseInt(document.getElementById('rlano').value);const cl=C.chamados.filter(c=>{const[y,m]=(c.data_chamado||'').split('-');return parseInt(y)===ano&&parseInt(m)===mes;}).sort((a,b)=>(a.data_chamado||'').localeCompare(b.data_chamado||''));const pv=cl.filter(c=>c.tipo==='preventiva').length,cr=cl.filter(c=>c.tipo==='corretiva').length,cn=cl.filter(c=>c.status==='cn'||c.status==='concluido').length;const lns=cl.map(c=>`<tr style="border-bottom:1px solid #e0ddd6"><td style="padding:7px 9px;font-size:12px;white-space:nowrap">${fd(c.data_chamado)}</td><td style="padding:7px 9px;font-size:12px;text-transform:capitalize">${c.tipo}</td><td style="padding:7px 9px;font-size:12px">${c.sala} — ${c.departamento}</td><td style="padding:7px 9px;font-size:12px">${c.marca}${c.modelo?' '+c.modelo:''} ${c.potencia}</td><td style="padding:7px 9px;font-size:12px">${c.problema}${c.obs?' — '+c.obs:''}</td></tr>`).join('');const html=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding-bottom:12px;border-bottom:2px solid #1a1916"><div><div style="font-size:18px;font-weight:600">Relatório de Manutenções – Ar Condicionado</div><div style="font-size:13px;color:#6b6860;margin-top:3px">Empresa: ${emp} | Período: ${MNM[mes]} de ${ano}</div></div><div style="font-size:11px;color:#a8a49e">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div></div><div style="margin-bottom:16px"><div style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:#6b6860;margin-bottom:7px">Resumo das Atividades</div><p style="font-size:13px">Durante ${MNM[mes]} de ${ano}, foram realizadas <strong>${cl.length}</strong> manutenção(ões): <strong>${pv}</strong> preventiva(s) e <strong>${cr}</strong> corretiva(s).</p></div><div style="margin-bottom:16px"><div style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:#6b6860;margin-bottom:7px">Manutenções Realizadas</div>${cl.length?`<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f5f4f0"><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Data</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Tipo</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Sala/Setor</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Equipamento</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Descrição</th></tr></thead><tbody>${lns}</tbody></table>`:'<p style="color:#a8a49e">Nenhuma manutenção no período.</p>'}</div><div style="display:flex;gap:12px"><div style="flex:1;background:#f5f4f0;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600">${cl.length}</div><div style="font-size:10px;color:#6b6860;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Total</div></div><div style="flex:1;background:#eaf5ef;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600;color:#1a7f4e">${pv}</div><div style="font-size:10px;color:#1a7f4e;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Preventivas</div></div><div style="flex:1;background:#fdecea;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600;color:#c0392b">${cr}</div><div style="font-size:10px;color:#c0392b;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Corretivas</div></div><div style="flex:1;background:#eef2fd;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600;color:#2a5bd7">${cn}</div><div style="font-size:10px;color:#2a5bd7;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Concluídos</div></div></div>`;document.getElementById('relcnt').innerHTML=html;document.getElementById('relprv').style.display='block';}
+function prtRel(){if(document.getElementById('relprv').style.display==='none'){alert('Gere o relatório antes de imprimir.');return;}const cnt=document.getElementById('relcnt').innerHTML;const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'IBM Plex Sans',sans-serif;padding:32px 40px;color:#1a1916;font-size:13px}@page{size:A4;margin:18mm}@media print{body{padding:0}}</style></head><body>${cnt}</body></html>`);w.document.close();setTimeout(()=>w.print(),500);}
 
-function preencherDoPedido() {
-  const id = parseInt(document.getElementById('s-pedido-sel').value);
-  const ped = (cache.pedidos || []).find(p => p.id === id);
-  if (!ped) { document.getElementById('s-pedido-info').style.display = 'none'; return; }
-  const item = cache.itens.find(i => i.id === ped.item_id);
-  // Preenche campos da saída
-  if (item) {
-    const sel = document.getElementById('s-item');
-    if (sel) sel.value = item.id;
-  }
-  document.getElementById('s-qtd').value = ped.qtd;
-  const sr = document.getElementById('s-resp');
-  if (sr && ped.solicitante) {
-    for (let opt of sr.options) { if (opt.value === ped.solicitante) { sr.value = ped.solicitante; break; } }
-  }
-  // Info box
-  const info = document.getElementById('s-pedido-info');
-  info.style.display = 'block';
-  info.innerHTML = `📋 Pedido #${ped.id} — solicitado em ${ped.data_pedido||'?'} por <strong>${ped.solicitante}</strong>${ped.obs ? ` — "${ped.obs}"` : ''}`;
-}
+// ── DEMANDAS ───────────────────────────────────────────────
+function togAprov(){const c=document.getElementById('dmca').checked;document.getElementById('dmapblk').style.display=c?'block':'none';}
+async function addDem(){const t=document.getElementById('dmt').value.trim(),s=document.getElementById('dms').value.trim(),d=document.getElementById('dmd').value,de=document.getElementById('dmde').value.trim(),ca=document.getElementById('dmca').checked,v=ca?parseFloat(document.getElementById('dmv').value)||null:null,dso=ca?document.getElementById('dmdo').value:null,dap=ca?document.getElementById('dmda').value:null;if(!t){alert('Informe o que foi solicitado.');return;}if(!d){alert('Informe a data da solicitação.');return;}try{await A('POST','/demandas',{titulo:t,descricao:de,solicitante:s,data_solicitacao:d,precisa_aprovacao:ca,valor_solicitado:v,data_sol_orcamento:dso||null,data_aprov_orcamento:dap||null});await loadAdm();rDems();['dmt','dms','dmde','dmv','dmdo','dmda'].forEach(id=>document.getElementById(id).value='');document.getElementById('dmca').checked=false;togAprov();alert('Demanda registrada!');}catch(e){alert('Erro: '+e.message);}}
+function rDems(){const fil=document.getElementById('dmfil')?.value??'ab';const l=fil===''?[...C.demandas]:C.demandas.filter(d=>d.status===fil);l.sort((a,b)=>(a.data_solicitacao||'').localeCompare(b.data_solicitacao||''));const cont=document.getElementById('ldems');if(!l.length){cont.innerHTML='<div class="empty">Nenhuma demanda encontrada</div>';return;}cont.innerHTML=l.map(d=>{const anots=C.anotacoes.filter(a=>a.demanda_id===d.id).sort((a,b)=>(a.data||'').localeCompare(b.data||''));const cn=d.status==='cn'||d.status==='concluido';let dap='—';if(d.data_sol_orcamento&&d.data_aprov_orcamento){const s=new Date(d.data_sol_orcamento+'T00:00:00'),ap=new Date(d.data_aprov_orcamento+'T00:00:00');dap=Math.round((ap-s)/(864e5))+' dias';}return`<div class="card" style="margin-bottom:11px;${cn?'opacity:.7':''}"><div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:9px"><div style="flex:1"><div style="font-weight:600;font-size:15px">${d.titulo}</div><div style="font-size:12px;color:var(--tm);margin-top:2px">Solicitado em ${fd(d.data_solicitacao)}${d.solicitante?' por '+d.solicitante:''}${cn?' · Concluído em '+fd(d.data_conclusao):''}</div></div><div style="display:flex;gap:5px;flex-shrink:0">${!cn?`<button class="btn sm s" onclick="opCnDem(${d.id})">Concluir</button>`:''}<button class="btn sm e" onclick="opAnots(${d.id})">Anotações (${anots.length})</button><button class="btn sm d" onclick="delDem(${d.id})">✕</button></div></div>${d.precisa_aprovacao?`<div style="font-size:12px;color:var(--tm);padding:7px 11px;background:var(--acb);border-radius:8px;margin-bottom:7px">💰 Valor: ${fm(d.valor_solicitado)} · Sol.Orç.: ${fd(d.data_sol_orcamento)} · Aprovação: ${fd(d.data_aprov_orcamento)} · Prazo: ${dap}</div>`:''} ${d.descricao?`<div style="font-size:13px;color:var(--tm);margin-bottom:7px">${d.descricao}</div>`:''} ${anots.length?`<div>${anots.map(a=>`<div class="anot"><div class="anot-d">${fd(a.data)}</div><div class="anot-t">${a.texto}</div></div>`).join('')}</div>`:'<div style="font-size:12px;color:var(--th)">Nenhuma anotação ainda. Clique em "Anotações" para adicionar.</div>'}</div>`;}).join('');}
+let danot=null;
+function opAnots(id){danot=id;const d=C.demandas.find(x=>x.id===id);document.getElementById('m-anot-tit').textContent=`Anotações — ${d?.titulo||''}`;document.getElementById('anotd').value=hj();document.getElementById('anott').value='';rListAnots();document.getElementById('m-anot').classList.add('op');}
+function rListAnots(){const anots=C.anotacoes.filter(a=>a.demanda_id===danot).sort((a,b)=>(a.data||'').localeCompare(b.data||''));document.getElementById('lanots').innerHTML=anots.length?anots.map(a=>`<div class="anot"><div style="display:flex;align-items:center;gap:8px"><div class="anot-d">${fd(a.data)}</div><button class="btn sm d" onclick="delAnot(${a.id})" style="margin-left:auto;padding:2px 7px;font-size:11px">✕</button></div><div class="anot-t">${a.texto}</div></div>`).join(''):'<div style="font-size:13px;color:var(--th);text-align:center;padding:11px">Nenhuma anotação</div>';}
+async function addAnot(){if(!danot)return;const t=document.getElementById('anott').value.trim(),d=document.getElementById('anotd').value;if(!t){alert('Descreva a anotação.');return;}try{await A('POST','/anotacoes',{demanda_id:danot,texto:t,data:d});await loadAdm();rListAnots();rDems();document.getElementById('anott').value='';}catch(e){alert('Erro: '+e.message);}}
+async function delAnot(id){if(!confirm('Remover esta anotação?'))return;try{await A('DELETE',`/anotacoes/${id}`);await loadAdm();rListAnots();rDems();}catch(e){alert('Erro: '+e.message);}}
+let dcnid=null;
+function opCnDem(id){dcnid=id;document.getElementById('mcnd').value=hj();document.getElementById('m-cndem').classList.add('op');}
+async function saveCnDem(){if(!dcnid)return;const d=document.getElementById('mcnd').value;if(!d){alert('Informe a data.');return;}try{await A('PUT',`/demandas/${dcnid}`,{status:'cn',data_conclusao:d});await loadAdm();cm('m-cndem');rDems();}catch(e){alert('Erro: '+e.message);}}
+async function delDem(id){if(!confirm('Remover demanda e todas as anotações?'))return;try{await A('DELETE',`/demandas/${id}`);await loadAdm();rDems();}catch(e){alert('Erro: '+e.message);}}
 
-async function registrar(tipo) {
-  const p = tipo === 'entrada' ? 'e' : 's';
-  const itemId = parseInt(document.getElementById(p + '-item').value);
-  const qtd = parseInt(document.getElementById(p + '-qtd').value);
-  const data = document.getElementById(p + '-data').value;
-  const obs = document.getElementById(p + '-obs').value;
-  const resp = document.getElementById(p + '-resp') ? document.getElementById(p + '-resp').value : '—';
-  if (!qtd || qtd < 1) { alert('Informe uma quantidade válida.'); return; }
+// ── RELATÓRIO ADM ──────────────────────────────────────────
+function abrRelAdm(){const h=new Date();document.getElementById('radi').value=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}-01`;document.getElementById('radf').value=hj();document.getElementById('radmprev').innerHTML='';document.getElementById('m-radm').classList.add('op');}
+function genRelAdm(){const ini=document.getElementById('radi').value,fim=document.getElementById('radf').value;const l=C.demandas.filter(d=>{const dt=d.data_solicitacao||'';return(!ini||dt>=ini)&&(!fim||dt<=fim);}).sort((a,b)=>(a.data_solicitacao||'').localeCompare(b.data_solicitacao||''));let html=`<div style="border-bottom:2px solid #1a1916;margin-bottom:16px;padding-bottom:11px"><div style="font-size:17px;font-weight:600">Relatório de Demandas Administrativas</div><div style="font-size:12px;color:#6b6860;margin-top:3px">Período: ${fd(ini)} a ${fd(fim)}</div></div>`;if(!l.length){html+='<p style="color:#a8a49e;font-size:13px">Nenhuma demanda no período.</p>';}else{html+=`<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#f5f4f0"><th style="padding:7px 9px;text-align:left;border-bottom:2px solid #e0ddd6">Demanda</th><th style="padding:7px 9px;text-align:left;border-bottom:2px solid #e0ddd6">Solicitação</th><th style="padding:7px 9px;text-align:left;border-bottom:2px solid #e0ddd6">Conclusão</th><th style="padding:7px 9px;text-align:left;border-bottom:2px solid #e0ddd6">Aprovação</th><th style="padding:7px 9px;text-align:left;border-bottom:2px solid #e0ddd6">Valor</th><th style="padding:7px 9px;text-align:left;border-bottom:2px solid #e0ddd6">Prazo Aprov.</th></tr></thead><tbody>`;html+=l.map(d=>{let dap='—';if(d.data_sol_orcamento&&d.data_aprov_orcamento){const s=new Date(d.data_sol_orcamento+'T00:00:00'),a=new Date(d.data_aprov_orcamento+'T00:00:00');dap=Math.round((a-s)/(864e5))+' dias';}return`<tr style="border-bottom:1px solid #e0ddd6"><td style="padding:7px 9px;font-weight:500">${d.titulo}</td><td style="padding:7px 9px">${fd(d.data_solicitacao)}</td><td style="padding:7px 9px">${fd(d.data_conclusao)}</td><td style="padding:7px 9px">${d.precisa_aprovacao?'Sim':'Não'}</td><td style="padding:7px 9px">${fm(d.valor_solicitado)}</td><td style="padding:7px 9px">${dap}</td></tr>`;}).join('');html+=`</tbody></table>`;}document.getElementById('radmprev').innerHTML=html;}
+function prtRelAdm(){const cnt=document.getElementById('radmprev').innerHTML;if(!cnt){alert('Gere o relatório antes.');return;}const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'IBM Plex Sans',sans-serif;padding:32px;color:#1a1916}@page{size:A4;margin:18mm}@media print{body{padding:0}}</style></head><body>${cnt}</body></html>`);w.document.close();setTimeout(()=>w.print(),500);}
 
-  // Verifica se está vinculado a um pedido
-  const temPedido = tipo === 'saida' && document.getElementById('s-tem-pedido')?.checked;
-  const pedidoId = temPedido ? parseInt(document.getElementById('s-pedido-sel').value) : null;
-  if (temPedido && !pedidoId) { alert('Selecione o pedido em aberto.'); return; }
+// ── VENCIMENTOS ────────────────────────────────────────────
+function stFilt(f){const prox=new Date(f.data_troca+'T00:00:00');prox.setMonth(prox.getMonth()+parseInt(f.meses_validade));const dias=Math.round((prox-new Date())/(864e5));if(dias<0)return{s:'al',l:'Vencido'};if(dias<=7)return{s:'al',l:`Vence em ${dias}d`};if(dias<=21)return{s:'av',l:`Vence em ${dias}d`};return{s:'ok',l:`OK — ${dias}d`};}
+function stExt(e){const dias=da(e.data_vencimento);if(dias<0)return{s:'al',l:'Vencido'};if(dias<=30)return{s:'al',l:`Vence em ${dias}d`};if(dias<=60)return{s:'av',l:`Vence em ${dias}d`};return{s:'ok',l:`OK — ${dias}d`};}
+function rVencs(){const al=document.getElementById('valerts');const fa=C.filtros.filter(f=>stFilt(f).s==='al'),ea=C.extintores.filter(e=>stExt(e).s==='al');let h='';if(fa.length)h+=`<div class="ab2 rd" style="margin-bottom:8px">⚠️ ${fa.length} filtro(s) de água vencido(s) ou próximo do vencimento — solicitar troca!</div>`;if(ea.length)h+=`<div class="ab2 rd" style="margin-bottom:8px">🧯 ${ea.length} extintor(es) vencido(s) ou vencendo em até 30 dias — solicitar recarga!</div>`;al.innerHTML=h;const tbf=document.getElementById('td-filt');tbf.innerHTML=C.filtros.length?C.filtros.map(f=>{const prox=new Date(f.data_troca+'T00:00:00');prox.setMonth(prox.getMonth()+parseInt(f.meses_validade));const ps=prox.toISOString().split('T')[0];const st=stFilt(f);return`<tr><td><strong>${f.local}</strong></td><td>${f.descricao||'—'}</td><td class="mn">${fd(f.data_troca)}</td><td class="mn">${f.meses_validade} meses</td><td class="mn">${fd(ps)}</td><td><span class="bdg ${st.s}">${st.l}</span></td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opFilt(${f.id})">Editar</button><button class="btn sm d" onclick="delFilt(${f.id})">Remover</button></td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">Nenhum filtro cadastrado</td></tr>';const tbe=document.getElementById('td-ext');tbe.innerHTML=C.extintores.length?C.extintores.map(e=>{const st=stExt(e);return`<tr><td><strong>${e.local}</strong></td><td>${e.tipo||'—'}</td><td class="mn">${e.numero_serie||'—'}</td><td class="mn">${fd(e.data_vencimento)}</td><td><span class="bdg ${st.s}">${st.l}</span></td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opExt(${e.id})">Editar</button><button class="btn sm d" onclick="delExt(${e.id})">Remover</button></td></tr>`;}).join(''):'<tr><td colspan="6" class="empty">Nenhum extintor cadastrado</td></tr>';}
+async function addFilt(){const l=document.getElementById('ftl').value.trim(),d=document.getElementById('ftd').value.trim(),dt=document.getElementById('ftdt').value,v=parseInt(document.getElementById('ftv').value)||6;if(!l||!dt){alert('Local e data são obrigatórios.');return;}try{await A('POST','/filtros',{local:l,descricao:d,data_troca:dt,meses_validade:v});await loadAdm();rVencs();['ftl','ftd','ftdt'].forEach(id=>document.getElementById(id).value='');document.getElementById('ftv').value='6';}catch(e){alert('Erro: '+e.message);}}
+async function addExt(){const l=document.getElementById('exl').value.trim(),t=document.getElementById('ext').value.trim(),d=document.getElementById('exd').value,s=document.getElementById('exs').value.trim();if(!l||!d){alert('Local e data de vencimento são obrigatórios.');return;}try{await A('POST','/extintores',{local:l,tipo:t,data_vencimento:d,numero_serie:s});await loadAdm();rVencs();['exl','ext','exd','exs'].forEach(id=>document.getElementById(id).value='');}catch(e){alert('Erro: '+e.message);}}
+let efid=null,eeid=null;
+function opFilt(id){const f=C.filtros.find(x=>x.id===id);if(!f)return;efid=id;document.getElementById('efl').value=f.local;document.getElementById('efd').value=f.descricao||'';document.getElementById('efdt').value=f.data_troca;document.getElementById('efv').value=f.meses_validade;document.getElementById('m-efilt').classList.add('op');}
+async function saveFilt(){if(!efid)return;try{await A('PUT',`/filtros/${efid}`,{local:document.getElementById('efl').value.trim(),descricao:document.getElementById('efd').value.trim(),data_troca:document.getElementById('efdt').value,meses_validade:parseInt(document.getElementById('efv').value)||6});await loadAdm();cm('m-efilt');rVencs();}catch(e){alert('Erro: '+e.message);}}
+async function delFilt(id){if(!confirm('Remover filtro?'))return;try{await A('DELETE',`/filtros/${id}`);await loadAdm();rVencs();}catch(e){alert('Erro: '+e.message);}}
+function opExt(id){const e=C.extintores.find(x=>x.id===id);if(!e)return;eeid=id;document.getElementById('eel').value=e.local;document.getElementById('eet').value=e.tipo||'';document.getElementById('eed').value=e.data_vencimento;document.getElementById('ees').value=e.numero_serie||'';document.getElementById('m-eext').classList.add('op');}
+async function saveExt(){if(!eeid)return;try{await A('PUT',`/extintores/${eeid}`,{local:document.getElementById('eel').value.trim(),tipo:document.getElementById('eet').value.trim(),data_vencimento:document.getElementById('eed').value,numero_serie:document.getElementById('ees').value.trim()});await loadAdm();cm('m-eext');rVencs();}catch(e){alert('Erro: '+e.message);}}
+async function delExt(id){if(!confirm('Remover extintor?'))return;try{await A('DELETE',`/extintores/${id}`);await loadAdm();rVencs();}catch(e){alert('Erro: '+e.message);}}
 
-  try {
-    await api('POST', '/movimentos', { tipo, itemId, qtd, data, obs, resp });
-    // Marca o pedido como entregue
-    if (pedidoId) {
-      await api('PUT', `/pedidos/${pedidoId}`, { status: 'entregue', data_entrega: data });
-    }
-    await carregar();
-    document.getElementById(p + '-qtd').value = '';
-    document.getElementById(p + '-obs').value = '';
-    // Reseta o toggle de pedido
-    if (tipo === 'saida') {
-      const chk = document.getElementById('s-tem-pedido');
-      if (chk) { chk.checked = false; togglePedido(); }
-    }
-    renderSelects();
-    alert(`${tipo === 'entrada' ? 'Entrada' : 'Saída'} registrada com sucesso!${pedidoId ? '\nPedido marcado como entregue.' : ''}`);
-  } catch(e) { alert('Erro: ' + e.message); }
-}
+// ── MÓDULOS / NAVEGAÇÃO ────────────────────────────────────
+const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:rSels,saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs};
+function sp(n,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni').forEach(b=>b.classList.remove('on'));const pg=document.getElementById('page-'+n);if(pg)pg.classList.add('on');if(btn)btn.classList.add('on');RENDERS[n]?.();}
+function tmod(m){['est','cli','adm'].forEach(x=>{document.getElementById('n'+x[0]).style.display=m===x?'block':'none';document.getElementById('bm'+x[0]).classList.toggle('on',m===x);});const IC={est:'E',cli:'❄',adm:'🗂'};const TT={est:'Estoque',cli:'Climatização',adm:'Administrativo'};const SB={est:'Material de consumo',cli:'Ar condicionado',adm:'Gestão predial'};document.getElementById('mid').textContent=IC[m];document.getElementById('mtit').textContent=TT[m];document.getElementById('msub').textContent=SB[m];document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni').forEach(b=>b.classList.remove('on'));const FP={est:'dashboard',cli:'ccham',adm:'ademdas'}[m];document.getElementById('page-'+FP).classList.add('on');const fn=document.querySelector(`#n${m[0]} .ni`);if(fn)fn.classList.add('on');RENDERS[FP]?.();}
 
-// Filtros do histórico
-function aplicarFiltros() {
-  const periodo = document.getElementById('f-periodo').value;
-  const itemNome = document.getElementById('f-item-hist').value;
-  const respNome = document.getElementById('f-resp-hist').value;
-  const tipo = document.getElementById('f-tipo-hist') ? document.getElementById('f-tipo-hist').value : '';
-
-  const divDatas = document.getElementById('datas-personalizadas');
-  divDatas.style.display = periodo === 'personalizado' ? 'grid' : 'none';
-
-  const hoje = new Date(); hoje.setHours(0,0,0,0);
-  let movs = [...cache.movimentos];
-
-  if (periodo === 'hoje') {
-    const s = hoje.toISOString().split('T')[0];
-    movs = movs.filter(m => m.data === s);
-  } else if (periodo === 'semana') {
-    const ini = new Date(hoje); ini.setDate(hoje.getDate() - hoje.getDay());
-    movs = movs.filter(m => m.data >= ini.toISOString().split('T')[0]);
-  } else if (periodo === 'mes') {
-    const s = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
-    movs = movs.filter(m => m.data && m.data.startsWith(s));
-  } else if (periodo === 'personalizado') {
-    const ini = document.getElementById('f-data-ini').value;
-    const fim = document.getElementById('f-data-fim').value;
-    if (ini) movs = movs.filter(m => m.data >= ini);
-    if (fim) movs = movs.filter(m => m.data <= fim);
-  }
-
-  if (itemNome) movs = movs.filter(m => m.item_nome === itemNome);
-  if (respNome) movs = movs.filter(m => m.resp === respNome);
-  if (tipo) movs = movs.filter(m => m.tipo === tipo);
-
-  movsFiltrados = movs;
-  renderHist();
-}
-
-function limparFiltros() {
-  ['f-periodo','f-item-hist','f-resp-hist','f-tipo-hist'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.value = '';
-  });
-  ['f-data-ini','f-data-fim'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  document.getElementById('datas-personalizadas').style.display = 'none';
-  movsFiltrados = cache.movimentos;
-  renderHist();
-}
-
-function renderHist() {
-  const tb = document.getElementById('tbl-hist');
-  const cont = document.getElementById('f-contagem');
-  if(cont) cont.textContent = movsFiltrados.length !== cache.movimentos.length
-    ? `${movsFiltrados.length} de ${cache.movimentos.length} registros` : `${cache.movimentos.length} registros`;
-  tb.innerHTML = movsFiltrados.length
-    ? movsFiltrados.map(m => `<tr>
-        <td class="mono">${m.data || '—'}</td>
-        <td><span class="badge ${m.tipo}">${m.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span></td>
-        <td>${m.item_nome}</td>
-        <td class="mono">${m.qtd}</td>
-        <td>${m.resp || '—'}</td>
-        <td style="color:var(--text-muted)">${m.obs || '—'}</td>
-      </tr>`).join('')
-    : '<tr><td colspan="6" class="empty">Nenhum movimento encontrado</td></tr>';
-}
-
-// Backup e restauração
-function exportarBackup() {
-  const dados = {
-    versao: '1.0',
-    exportado_em: new Date().toISOString(),
-    itens: cache.itens,
-    responsaveis: cache.responsaveis,
-    movimentos: cache.movimentos
-  };
-  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `backup_estoque_${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-}
-
-async function importarBackup(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const texto = await file.text();
-  let dados;
-  try { dados = JSON.parse(texto); } catch(e) { alert('Arquivo inválido. Use um backup gerado pelo sistema.'); return; }
-  if (!dados.itens || !dados.movimentos) { alert('Arquivo de backup inválido ou incompleto.'); return; }
-
-  const confirm1 = confirm(
-    `Importar backup de ${dados.exportado_em ? new Date(dados.exportado_em).toLocaleString('pt-BR') : 'data desconhecida'}?\n\n` +
-    `• ${dados.itens.length} itens\n` +
-    `• ${(dados.responsaveis||[]).length} responsáveis\n` +
-    `• ${dados.movimentos.length} movimentos\n\n` +
-    `Os dados existentes NÃO serão apagados — os do backup serão adicionados.`
-  );
-  if (!confirm1) { event.target.value = ''; return; }
-
-  let erros = 0, ok = 0;
-  // Importar itens
-  for (const item of dados.itens) {
-    try {
-      await api('POST', '/itens', { nome: item.nome, cat: item.cat, unid: item.unid, qtd: item.qtd, min: item.min });
-      ok++;
-    } catch(e) { erros++; }
-  }
-  // Importar responsáveis
-  for (const r of (dados.responsaveis || [])) {
-    try { await api('POST', '/responsaveis', { nome: r.nome, setor: r.setor }); } catch(e) {}
-  }
-  // Recarregar para pegar os novos IDs
-  await carregar();
-  // Importar movimentos ligando ao novo item pelo nome
-  for (const m of dados.movimentos) {
-    const itemAtual = cache.itens.find(i => i.nome === m.item_nome);
-    if (!itemAtual) continue;
-    try {
-      await fetch('/api/movimentos/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo: m.tipo, itemId: itemAtual.id, qtd: m.qtd, data: m.data, resp: m.resp, obs: m.obs, semAjuste: true })
-      });
-    } catch(e) {}
-  }
-  await carregar();
-  renderEstoque(); renderDash();
-  event.target.value = '';
-  alert(`Backup importado!\n${ok} itens adicionados.${erros > 0 ? `\n${erros} itens ignorados (já existiam ou erro).` : ''}`);
-}
-
-function exportCSV() {
-  const rows = [['Data','Tipo','Item','Quantidade','Responsável','Observação'],
-    ...movsFiltrados.map(m => [m.data, m.tipo, m.item_nome, m.qtd, m.resp, m.obs])];
-  const csv = rows.map(r => r.map(v => `"${v || ''}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
-  a.download = 'historico_estoque.csv'; a.click();
-}
-
-// ===================== PEDIDOS =====================
-
-function renderPedidos() {
-  const filtro = document.getElementById('ped-filtro')?.value ?? 'aberto';
-  const lista = filtro === ''
-    ? [...cache.pedidos]
-    : cache.pedidos.filter(p => p.status === filtro);
-  // Ordena por data de pedido (mais antigos primeiro = prioridade)
-  lista.sort((a,b) => (a.data_pedido||'').localeCompare(b.data_pedido||''));
-  const tb = document.getElementById('tbl-pedidos');
-  tb.innerHTML = lista.length
-    ? lista.map((p, idx) => {
-        const item = cache.itens.find(i => i.id === p.item_id);
-        const nomeItem = item ? item.nome : p.item_nome || '?';
-        const entregue = p.status === 'entregue';
-        return `<tr style="${entregue ? 'opacity:0.55' : ''}">
-          <td class="mono" style="color:var(--text-muted)">#${p.id}</td>
-          <td class="mono">${p.data_pedido||'—'}</td>
-          <td><strong>${nomeItem}</strong></td>
-          <td class="mono">${p.qtd}</td>
-          <td>${p.solicitante||'—'}</td>
-          <td style="color:var(--text-muted);font-size:13px">${p.obs||'—'}</td>
-          <td>
-            ${entregue
-              ? `<span class="badge ok">Entregue${p.data_entrega ? ' ' + p.data_entrega : ''}</span>`
-              : `<span class="badge low">Em aberto</span>`}
-          </td>
-          <td style="display:flex;gap:5px">
-            ${!entregue ? `<button class="btn sm primary" onclick="entregarPedido(${p.id})">Entregar</button>` : ''}
-            <button class="btn sm danger" onclick="removerPedido(${p.id})">✕</button>
-          </td>
-        </tr>`;
-      }).join('')
-    : '<tr><td colspan="8" class="empty">Nenhum pedido encontrado</td></tr>';
-}
-
-async function addPedido() {
-  const item_id = parseInt(document.getElementById('ped-item').value);
-  const qtd = parseInt(document.getElementById('ped-qtd').value) || 1;
-  const solicitante = document.getElementById('ped-resp').value;
-  const data_pedido = document.getElementById('ped-data').value;
-  const obs = document.getElementById('ped-obs').value.trim();
-  if (!item_id) { alert('Selecione um item.'); return; }
-  if (!solicitante || solicitante === '—') { alert('Selecione o solicitante.'); return; }
-  if (!data_pedido) { alert('Informe a data da solicitação.'); return; }
-  const item = cache.itens.find(i => i.id === item_id);
-  try {
-    await api('POST', '/pedidos', { item_id, item_nome: item?.nome||'', qtd, solicitante, data_pedido, obs, status: 'aberto' });
-    await carregar();
-    renderPedidos(); renderSelectPedidos();
-    ['ped-qtd','ped-obs'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('ped-qtd').value = '1';
-    alert('Pedido registrado!');
-  } catch(e) { alert('Erro: ' + e.message); }
-}
-
-async function entregarPedido(id) {
-  const hoje = new Date().toISOString().split('T')[0];
-  try {
-    await api('PUT', `/pedidos/${id}`, { status: 'entregue', data_entrega: hoje });
-    await carregar(); renderPedidos(); renderSelectPedidos();
-  } catch(e) { alert('Erro: ' + e.message); }
-}
-
-async function removerPedido(id) {
-  if (!confirm('Remover este pedido?')) return;
-  try { await api('DELETE', `/pedidos/${id}`); await carregar(); renderPedidos(); renderSelectPedidos(); }
-  catch(e) { alert('Erro: ' + e.message); }
-}
-
-// ===================== CLIMATIZAÇÃO =====================
-
-// Aparelhos
-function renderAparelhos() {
-  const tb = document.getElementById('tbl-aparelhos');
-  tb.innerHTML = cache.aparelhos.length
-    ? cache.aparelhos.map(a => `<tr>
-        <td><strong>${a.sala}</strong></td><td>${a.departamento}</td><td style="color:var(--text-muted)">${a.localizacao||'—'}</td>
-        <td>${a.marca}</td><td>${a.modelo||'—'}</td><td class="mono">${a.potencia}</td>
-        <td style="display:flex;gap:6px">
-          <button class="btn sm edit" onclick="abrirModalAp(${a.id})">Editar</button>
-          <button class="btn sm danger" onclick="removerAparelho(${a.id})">Remover</button>
-        </td>
-      </tr>`).join('')
-    : '<tr><td colspan="7" class="empty">Nenhum aparelho cadastrado ainda</td></tr>';
-  // Atualiza select de chamados
-  const sel = document.getElementById('ch-aparelho');
-  if (sel) {
-    sel.innerHTML = '<option value="">Selecione o aparelho...</option>' +
-      cache.aparelhos.map(a => `<option value="${a.id}">Sala ${a.sala} — ${a.departamento}</option>`).join('');
-  }
-}
-
-async function addAparelho() {
-  const sala = document.getElementById('ap-sala').value.trim();
-  const departamento = document.getElementById('ap-depto').value.trim();
-  const localizacao = document.getElementById('ap-local').value.trim();
-  const marca = document.getElementById('ap-marca').value.trim();
-  const modelo = document.getElementById('ap-modelo').value.trim();
-  const potencia = document.getElementById('ap-potencia').value.trim();
-  if (!sala || !departamento || !marca || !potencia) { alert('Preencha sala, departamento, marca e potência.'); return; }
-  try {
-    await api('POST', '/aparelhos', { sala, departamento, localizacao, marca, modelo, potencia });
-    await carregarClima(); renderAparelhos();
-    ['ap-sala','ap-depto','ap-local','ap-marca','ap-modelo','ap-potencia'].forEach(id => document.getElementById(id).value = '');
-  } catch(e) { alert('Erro: ' + e.message); }
-}
-
-let editandoApId = null;
-function abrirModalAp(id) {
-  const a = cache.aparelhos.find(x => x.id === id); if (!a) return;
-  editandoApId = id;
-  document.getElementById('eap-sala').value = a.sala;
-  document.getElementById('eap-depto').value = a.departamento;
-  document.getElementById('eap-local').value = a.localizacao || '';
-  document.getElementById('eap-marca').value = a.marca;
-  document.getElementById('eap-modelo').value = a.modelo || '';
-  document.getElementById('eap-potencia').value = a.potencia;
-  document.getElementById('modal-aparelho').classList.add('open');
-}
-function fecharModalAp() { document.getElementById('modal-aparelho').classList.remove('open'); editandoApId = null; }
-async function salvarAparelho() {
-  if (!editandoApId) return;
-  const updates = {
-    sala: document.getElementById('eap-sala').value.trim(),
-    departamento: document.getElementById('eap-depto').value.trim(),
-    localizacao: document.getElementById('eap-local').value.trim(),
-    marca: document.getElementById('eap-marca').value.trim(),
-    modelo: document.getElementById('eap-modelo').value.trim(),
-    potencia: document.getElementById('eap-potencia').value.trim(),
-  };
-  if (!updates.sala || !updates.departamento) { alert('Sala e departamento são obrigatórios.'); return; }
-  try {
-    await api('PUT', `/aparelhos/${editandoApId}`, updates);
-    await carregarClima(); fecharModalAp(); renderAparelhos();
-  } catch(e) { alert('Erro: ' + e.message); }
-}
-async function removerAparelho(id) {
-  if (!confirm('Remover este aparelho? Os chamados associados serão mantidos.')) return;
-  try { await api('DELETE', `/aparelhos/${id}`); await carregarClima(); renderAparelhos(); }
-  catch(e) { alert('Erro: ' + e.message); }
-}
-
-// Preenche campos automáticos ao selecionar aparelho no chamado
-function preencherAparelho() {
-  const id = parseInt(document.getElementById('ch-aparelho').value);
-  const a = cache.aparelhos.find(x => x.id === id);
-  document.getElementById('ch-depto').value = a ? a.departamento : '';
-  document.getElementById('ch-marca').value = a ? a.marca : '';
-  document.getElementById('ch-potencia').value = a ? a.potencia : '';
-}
-
-// Chamados
-function renderChamados() {
-  const filtro = document.getElementById('ch-filtro-status')?.value || '';
-  const lista = filtro ? cache.chamados.filter(c => c.status === filtro) : cache.chamados;
-  const tb = document.getElementById('tbl-chamados');
-  tb.innerHTML = lista.length
-    ? lista.map(c => `<tr>
-        <td class="mono">${c.data_chamado||'—'}</td>
-        <td><strong>${c.sala||'—'}</strong></td>
-        <td>${c.departamento||'—'}</td>
-        <td><span class="badge ${c.tipo}">${c.tipo==='corretiva'?'Corretiva':'Preventiva'}</span></td>
-        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.problema||'—'}</td>
-        <td><span class="badge ${c.status}">${c.status==='aberto'?'Em aberto':'Concluído'}</span></td>
-        <td style="display:flex;gap:5px">
-          ${c.status==='aberto' ? `<button class="btn sm primary" onclick="abrirModalConc(${c.id})">Concluir</button>` : `<span class="mono" style="font-size:11px;color:var(--text-muted)">${c.data_conserto||''}</span>`}
-          <button class="btn sm danger" onclick="removerChamado(${c.id})">✕</button>
-        </td>
-      </tr>`).join('')
-    : '<tr><td colspan="7" class="empty">Nenhum chamado encontrado</td></tr>';
-}
-
-async function addChamado() {
-  const aparelhoId = parseInt(document.getElementById('ch-aparelho').value);
-  const tipo = document.getElementById('ch-tipo').value;
-  const problema = document.getElementById('ch-problema').value.trim();
-  const data_chamado = document.getElementById('ch-data-chamado').value;
-  const data_conserto = document.getElementById('ch-data-conserto').value;
-  const obs = document.getElementById('ch-obs').value.trim();
-  if (!aparelhoId) { alert('Selecione um aparelho.'); return; }
-  if (!problema) { alert('Descreva o problema ou serviço.'); return; }
-  if (!data_chamado) { alert('Informe a data do chamado.'); return; }
-  const ap = cache.aparelhos.find(x => x.id === aparelhoId);
-  try {
-    await api('POST', '/chamados', {
-      aparelho_id: aparelhoId, tipo, problema, data_chamado, data_conserto, obs,
-      sala: ap.sala, departamento: ap.departamento, marca: ap.marca,
-      modelo: ap.modelo, potencia: ap.potencia,
-      status: data_conserto ? 'concluido' : 'aberto'
-    });
-    await carregarClima(); renderChamados();
-    ['ch-problema','ch-data-conserto','ch-obs'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('ch-aparelho').value = '';
-    preencherAparelho();
-    alert('Chamado registrado com sucesso!');
-  } catch(e) { alert('Erro: ' + e.message); }
-}
-
-let concluindoId = null;
-function abrirModalConc(id) {
-  concluindoId = id;
-  document.getElementById('conc-data').value = new Date().toISOString().split('T')[0];
-  document.getElementById('conc-obs').value = '';
-  document.getElementById('modal-concluir').classList.add('open');
-}
-function fecharModalConc() { document.getElementById('modal-concluir').classList.remove('open'); concluindoId = null; }
-async function salvarConclusao() {
-  if (!concluindoId) return;
-  const data_conserto = document.getElementById('conc-data').value;
-  const obs = document.getElementById('conc-obs').value;
-  if (!data_conserto) { alert('Informe a data do conserto.'); return; }
-  try {
-    await api('PUT', `/chamados/${concluindoId}`, { status: 'concluido', data_conserto, obs });
-    await carregarClima(); fecharModalConc(); renderChamados();
-  } catch(e) { alert('Erro: ' + e.message); }
-}
-async function removerChamado(id) {
-  if (!confirm('Remover este chamado?')) return;
-  try { await api('DELETE', `/chamados/${id}`); await carregarClima(); renderChamados(); }
-  catch(e) { alert('Erro: ' + e.message); }
-}
-
-// Relatório PDF
-const mesesNome = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-function gerarRelatorio() {
-  const empresa = document.getElementById('rel-empresa').value || 'JS Contadores';
-  const mes = parseInt(document.getElementById('rel-mes').value);
-  const ano = parseInt(document.getElementById('rel-ano').value);
-  const mesStr = `${String(mes).padStart(2,'0')}/${ano}`;
-  const chamadosMes = cache.chamados.filter(c => {
-    const d = c.data_chamado || '';
-    const [y,m] = d.split('-');
-    return parseInt(y) === ano && parseInt(m) === mes;
-  }).sort((a,b) => (a.data_chamado||'').localeCompare(b.data_chamado||''));
-
-  const linhasTabela = chamadosMes.map((c,i) => `
-    <tr style="border-bottom:1px solid #e0ddd6">
-      <td style="padding:8px 10px;font-size:12px;white-space:nowrap">${formatarData(c.data_chamado)}</td>
-      <td style="padding:8px 10px;font-size:12px;text-transform:capitalize">${c.tipo}</td>
-      <td style="padding:8px 10px;font-size:12px">${c.sala} — ${c.departamento}</td>
-      <td style="padding:8px 10px;font-size:12px">${c.marca}${c.modelo ? ' ' + c.modelo : ''} ${c.potencia}</td>
-      <td style="padding:8px 10px;font-size:12px">${c.problema}${c.obs ? ' — ' + c.obs : ''}</td>
-    </tr>`).join('');
-
-  const preventivas = chamadosMes.filter(c => c.tipo === 'preventiva').length;
-  const corretivas = chamadosMes.filter(c => c.tipo === 'corretiva').length;
-  const concluidos = chamadosMes.filter(c => c.status === 'concluido').length;
-
-  const html = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #1a1916">
-      <div>
-        <div style="font-size:20px;font-weight:600;letter-spacing:-0.02em">Relatório de Manutenções – Ar Condicionado</div>
-        <div style="font-size:13px;color:#6b6860;margin-top:4px">Empresa: ${empresa} &nbsp;|&nbsp; Período: ${mesesNome[mes]} de ${ano}</div>
-      </div>
-      <div style="font-size:11px;color:#a8a49e;text-align:right">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
-    </div>
-
-    <div style="margin-bottom:20px">
-      <div style="font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.07em;color:#6b6860;margin-bottom:10px">Resumo das Atividades</div>
-      <p style="font-size:13px;color:#1a1916">Durante o período de ${mesesNome[mes]} de ${ano}, foram realizadas <strong>${chamadosMes.length}</strong> manutenção(ões) nos aparelhos de ar condicionado da empresa, sendo <strong>${preventivas}</strong> preventiva(s) e <strong>${corretivas}</strong> corretiva(s), com foco no bom funcionamento e conservação dos equipamentos.</p>
-    </div>
-
-    <div style="margin-bottom:20px">
-      <div style="font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.07em;color:#6b6860;margin-bottom:10px">Manutenções Realizadas</div>
-      ${chamadosMes.length ? `
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr style="background:#f5f4f0">
-            <th style="padding:9px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6b6860;border-bottom:2px solid #e0ddd6;white-space:nowrap">Data</th>
-            <th style="padding:9px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Tipo</th>
-            <th style="padding:9px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Sala / Setor</th>
-            <th style="padding:9px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Equipamento</th>
-            <th style="padding:9px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Descrição</th>
-          </tr>
-        </thead>
-        <tbody>${linhasTabela}</tbody>
-      </table>` : '<p style="color:#a8a49e;font-size:13px">Nenhuma manutenção registrada neste período.</p>'}
-    </div>
-
-    <div style="margin-bottom:8px">
-      <div style="font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.07em;color:#6b6860;margin-bottom:10px">Resumo do Período</div>
-      <div style="display:flex;gap:16px">
-        <div style="flex:1;background:#f5f4f0;border-radius:8px;padding:12px 16px;text-align:center">
-          <div style="font-size:24px;font-weight:600">${chamadosMes.length}</div>
-          <div style="font-size:11px;color:#6b6860;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px">Total</div>
-        </div>
-        <div style="flex:1;background:#eaf5ef;border-radius:8px;padding:12px 16px;text-align:center">
-          <div style="font-size:24px;font-weight:600;color:#1a7f4e">${preventivas}</div>
-          <div style="font-size:11px;color:#1a7f4e;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px">Preventivas</div>
-        </div>
-        <div style="flex:1;background:#fdecea;border-radius:8px;padding:12px 16px;text-align:center">
-          <div style="font-size:24px;font-weight:600;color:#c0392b">${corretivas}</div>
-          <div style="font-size:11px;color:#c0392b;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px">Corretivas</div>
-        </div>
-        <div style="flex:1;background:#eef2fd;border-radius:8px;padding:12px 16px;text-align:center">
-          <div style="font-size:24px;font-weight:600;color:#2a5bd7">${concluidos}</div>
-          <div style="font-size:11px;color:#2a5bd7;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px">Concluídos</div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.getElementById('relatorio-conteudo').innerHTML = html;
-  document.getElementById('relatorio-preview').style.display = 'block';
-}
-
-function imprimirRelatorio() {
-  if (document.getElementById('relatorio-preview').style.display === 'none') {
-    alert('Gere o relatório antes de imprimir.');
-    return;
-  }
-  const conteudo = document.getElementById('relatorio-conteudo').innerHTML;
-  const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: 'IBM Plex Sans', sans-serif; padding: 32px 40px; color: #1a1916; font-size: 13px; }
-      @page { size: A4; margin: 20mm 22mm; }
-      @media print { body { padding: 0; } }
-    </style>
-    </head><body>${conteudo}</body></html>`);
-  win.document.close();
-  setTimeout(() => win.print(), 500);
-}
-
-function formatarData(d) {
-  if (!d) return '—';
-  const [y,m,dia] = d.split('-');
-  return `${dia}/${m}/${y}`;
-}
-
-// Carregar dados de climatização
-async function carregarClima() {
-  try {
-    const r = await api('GET', '/clima');
-    cache.aparelhos = r.aparelhos || [];
-    cache.chamados = r.chamados || [];
-  } catch(e) { console.error('Erro ao carregar clima:', e); }
-}
-
-// Navegação
-const renders = {
-  dashboard: renderDash, estoque: renderEstoque,
-  entrada: renderSelects, saida: renderSelects,
-  historico: () => { renderSelects(); aplicarFiltros(); },
-  responsaveis: renderResp,
-  pedidos: () => { renderSelects(); renderPedidos(); },
-  'clima-chamados': () => { renderAparelhos(); renderChamados(); document.getElementById('ch-data-chamado').value = new Date().toISOString().split('T')[0]; },
-  'clima-aparelhos': renderAparelhos,
-  'clima-relatorio': () => { const h = new Date(); document.getElementById('rel-mes').value = h.getMonth()+1; document.getElementById('rel-ano').value = h.getFullYear(); }
-};
-
-function showPage(name, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('#nav-estoque .nav-item, #nav-clima .nav-item').forEach(b => b.classList.remove('active'));
-  const pg = document.getElementById('page-' + name);
-  if (pg) pg.classList.add('active');
-  if (btn) btn.classList.add('active');
-  renders[name]?.();
-}
-
-// Trocar módulo
-function trocarModulo(mod) {
-  const isEstoque = mod === 'estoque';
-  const navE = document.getElementById('nav-estoque');
-  const navC = document.getElementById('nav-clima');
-  navE.style.display = isEstoque ? 'block' : 'none';
-  navC.style.display = isEstoque ? 'none' : 'block';
-  document.getElementById('btn-mod-estoque').classList.toggle('active', isEstoque);
-  document.getElementById('btn-mod-clima').classList.toggle('active', !isEstoque);
-  document.getElementById('mod-icon').textContent = isEstoque ? 'E' : '❄';
-  document.getElementById('mod-titulo').textContent = isEstoque ? 'Estoque' : 'Climatização';
-  document.getElementById('mod-sub').textContent = isEstoque ? 'Material de consumo' : 'Ar condicionado';
-
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('#nav-estoque .nav-item, #nav-clima .nav-item').forEach(b => b.classList.remove('active'));
-
-  if (isEstoque) {
-    document.getElementById('page-dashboard').classList.add('active');
-    navE.querySelector('.nav-item').classList.add('active');
-    renderDash();
-  } else {
-    document.getElementById('page-clima-chamados').classList.add('active');
-    navC.querySelector('.nav-item').classList.add('active');
-    document.getElementById('ch-data-chamado').value = new Date().toISOString().split('T')[0];
-    const hoje = new Date();
-    document.getElementById('rel-mes').value = hoje.getMonth() + 1;
-    document.getElementById('rel-ano').value = hoje.getFullYear();
-    renderAparelhos(); renderChamados();
-  }
-}
-
-document.getElementById('server-ip').textContent = window.location.host;
-
-(async () => {
-  await carregar();
-  await carregarClima();
-  renderDash();
-})();
+// ── INIT ───────────────────────────────────────────────────
+document.getElementById('sip').textContent=window.location.host;
+const SU=sessionStorage.getItem('U');
+if(SU){try{U=JSON.parse(SU);startApp();}catch(e){sessionStorage.removeItem('U');}}
 </script>
 </body>
 </html>
