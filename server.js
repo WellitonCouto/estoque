@@ -90,6 +90,7 @@ async function iniciarBanco() {
       titulo TEXT NOT NULL,
       descricao TEXT DEFAULT '',
       solicitante TEXT DEFAULT '',
+      iniciado_por TEXT DEFAULT '',
       data_solicitacao TEXT,
       precisa_aprovacao BOOLEAN DEFAULT FALSE,
       valor_solicitado NUMERIC(12,2),
@@ -104,6 +105,15 @@ async function iniciarBanco() {
       demanda_id INTEGER REFERENCES demandas(id) ON DELETE CASCADE,
       texto TEXT NOT NULL,
       data TEXT,
+      autor TEXT DEFAULT '',
+      criado_em TIMESTAMP DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS anotacoes_chamado (
+      id SERIAL PRIMARY KEY,
+      chamado_id INTEGER REFERENCES chamados(id) ON DELETE CASCADE,
+      texto TEXT NOT NULL,
+      data TEXT,
+      autor TEXT DEFAULT '',
       criado_em TIMESTAMP DEFAULT NOW()
     );
     CREATE TABLE IF NOT EXISTS filtros_agua (
@@ -190,8 +200,7 @@ const server = http.createServer(async (req, res) => {
           if (b.senha) await pool.query('UPDATE usuarios SET nome=$1,setor=$2,senha_hash=$3 WHERE id=$4', [b.nome, b.setor || '', sha(b.senha), id]);
           else await pool.query('UPDATE usuarios SET nome=$1,setor=$2 WHERE id=$3', [b.nome, b.setor || '', id]);
           return ok(res, { ok: true });
-        }
-        if (req.method === 'DELETE' && pth.startsWith('/api/usuarios/')) {
+        }        if (req.method === 'DELETE' && pth.startsWith('/api/usuarios/')) {
           const id = parseInt(pth.split('/')[3]);
           const u = await pool.query('SELECT email FROM usuarios WHERE id=$1', [id]);
           if (u.rows[0]?.email === ADM_EMAIL) return err(res, 403, 'Não é possível remover o administrador');
@@ -230,8 +239,8 @@ const server = http.createServer(async (req, res) => {
         if (req.method === 'POST' && pth === '/api/movimentos') {
           const item = (await pool.query('SELECT * FROM itens WHERE id=$1', [b.itemId])).rows[0];
           if (!item) return err(res, 404, 'Item não encontrado');
-          if (b.tipo === 'saida' && b.qtd > item.qtd) return err(res, 400, 'Quantidade insuficiente em estoque');
-          const novaQtd = b.tipo === 'entrada' ? item.qtd + b.qtd : item.qtd - b.qtd;
+          if ((b.tipo === 'saida' || b.tipo === 'sa') && b.qtd > item.qtd) return err(res, 400, 'Quantidade insuficiente em estoque');
+          const novaQtd = (b.tipo === 'entrada' || b.tipo === 'en') ? item.qtd + b.qtd : item.qtd - b.qtd;
           await pool.query('UPDATE itens SET qtd=$1 WHERE id=$2', [novaQtd, b.itemId]);
           const mov = await pool.query('INSERT INTO movimentos (tipo,item_id,item_nome,qtd,data,resp,obs) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *', [b.tipo, b.itemId, item.nome, b.qtd, b.data, b.resp || '—', b.obs || '']);
           return ok(res, { mov: mov.rows[0] }, 201);
@@ -292,20 +301,20 @@ const server = http.createServer(async (req, res) => {
           return ok(res, { ok: true });
         }
 
-        // ── ADMIN ─────────────────────────────────────────────
         if (req.method === 'GET' && pth === '/api/admin') {
-          const [dem, anot, filt, ext] = await Promise.all([
+          const [dem, anot, filt, ext, anotch] = await Promise.all([
             pool.query('SELECT * FROM demandas ORDER BY criado_em DESC'),
             pool.query('SELECT * FROM anotacoes ORDER BY criado_em ASC'),
             pool.query('SELECT * FROM filtros_agua ORDER BY data_troca ASC'),
             pool.query('SELECT * FROM extintores ORDER BY data_vencimento ASC'),
+            pool.query('SELECT * FROM anotacoes_chamado ORDER BY criado_em ASC'),
           ]);
-          return ok(res, { demandas: dem.rows, anotacoes: anot.rows, filtros: filt.rows, extintores: ext.rows });
+          return ok(res, { demandas: dem.rows, anotacoes: anot.rows, filtros: filt.rows, extintores: ext.rows, anotacoes_chamado: anotch.rows });
         }
 
         // ── DEMANDAS ──────────────────────────────────────────
         if (req.method === 'POST' && pth === '/api/demandas') {
-          const r = await pool.query('INSERT INTO demandas (titulo,descricao,solicitante,data_solicitacao,precisa_aprovacao,valor_solicitado,data_sol_orcamento,data_aprov_orcamento) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *', [b.titulo, b.descricao || '', b.solicitante || '', b.data_solicitacao, b.precisa_aprovacao || false, b.valor_solicitado || null, b.data_sol_orcamento || null, b.data_aprov_orcamento || null]);
+          const r = await pool.query('INSERT INTO demandas (titulo,descricao,solicitante,iniciado_por,data_solicitacao,precisa_aprovacao,valor_solicitado,data_sol_orcamento,data_aprov_orcamento) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *', [b.titulo, b.descricao || '', b.solicitante || '', b.iniciado_por || '', b.data_solicitacao, b.precisa_aprovacao || false, b.valor_solicitado || null, b.data_sol_orcamento || null, b.data_aprov_orcamento || null]);
           return ok(res, r.rows[0], 201);
         }
         if (req.method === 'PUT' && pth.startsWith('/api/demandas/')) {
@@ -319,13 +328,23 @@ const server = http.createServer(async (req, res) => {
           return ok(res, { ok: true });
         }
 
-        // ── ANOTAÇÕES ─────────────────────────────────────────
+        // ── ANOTAÇÕES DEMANDA ─────────────────────────────────
         if (req.method === 'POST' && pth === '/api/anotacoes') {
-          const r = await pool.query('INSERT INTO anotacoes (demanda_id,texto,data) VALUES ($1,$2,$3) RETURNING *', [b.demanda_id, b.texto, b.data]);
+          const r = await pool.query('INSERT INTO anotacoes (demanda_id,texto,data,autor) VALUES ($1,$2,$3,$4) RETURNING *', [b.demanda_id, b.texto, b.data, b.autor || '']);
           return ok(res, r.rows[0], 201);
         }
         if (req.method === 'DELETE' && pth.startsWith('/api/anotacoes/')) {
           await pool.query('DELETE FROM anotacoes WHERE id=$1', [parseInt(pth.split('/')[3])]);
+          return ok(res, { ok: true });
+        }
+
+        // ── ANOTAÇÕES CHAMADO ─────────────────────────────────
+        if (req.method === 'POST' && pth === '/api/anotacoes-chamado') {
+          const r = await pool.query('INSERT INTO anotacoes_chamado (chamado_id,texto,data,autor) VALUES ($1,$2,$3,$4) RETURNING *', [b.chamado_id, b.texto, b.data, b.autor || '']);
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/anotacoes-chamado/')) {
+          await pool.query('DELETE FROM anotacoes_chamado WHERE id=$1', [parseInt(pth.split('/')[3])]);
           return ok(res, { ok: true });
         }
 
