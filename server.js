@@ -140,6 +140,20 @@ async function iniciarBanco() {
     );
     console.log('Admin criado. Senha padrão: admin123 — troque após o primeiro acesso.');
   }
+
+  // Migrações — adiciona colunas novas sem recriar tabelas existentes
+  await pool.query(`ALTER TABLE anotacoes ADD COLUMN IF NOT EXISTS autor TEXT DEFAULT ''`);
+  await pool.query(`ALTER TABLE anotacoes ADD COLUMN IF NOT EXISTS criado_em TIMESTAMP DEFAULT NOW()`);
+  await pool.query(`ALTER TABLE demandas ADD COLUMN IF NOT EXISTS iniciado_por TEXT DEFAULT ''`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS anotacoes_chamado (
+    id SERIAL PRIMARY KEY,
+    chamado_id INTEGER REFERENCES chamados(id) ON DELETE CASCADE,
+    texto TEXT NOT NULL,
+    data TEXT,
+    autor TEXT DEFAULT '',
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+
   console.log('Banco pronto.');
 }
 
