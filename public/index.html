@@ -263,7 +263,7 @@ tbody tr:hover td{background:var(--bg)}
       </div>
       <div class="card">
         <div class="fl" style="margin-bottom:13px"><span class="ct" style="margin:0">Fila de pedidos</span><select id="pfil" onchange="rPeds()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="aberto">Em aberto</option><option value="entregue">Entregues</option><option value="">Todos</option></select></div>
-        <div class="tw"><table><thead><tr><th>#</th><th>Data</th><th>Item</th><th>Qtd</th><th>Solicitante</th><th>Obs.</th><th>Status</th><th></th></tr></thead><tbody id="td-ped"></tbody></table></div>
+        <div class="tw"><table><thead><tr><th>#</th><th>Data</th><th>Item</th><th>Qtd</th><th>Solicitante</th><th>Obs.</th><th>Estoque</th><th>Status</th><th></th></tr></thead><tbody id="td-ped"></tbody></table></div>
       </div>
     </div>
 
@@ -455,9 +455,25 @@ function expBkpEst(){const d={versao:'1.0',exportado_em:new Date().toISOString()
 async function impBkpEst(ev){const f=ev.target.files[0];if(!f)return;const tx=await f.text();let d;try{d=JSON.parse(tx);}catch(e){alert('Arquivo inválido.');return;}if(!d.itens){alert('Backup inválido.');return;}if(!confirm(`Importar backup?\n• ${d.itens.length} itens\n• ${d.movimentos.length} movimentos\n\nDados existentes NÃO serão apagados.`)){ev.target.value='';return;}let ok=0,er=0;for(const i of d.itens){try{await A('POST','/itens',{nome:i.nome,cat:i.cat,unid:i.unid,qtd:i.qtd,min:i.min});ok++;}catch(e){er++;}}await load();for(const m of d.movimentos){const it=C.itens.find(x=>x.nome===m.item_nome);if(!it)continue;try{await fetch('/api/movimentos/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo:m.tipo,itemId:it.id,qtd:m.qtd,data:m.data,resp:m.resp,obs:m.obs})});}catch(e){}}await load();rEstoque();rDash();ev.target.value='';alert(`Importado! ${ok} itens adicionados.${er?' '+er+' ignorados.':''}`);}
 
 // ── PEDIDOS ────────────────────────────────────────────────
-function rPeds(){const fil=document.getElementById('pfil')?.value??'aberto';const l=fil===''?[...C.pedidos]:C.pedidos.filter(p=>p.status===fil);l.sort((a,b)=>(a.data_pedido||'').localeCompare(b.data_pedido||''));document.getElementById('td-ped').innerHTML=l.length?l.map(p=>{const it=C.itens.find(i=>i.id===p.item_id);const et=p.status==='entregue';return`<tr style="${et?'opacity:.55':''}"><td class="mn" style="color:var(--tm)">#${p.id}</td><td class="mn">${p.data_pedido||'—'}</td><td><strong>${it?it.nome:p.item_nome||'?'}</strong></td><td class="mn">${p.qtd}</td><td>${p.solicitante||'—'}</td><td style="color:var(--tm);font-size:12px">${p.obs||'—'}</td><td>${et?`<span class="bdg et">Entregue</span>`:`<span class="bdg lw">Em aberto</span>`}</td><td style="display:flex;gap:4px">${!et?`<button class="btn sm s" onclick="entPed(${p.id})">Entregar</button>`:''}<button class="btn sm d" onclick="delPed(${p.id})">✕</button></td></tr>`;}).join(''):'<tr><td colspan="8" class="empty">Nenhum pedido</td></tr>';}
+function rPeds(){const fil=document.getElementById('pfil')?.value??'aberto';const l=fil===''?[...C.pedidos]:C.pedidos.filter(p=>p.status===fil);l.sort((a,b)=>(a.data_pedido||'').localeCompare(b.data_pedido||''));document.getElementById('td-ped').innerHTML=l.length?l.map(p=>{const it=C.itens.find(i=>i.id===p.item_id);const et=p.status==='entregue';const qtdEst=it?it.qtd:0;const temEstoque=it&&qtdEst>=p.qtd;const dispBadge=et?'':(it?temEstoque?`<span class="bdg ok" title="${qtdEst} ${it.unid} em estoque">✓ Disponível (${qtdEst})</span>`:`<span class="bdg ot" title="${qtdEst} ${it.unid} em estoque">✗ Sem estoque (${qtdEst})</span>`:'');return`<tr style="${et?'opacity:.55':''}"><td class="mn" style="color:var(--tm)">#${p.id}</td><td class="mn">${p.data_pedido||'—'}</td><td><strong>${it?it.nome:p.item_nome||'?'}</strong></td><td class="mn">${p.qtd}</td><td>${p.solicitante||'—'}</td><td style="color:var(--tm);font-size:12px">${p.obs||'—'}</td><td>${dispBadge}</td><td>${et?`<span class="bdg et">Entregue ${p.data_entrega?fd(p.data_entrega):''}</span>`:`<span class="bdg lw">Em aberto</span>`}</td><td style="display:flex;gap:4px">${!et?`<button class="btn sm s" onclick="entPed(${p.id})" ${!temEstoque?'title="Estoque insuficiente" style=\'opacity:.5\'':""}>${temEstoque?'Entregar':'Sem estoque'}</button>`:''}<button class="btn sm d" onclick="delPed(${p.id})">✕</button></td></tr>`;}).join(''):'<tr><td colspan="9" class="empty">Nenhum pedido</td></tr>';}
+
 async function addPed(){const iid=parseInt(document.getElementById('pi').value),q=parseInt(document.getElementById('pq').value)||1,sl=document.getElementById('pr').value,dt=document.getElementById('pd').value,ob=document.getElementById('po').value.trim();if(!iid){alert('Selecione um item.');return;}if(!sl||sl==='—'){alert('Selecione o solicitante.');return;}if(!dt){alert('Informe a data.');return;}const it=C.itens.find(i=>i.id===iid);try{await A('POST','/pedidos',{item_id:iid,item_nome:it?.nome||'',qtd:q,solicitante:sl,data_pedido:dt,obs:ob,status:'aberto'});await load();rPeds();rSelPeds();document.getElementById('pq').value='1';document.getElementById('po').value='';alert('Pedido registrado!');}catch(e){alert('Erro: '+e.message);}}
-async function entPed(id){try{await A('PUT',`/pedidos/${id}`,{status:'entregue',data_entrega:hj()});await load();rPeds();rSelPeds();}catch(e){alert('Erro: '+e.message);}}
+
+async function entPed(id){
+  const ped=C.pedidos.find(p=>p.id===id);
+  if(!ped){alert('Pedido não encontrado.');return;}
+  const it=C.itens.find(i=>i.id===ped.item_id);
+  if(!it){alert('Item do pedido não encontrado no estoque.');return;}
+  if(it.qtd<ped.qtd){alert(`Estoque insuficiente!\nDisponível: ${it.qtd} ${it.unid}\nSolicitado: ${ped.qtd} ${it.unid}`);return;}
+  const dt=hj();
+  try{
+    await A('POST','/movimentos',{tipo:'sa',itemId:it.id,qtd:ped.qtd,data:dt,resp:U?U.nome:'—',obs:`Entrega do pedido #${ped.id} — ${ped.solicitante}`});
+    await A('PUT',`/pedidos/${id}`,{status:'entregue',data_entrega:dt});
+    await load();rPeds();rSelPeds();
+    alert(`Pedido #${ped.id} entregue!\nSaída de ${ped.qtd} ${it.unid} de "${it.nome}" registrada no histórico.`);
+  }catch(e){alert('Erro: '+e.message);}
+}
+
 async function delPed(id){if(!confirm('Remover pedido?'))return;try{await A('DELETE',`/pedidos/${id}`);await load();rPeds();rSelPeds();}catch(e){alert('Erro: '+e.message);}}
 
 // ── CLIMATIZAÇÃO ───────────────────────────────────────────
