@@ -145,6 +145,7 @@ async function iniciarBanco() {
   await pool.query(`ALTER TABLE anotacoes ADD COLUMN IF NOT EXISTS autor TEXT DEFAULT ''`);
   await pool.query(`ALTER TABLE anotacoes ADD COLUMN IF NOT EXISTS criado_em TIMESTAMP DEFAULT NOW()`);
   await pool.query(`ALTER TABLE demandas ADD COLUMN IF NOT EXISTS iniciado_por TEXT DEFAULT ''`);
+  await pool.query(`ALTER TABLE demandas ADD COLUMN IF NOT EXISTS urgencia TEXT DEFAULT 'normal'`);
   await pool.query(`CREATE TABLE IF NOT EXISTS anotacoes_chamado (
     id SERIAL PRIMARY KEY,
     chamado_id INTEGER REFERENCES chamados(id) ON DELETE CASCADE,
