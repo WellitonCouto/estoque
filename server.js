@@ -329,7 +329,7 @@ const server = http.createServer(async (req, res) => {
 
         // ── DEMANDAS ──────────────────────────────────────────
         if (req.method === 'POST' && pth === '/api/demandas') {
-          const r = await pool.query('INSERT INTO demandas (titulo,descricao,solicitante,iniciado_por,data_solicitacao,precisa_aprovacao,valor_solicitado,data_sol_orcamento,data_aprov_orcamento) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *', [b.titulo, b.descricao || '', b.solicitante || '', b.iniciado_por || '', b.data_solicitacao, b.precisa_aprovacao || false, b.valor_solicitado || null, b.data_sol_orcamento || null, b.data_aprov_orcamento || null]);
+          const r = await pool.query('INSERT INTO demandas (titulo,descricao,solicitante,iniciado_por,urgencia,data_solicitacao,precisa_aprovacao,valor_solicitado,data_sol_orcamento,data_aprov_orcamento) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *', [b.titulo, b.descricao || '', b.solicitante || '', b.iniciado_por || '', b.urgencia || 'normal', b.data_solicitacao, b.precisa_aprovacao || false, b.valor_solicitado || null, b.data_sol_orcamento || null, b.data_aprov_orcamento || null]);
           return ok(res, r.rows[0], 201);
         }
         if (req.method === 'PUT' && pth.startsWith('/api/demandas/')) {
