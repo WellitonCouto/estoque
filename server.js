@@ -156,8 +156,6 @@ async function iniciarBanco() {
       numero_serie TEXT DEFAULT '',
       data_vencimento TEXT NOT NULL
     );
-  `);
-
     CREATE TABLE IF NOT EXISTS veiculos (
       id SERIAL PRIMARY KEY,
       placa TEXT NOT NULL,
@@ -178,6 +176,7 @@ async function iniciarBanco() {
       status TEXT DEFAULT 'ativo',
       criado_em TIMESTAMP DEFAULT NOW()
     );
+  `);
 
   const adm = await pool.query('SELECT id FROM usuarios WHERE email=$1', [ADM_EMAIL]);
   if (!adm.rows.length) {
