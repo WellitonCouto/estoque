@@ -158,6 +158,27 @@ async function iniciarBanco() {
     );
   `);
 
+    CREATE TABLE IF NOT EXISTS veiculos (
+      id SERIAL PRIMARY KEY,
+      placa TEXT NOT NULL,
+      ano INTEGER NOT NULL,
+      renavam TEXT NOT NULL,
+      modelo TEXT DEFAULT '',
+      possui_seguro BOOLEAN DEFAULT FALSE,
+      seguradora TEXT DEFAULT '',
+      vigencia_seguro TEXT,
+      criado_em TIMESTAMP DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS motoristas (
+      id SERIAL PRIMARY KEY,
+      nome TEXT NOT NULL,
+      documento TEXT DEFAULT '',
+      vencimento_cnh TEXT,
+      telefone TEXT DEFAULT '',
+      status TEXT DEFAULT 'ativo',
+      criado_em TIMESTAMP DEFAULT NOW()
+    );
+
   const adm = await pool.query('SELECT id FROM usuarios WHERE email=$1', [ADM_EMAIL]);
   if (!adm.rows.length) {
     await pool.query(
@@ -515,6 +536,42 @@ const server = http.createServer(async (req, res) => {
         }
         if (req.method === 'DELETE' && pth.startsWith('/api/extintores/')) {
           await pool.query('DELETE FROM extintores WHERE id=$1', [parseInt(pth.split('/')[3])]);
+          return ok(res, { ok: true });
+        }
+
+
+        // ── FROTA ─────────────────────────────────────────────
+        if (req.method === 'GET' && pth === '/api/frota') {
+          const [vei, mot] = await Promise.all([
+            pool.query('SELECT * FROM veiculos ORDER BY placa'),
+            pool.query('SELECT * FROM motoristas ORDER BY nome'),
+          ]);
+          return ok(res, { veiculos: vei.rows, motoristas: mot.rows });
+        }
+        if (req.method === 'POST' && pth === '/api/veiculos') {
+          const r = await pool.query('INSERT INTO veiculos (placa,ano,renavam,modelo,possui_seguro,seguradora,vigencia_seguro) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *', [b.placa, b.ano, b.renavam, b.modelo||'', !!b.possui_seguro, b.seguradora||'', b.vigencia_seguro||null]);
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'PUT' && pth.startsWith('/api/veiculos/')) {
+          const id = parseInt(pth.split('/')[3]);
+          const r = await pool.query('UPDATE veiculos SET placa=$1,ano=$2,renavam=$3,modelo=$4,possui_seguro=$5,seguradora=$6,vigencia_seguro=$7 WHERE id=$8 RETURNING *', [b.placa, b.ano, b.renavam, b.modelo||'', !!b.possui_seguro, b.seguradora||'', b.vigencia_seguro||null, id]);
+          return ok(res, r.rows[0]);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/veiculos/')) {
+          await pool.query('DELETE FROM veiculos WHERE id=$1', [parseInt(pth.split('/')[3])]);
+          return ok(res, { ok: true });
+        }
+        if (req.method === 'POST' && pth === '/api/motoristas') {
+          const r = await pool.query('INSERT INTO motoristas (nome,documento,vencimento_cnh,telefone,status) VALUES ($1,$2,$3,$4,$5) RETURNING *', [b.nome, b.documento||'', b.vencimento_cnh||null, b.telefone||'', b.status||'ativo']);
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'PUT' && pth.startsWith('/api/motoristas/')) {
+          const id = parseInt(pth.split('/')[3]);
+          const r = await pool.query('UPDATE motoristas SET nome=$1,documento=$2,vencimento_cnh=$3,telefone=$4,status=$5 WHERE id=$6 RETURNING *', [b.nome, b.documento||'', b.vencimento_cnh||null, b.telefone||'', b.status||'ativo', id]);
+          return ok(res, r.rows[0]);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/motoristas/')) {
+          await pool.query('DELETE FROM motoristas WHERE id=$1', [parseInt(pth.split('/')[3])]);
           return ok(res, { ok: true });
         }
 
