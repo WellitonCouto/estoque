@@ -165,6 +165,7 @@ tbody tr:hover td{background:var(--bg)}
       <button class="mbtn on" id="bme" onclick="tmod('est')"><span class="mi">📦</span>Estoque</button>
       <button class="mbtn" id="bmc" onclick="tmod('cli')"><span class="mi">❄️</span>Clima</button>
       <button class="mbtn" id="bma" onclick="tmod('adm')"><span class="mi">🗂️</span>Adm</button>
+      <button class="mbtn" id="bmf" onclick="tmod('fro')"><span class="mi">🚗</span>Frota</button>
     </div>
     <nav id="ne">
       <button class="ni on" onclick="sp('dashboard',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="1.5"/></svg>Painel</button>
@@ -183,6 +184,10 @@ tbody tr:hover td{background:var(--bg)}
     <nav id="na" style="display:none">
       <button class="ni" onclick="sp('ademdas',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path stroke-width="1.5" d="M9 12h6M9 16h4"/></svg>Demandas</button>
       <button class="ni" onclick="sp('avencs',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Vencimentos</button>
+    </nav>
+    <nav id="nf" style="display:none">
+      <button class="ni" onclick="sp('fveiculos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M5 17H3a1 1 0 01-1-1v-4l2-5h12l2 5v4a1 1 0 01-1 1h-2M5 17a2 2 0 004 0M5 17a2 2 0 000 4h14a2 2 0 000-4"/><path stroke-width="1.5" d="M15 17a2 2 0 004 0"/></svg>Veículos</button>
+      <button class="ni" onclick="sp('fmotoristas',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="1.5"/><path stroke-width="1.5" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Motoristas</button>
     </nav>
     <div class="sft"><p>Servidor ativo</p><span class="sipbadge" id="sip">—</span></div>
     <div class="slogout-bar"><button class="blogout-bar" onclick="logout()" title="Sair">⏻ Sair</button></div>
@@ -369,6 +374,65 @@ tbody tr:hover td{background:var(--bg)}
       <div class="card"><div class="ct">Extintores cadastrados</div><div class="tw"><table><thead><tr><th>Local</th><th>Tipo</th><th>Nº série</th><th>Vencimento</th><th>Status</th><th></th></tr></thead><tbody id="td-ext"></tbody></table></div></div>
     </div>
 
+
+    <!-- FROTA: VEÍCULOS -->
+    <div id="page-fveiculos" class="page">
+      <div class="ph"><h2>Veículos</h2><p>Cadastro e gestão da frota</p></div>
+      <div class="card"><div class="ct">Cadastrar veículo</div>
+        <div class="fg c3">
+          <div class="f"><label>Placa *</label><input id="fvplaca" placeholder="Ex: ABC-1234" oninput="this.value=this.value.toUpperCase()"></div>
+          <div class="f"><label>Ano *</label><input id="fvano" type="number" placeholder="Ex: 2022" min="1900" max="2100"></div>
+          <div class="f"><label>RENAVAM *</label><input id="fvrenavam" placeholder="11 dígitos"></div>
+        </div>
+        <div class="fg c2">
+          <div class="f"><label>Modelo (opcional)</label><input id="fvmodelo" placeholder="Ex: Fiat Strada"></div>
+          <div class="f" style="display:flex;flex-direction:column;justify-content:flex-end">
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--acb);border-radius:10px;border:1px solid #c5d4f7;margin-top:18px">
+              <input type="checkbox" id="fvseguro" onchange="togFvSeguro()" style="width:15px;height:15px;accent-color:var(--ac)">
+              <label for="fvseguro" style="font-size:13px;cursor:pointer;color:var(--ac);font-weight:500">Possui seguro</label>
+            </div>
+          </div>
+        </div>
+        <div id="fvsegblk" style="display:none">
+          <div class="fg c2">
+            <div class="f"><label>Seguradora</label><input id="fvseguradora" placeholder="Ex: Porto Seguro"></div>
+            <div class="f"><label>Vigência do seguro</label><input id="fvvigencia" type="date"></div>
+          </div>
+        </div>
+        <button class="btn p" onclick="addVeiculo()">Cadastrar veículo</button>
+      </div>
+      <div class="card">
+        <div class="fl" style="margin-bottom:13px"><span class="ct" style="margin:0">Veículos cadastrados</span></div>
+        <div class="tw"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Ano</th><th>RENAVAM</th><th>Seguro</th><th>Seguradora</th><th>Vigência</th><th></th></tr></thead><tbody id="td-veiculos"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- FROTA: MOTORISTAS -->
+    <div id="page-fmotoristas" class="page">
+      <div class="ph"><h2>Motoristas</h2><p>Cadastro e gestão de motoristas</p></div>
+      <div class="card"><div class="ct">Cadastrar motorista</div>
+        <div class="fg c2">
+          <div class="f"><label>Nome *</label><input id="fmnome" placeholder="Nome completo"></div>
+          <div class="f"><label>Documento (CPF/RG)</label><input id="fmdocumento" placeholder="Opcional"></div>
+        </div>
+        <div class="fg c2">
+          <div class="f"><label>Vencimento da CNH</label><input id="fmcnh" type="date"></div>
+          <div class="f"><label>Telefone</label><input id="fmtelefone" placeholder="Opcional"></div>
+        </div>
+        <div class="fg c2">
+          <div class="f"><label>Status</label><select id="fmstatus"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div>
+        </div>
+        <button class="btn p" onclick="addMotorista()">Cadastrar motorista</button>
+      </div>
+      <div class="card">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Motoristas cadastrados</span>
+          <select id="fmfil" onchange="rMotoristas()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos</option><option value="ativo">Ativos</option><option value="inativo">Inativos</option></select>
+        </div>
+        <div class="tw"><table><thead><tr><th>Nome</th><th>Documento</th><th>Venc. CNH</th><th>Telefone</th><th>Status</th><th></th></tr></thead><tbody id="td-motoristas"></tbody></table></div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -397,10 +461,23 @@ tbody tr:hover td{background:var(--bg)}
 <div class="mo" id="m-eusr"><div class="mbox"><div class="mtit">Editar usuário</div><p style="font-size:12px;color:var(--tm);margin-bottom:14px">E-mail: <strong><span id="eu-email-info"></span></strong> (não pode ser alterado)</p><div class="fg c2"><div class="f"><label>Nome completo</label><input id="eu-nome"></div><div class="f"><label>Setor</label><input id="eu-setor"></div></div><div class="f" style="margin-bottom:14px"><label>Nova senha (deixe em branco para não alterar)</label><input id="eu-senha" type="password" placeholder="Mínimo 6 caracteres"></div><div class="mft"><button class="btn" onclick="cm('m-eusr')">Cancelar</button><button class="btn p" onclick="saveUsr()">Salvar alterações</button></div></div></div>
 <div class="mo" id="m-anot-cham"><div class="mbox"><div class="mtit" id="m-anot-cham-tit">Anotações do chamado</div><div id="lanotsc" style="margin-bottom:13px;max-height:260px;overflow-y:auto"></div><div class="ct" style="margin-bottom:7px">Nova anotação</div><div class="fg c2"><div class="f"><label>Data</label><input id="anotcd" type="date"></div><div class="f"><label>Descrição</label><input id="anotct" placeholder="O que foi feito, observado..."></div></div><div class="mft"><button class="btn" onclick="cm('m-anot-cham')">Fechar</button><button class="btn p" onclick="addAnotCham()">Adicionar</button></div></div></div>
 
+<div class="mo" id="m-evei"><div class="mbox"><div class="mtit">Editar veículo</div>
+  <div class="fg c3"><div class="f"><label>Placa *</label><input id="evplaca" oninput="this.value=this.value.toUpperCase()"></div><div class="f"><label>Ano *</label><input id="evano" type="number" min="1900" max="2100"></div><div class="f"><label>RENAVAM *</label><input id="evrenavam"></div></div>
+  <div class="fg c2"><div class="f"><label>Modelo</label><input id="evmodelo"></div><div class="f" style="display:flex;flex-direction:column;justify-content:flex-end"><div style="display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--acb);border-radius:10px;border:1px solid #c5d4f7;margin-top:18px"><input type="checkbox" id="evseguro" onchange="togEvSeguro()" style="width:15px;height:15px;accent-color:var(--ac)"><label for="evseguro" style="font-size:13px;cursor:pointer;color:var(--ac);font-weight:500">Possui seguro</label></div></div></div>
+  <div id="evsegblk" style="display:none"><div class="fg c2"><div class="f"><label>Seguradora</label><input id="evseguradora"></div><div class="f"><label>Vigência</label><input id="evvigencia" type="date"></div></div></div>
+  <div class="mft"><button class="btn" onclick="cm('m-evei')">Cancelar</button><button class="btn p" onclick="saveVeiculo()">Salvar</button></div>
+</div></div>
+<div class="mo" id="m-emot"><div class="mbox"><div class="mtit">Editar motorista</div>
+  <div class="fg c2"><div class="f"><label>Nome *</label><input id="emnome"></div><div class="f"><label>Documento</label><input id="emdocumento"></div></div>
+  <div class="fg c2"><div class="f"><label>Vencimento CNH</label><input id="emcnh" type="date"></div><div class="f"><label>Telefone</label><input id="emtelefone"></div></div>
+  <div class="fg c2"><div class="f"><label>Status</label><select id="emstatus"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div></div>
+  <div class="mft"><button class="btn" onclick="cm('m-emot')">Cancelar</button><button class="btn p" onclick="saveMotorista()">Salvar</button></div>
+</div></div>
+
 <script>
 const ADM='adm.welliton@jscontadores.com.br';
 let U=null;
-let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],demandas:[],anotacoes:[],anotacoes_chamado:[],filtros:[],extintores:[]};
+let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],demandas:[],anotacoes:[],anotacoes_chamado:[],filtros:[],extintores:[],veiculos:[],motoristas:[]};
 let MF=[];
 
 // ── UTILS ─────────────────────────────────────────────────
@@ -422,12 +499,13 @@ async function redefinirSenha(){const s=document.getElementById('redef-senha').v
 function verificarTokenNaURL(){const params=new URLSearchParams(window.location.search);const token=params.get('token');if(token){document.getElementById('lform').style.display='none';document.getElementById('rform').style.display='none';document.getElementById('redef-form').style.display='block';}}
 function logout(){U=null;sessionStorage.removeItem('U');document.getElementById('app').classList.remove('vis');document.getElementById('login-screen').style.display='flex';document.getElementById('ls').value='';}
 
-async function startApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').classList.add('vis');document.getElementById('sip').textContent=window.location.host;document.getElementById('unome').textContent=U.nome;document.getElementById('uemail').textContent=U.email;document.getElementById('uav').textContent=U.nome.charAt(0).toUpperCase();document.getElementById('nubtn').style.display=U.is_admin?'flex':'none';document.getElementById('cadd').style.display=U.is_admin?'block':'none';const sn=document.getElementById('saida-resp-nome');if(sn)sn.textContent=U.nome;await load();await loadCli();await loadAdm();rDash();}
+async function startApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').classList.add('vis');document.getElementById('sip').textContent=window.location.host;document.getElementById('unome').textContent=U.nome;document.getElementById('uemail').textContent=U.email;document.getElementById('uav').textContent=U.nome.charAt(0).toUpperCase();document.getElementById('nubtn').style.display=U.is_admin?'flex':'none';document.getElementById('cadd').style.display=U.is_admin?'block':'none';const sn=document.getElementById('saida-resp-nome');if(sn)sn.textContent=U.nome;await load();await loadCli();await loadAdm();await loadFrota();rDash();}
 
 // ── LOAD ───────────────────────────────────────────────────
 async function load(){const d=await A('GET','/dados');C.itens=d.itens||[];C.movimentos=d.movimentos||[];C.pedidos=d.pedidos||[];C.usuarios=d.usuarios||[];MF=C.movimentos;}
 async function loadCli(){const d=await A('GET','/clima');C.aparelhos=d.aparelhos||[];C.chamados=d.chamados||[];}
 async function loadAdm(){const d=await A('GET','/admin');C.demandas=d.demandas||[];C.anotacoes=d.anotacoes||[];C.filtros=d.filtros||[];C.extintores=d.extintores||[];C.anotacoes_chamado=d.anotacoes_chamado||[];}
+async function loadFrota(){const d=await A('GET','/frota');C.veiculos=d.veiculos||[];C.motoristas=d.motoristas||[];}
 
 // ── PAINEL ─────────────────────────────────────────────────
 function rDash(){const it=C.itens,ok=it.filter(i=>i.qtd>i.min).length,lw=it.filter(i=>i.qtd>0&&i.qtd<=i.min).length,ot=it.filter(i=>i.qtd===0).length;document.getElementById('mets').innerHTML=`<div class="met"><div class="mv">${it.length}</div><div class="ml">Total</div></div><div class="met ok"><div class="mv">${ok}</div><div class="ml">OK</div></div><div class="met lw"><div class="mv">${lw}</div><div class="ml">Baixo</div></div><div class="met ot"><div class="mv">${ot}</div><div class="ml">Zerado</div></div>`;const al=it.filter(i=>i.qtd<=i.min);const comPedidos=al.filter(i=>pedidosAbertosPorItem(i.id)>0).length;document.getElementById('alw').innerHTML=al.length?`<div class="ab2 or"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>${al.length} item(ns) com estoque baixo ou zerado${comPedidos?` • ${comPedidos} com pedido(s) em aberto`:''}</div>`:'';document.getElementById('td-dash').innerHTML=al.length?al.map(i=>{const pedidosAbertos=pedidosAbertosPorItem(i.id);const comprar=Math.max((parseInt(i.min,10)||0)+pedidosAbertos-(parseInt(i.qtd,10)||0),0);return`<tr><td>${i.nome}</td><td>${i.cat}</td><td class="mn">${i.qtd} ${i.unid}</td><td class="mn">${i.min}</td><td class="mn">${pedidosAbertos?`${pedidosAbertos} ${i.unid}`:'—'}</td><td class="mn">${comprar} ${i.unid}</td><td>${sit(i)}</td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">Nenhum alerta</td></tr>';}
@@ -560,10 +638,34 @@ function opExt(id){const e=C.extintores.find(x=>x.id===id);if(!e)return;eeid=id;
 async function saveExt(){if(!eeid)return;try{await A('PUT',`/extintores/${eeid}`,{local:document.getElementById('eel').value.trim(),tipo:document.getElementById('eet').value.trim(),data_vencimento:document.getElementById('eed').value,numero_serie:document.getElementById('ees').value.trim()});await loadAdm();cm('m-eext');rVencs();}catch(e){alert('Erro: '+e.message);}}
 async function delExt(id){if(!confirm('Remover extintor?'))return;try{await A('DELETE',`/extintores/${id}`);await loadAdm();rVencs();}catch(e){alert('Erro: '+e.message);}}
 
+
+// ── FROTA: VEÍCULOS ───────────────────────────────────────
+function togFvSeguro(){const c=document.getElementById('fvseguro').checked;document.getElementById('fvsegblk').style.display=c?'block':'none';}
+function togEvSeguro(){const c=document.getElementById('evseguro').checked;document.getElementById('evsegblk').style.display=c?'block':'none';}
+
+async function addVeiculo(){const placa=document.getElementById('fvplaca').value.trim(),ano=document.getElementById('fvano').value,renavam=document.getElementById('fvrenavam').value.trim(),modelo=document.getElementById('fvmodelo').value.trim(),seguro=document.getElementById('fvseguro').checked,seguradora=seguro?document.getElementById('fvseguradora').value.trim():'',vigencia=seguro?document.getElementById('fvvigencia').value:'';if(!placa||!ano||!renavam){alert('Placa, ano e RENAVAM são obrigatórios.');return;}try{await A('POST','/veiculos',{placa,ano:parseInt(ano),renavam,modelo,possui_seguro:seguro,seguradora,vigencia_seguro:vigencia||null});await loadFrota();rVeiculos();['fvplaca','fvano','fvrenavam','fvmodelo','fvseguradora','fvvigencia'].forEach(id=>document.getElementById(id).value='');document.getElementById('fvseguro').checked=false;document.getElementById('fvsegblk').style.display='none';}catch(e){alert('Erro: '+e.message);}}
+
+function rVeiculos(){const tb=document.getElementById('td-veiculos');tb.innerHTML=C.veiculos.length?C.veiculos.map(v=>`<tr><td class="mn"><strong>${v.placa}</strong></td><td>${v.modelo||'—'}</td><td class="mn">${v.ano}</td><td class="mn">${v.renavam}</td><td>${v.possui_seguro?'<span class="bdg ok">Sim</span>':'<span class="bdg sd">Não</span>'}</td><td>${v.possui_seguro&&v.seguradora?v.seguradora:'—'}</td><td class="mn">${v.possui_seguro&&v.vigencia_seguro?fd(v.vigencia_seguro):'—'}</td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opVeiculo(${v.id})">Editar</button><button class="btn sm d" onclick="delVeiculo(${v.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="8" class="empty">Nenhum veículo cadastrado</td></tr>';}
+
+let evid=null;
+function opVeiculo(id){const v=C.veiculos.find(x=>x.id===id);if(!v)return;evid=id;document.getElementById('evplaca').value=v.placa;document.getElementById('evano').value=v.ano;document.getElementById('evrenavam').value=v.renavam;document.getElementById('evmodelo').value=v.modelo||'';document.getElementById('evseguro').checked=!!v.possui_seguro;document.getElementById('evsegblk').style.display=v.possui_seguro?'block':'none';document.getElementById('evseguradora').value=v.seguradora||'';document.getElementById('evvigencia').value=v.vigencia_seguro||'';document.getElementById('m-evei').classList.add('op');}
+async function saveVeiculo(){if(!evid)return;const seguro=document.getElementById('evseguro').checked;try{await A('PUT',`/veiculos/${evid}`,{placa:document.getElementById('evplaca').value.trim(),ano:parseInt(document.getElementById('evano').value),renavam:document.getElementById('evrenavam').value.trim(),modelo:document.getElementById('evmodelo').value.trim(),possui_seguro:seguro,seguradora:seguro?document.getElementById('evseguradora').value.trim():'',vigencia_seguro:seguro&&document.getElementById('evvigencia').value?document.getElementById('evvigencia').value:null});await loadFrota();cm('m-evei');rVeiculos();}catch(e){alert('Erro: '+e.message);}}
+async function delVeiculo(id){if(!confirm('Remover este veículo?'))return;try{await A('DELETE',`/veiculos/${id}`);await loadFrota();rVeiculos();}catch(e){alert('Erro: '+e.message);}}
+
+// ── FROTA: MOTORISTAS ─────────────────────────────────────
+async function addMotorista(){const nome=document.getElementById('fmnome').value.trim(),doc=document.getElementById('fmdocumento').value.trim(),cnh=document.getElementById('fmcnh').value,tel=document.getElementById('fmtelefone').value.trim(),st=document.getElementById('fmstatus').value;if(!nome){alert('Nome é obrigatório.');return;}try{await A('POST','/motoristas',{nome,documento:doc,vencimento_cnh:cnh||null,telefone:tel,status:st});await loadFrota();rMotoristas();['fmnome','fmdocumento','fmcnh','fmtelefone'].forEach(id=>document.getElementById(id).value='');document.getElementById('fmstatus').value='ativo';}catch(e){alert('Erro: '+e.message);}}
+
+function rMotoristas(){const fil=document.getElementById('fmfil')?.value||'';const lista=fil?C.motoristas.filter(m=>m.status===fil):C.motoristas;const tb=document.getElementById('td-motoristas');const stCNH=d=>{if(!d)return'—';const dias=da(d);if(dias<0)return`<span class="bdg al">Vencida (${fd(d)})</span>`;if(dias<=30)return`<span class="bdg av">Vence em ${dias}d</span>`;return`<span class="bdg ok">${fd(d)}</span>`;};tb.innerHTML=lista.length?lista.map(m=>`<tr><td><strong>${m.nome}</strong></td><td class="mn">${m.documento||'—'}</td><td>${stCNH(m.vencimento_cnh)}</td><td>${m.telefone||'—'}</td><td>${m.status==='ativo'?'<span class="bdg ok">Ativo</span>':'<span class="bdg sd">Inativo</span>'}</td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opMotorista(${m.id})">Editar</button><button class="btn sm d" onclick="delMotorista(${m.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Nenhum motorista cadastrado</td></tr>';}
+
+let emid=null;
+function opMotorista(id){const m=C.motoristas.find(x=>x.id===id);if(!m)return;emid=id;document.getElementById('emnome').value=m.nome;document.getElementById('emdocumento').value=m.documento||'';document.getElementById('emcnh').value=m.vencimento_cnh||'';document.getElementById('emtelefone').value=m.telefone||'';document.getElementById('emstatus').value=m.status||'ativo';document.getElementById('m-emot').classList.add('op');}
+async function saveMotorista(){if(!emid)return;try{await A('PUT',`/motoristas/${emid}`,{nome:document.getElementById('emnome').value.trim(),documento:document.getElementById('emdocumento').value.trim(),vencimento_cnh:document.getElementById('emcnh').value||null,telefone:document.getElementById('emtelefone').value.trim(),status:document.getElementById('emstatus').value});await loadFrota();cm('m-emot');rMotoristas();}catch(e){alert('Erro: '+e.message);}}
+async function delMotorista(id){if(!confirm('Remover este motorista?'))return;try{await A('DELETE',`/motoristas/${id}`);await loadFrota();rMotoristas();}catch(e){alert('Erro: '+e.message);}}
+
 // ── MÓDULOS / NAVEGAÇÃO ────────────────────────────────────
-const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:rSels,saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs};
+const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:rSels,saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,fveiculos:rVeiculos,fmotoristas:rMotoristas};
 function sp(n,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni').forEach(b=>b.classList.remove('on'));const pg=document.getElementById('page-'+n);if(pg)pg.classList.add('on');if(btn)btn.classList.add('on');RENDERS[n]?.();}
-function tmod(m){const NAVS={est:'ne',cli:'nc',adm:'na'};const BTNS={est:'bme',cli:'bmc',adm:'bma'};const IC={est:'E',cli:'❄',adm:'🗂'};const TT={est:'Estoque',cli:'Climatização',adm:'Administrativo'};const SB={est:'Material de consumo',cli:'Ar condicionado',adm:'Gestão predial'};const FP={est:'dashboard',cli:'ccham',adm:'ademdas'};['est','cli','adm'].forEach(x=>{document.getElementById(NAVS[x]).style.display=m===x?'block':'none';document.getElementById(BTNS[x]).classList.toggle('on',m===x);});document.getElementById('mid').textContent=IC[m];document.getElementById('mtit').textContent=TT[m];document.getElementById('msub').textContent=SB[m];document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni').forEach(b=>b.classList.remove('on'));document.getElementById('page-'+FP[m]).classList.add('on');const fn=document.querySelector(`#${NAVS[m]} .ni`);if(fn)fn.classList.add('on');RENDERS[FP[m]]?.();}
+function tmod(m){const NAVS={est:'ne',cli:'nc',adm:'na',fro:'nf'};const BTNS={est:'bme',cli:'bmc',adm:'bma',fro:'bmf'};const IC={est:'E',cli:'❄',adm:'🗂',fro:'🚗'};const TT={est:'Estoque',cli:'Climatização',adm:'Administrativo',fro:'Frota'};const SB={est:'Material de consumo',cli:'Ar condicionado',adm:'Gestão predial',fro:'Gestão de veículos'};const FP={est:'dashboard',cli:'ccham',adm:'ademdas',fro:'fveiculos'};['est','cli','adm','fro'].forEach(x=>{document.getElementById(NAVS[x]).style.display=m===x?'block':'none';document.getElementById(BTNS[x]).classList.toggle('on',m===x);});document.getElementById('mid').textContent=IC[m];document.getElementById('mtit').textContent=TT[m];document.getElementById('msub').textContent=SB[m];document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));document.getElementById('page-'+FP[m]).classList.add('on');const fn=document.querySelector(`#${NAVS[m]} .ni`);if(fn)fn.classList.add('on');RENDERS[FP[m]]?.();}
 
 // ── INIT ───────────────────────────────────────────────────
 document.getElementById('sip').textContent=window.location.host;
