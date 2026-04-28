@@ -14,8 +14,8 @@ async function enviarEmailRecuperacao(destinatario, nomeUsuario, token) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_API_KEY}` },
     body: JSON.stringify({
-      from: 'JS Contadores <noreply@jscontadores.com.br>',
-      to: destinatario,
+      from: 'JS Contadores <onboarding@resend.dev>',
+      to: 'wellitoncoutomidiajs@gmail.com', // plano gratuito Resend: só envia para e-mail verificado
       subject: 'Recuperação de senha — JS Contadores',
       html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
         <h2 style="margin-bottom:8px">Recuperação de senha</h2>
