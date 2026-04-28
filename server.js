@@ -5,6 +5,32 @@ const crypto = require('crypto');
 const { Pool } = require('pg');
 
 const PORT = process.env.PORT || 3000;
+const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_FSbyD98m_3Pfjnr1TafChbe3UjqaZVruc';
+const APP_URL = process.env.APP_URL || 'https://estoque-q5rf.onrender.com';
+
+async function enviarEmailRecuperacao(destinatario, nomeUsuario, token) {
+  const link = `${APP_URL}/redefinir-senha?token=${token}`;
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_API_KEY}` },
+    body: JSON.stringify({
+      from: 'JS Contadores <noreply@jscontadores.com.br>',
+      to: destinatario,
+      subject: 'Recuperação de senha — JS Contadores',
+      html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
+        <h2 style="margin-bottom:8px">Recuperação de senha</h2>
+        <p style="color:#555">Olá, <strong>${nomeUsuario}</strong>.</p>
+        <p style="color:#555;margin-bottom:24px">Clique no botão abaixo para definir uma nova senha. O link é válido por <strong>1 hora</strong> e pode ser usado apenas uma vez.</p>
+        <a href="${link}" style="display:inline-block;background:#2a5bd7;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Redefinir minha senha</a>
+        <p style="color:#aaa;font-size:12px;margin-top:24px">Se você não solicitou a recuperação, ignore este e-mail.</p>
+      </div>`
+    })
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error('Erro ao enviar e-mail: ' + (e.message || res.status));
+  }
+}
 const ADM_EMAIL = 'adm.welliton@jscontadores.com.br';
 
 const pool = new Pool({
@@ -155,6 +181,15 @@ async function iniciarBanco() {
     criado_em TIMESTAMP DEFAULT NOW()
   )`);
 
+  await pool.query(`CREATE TABLE IF NOT EXISTS tokens_recuperacao (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    token TEXT UNIQUE NOT NULL,
+    expira_em TIMESTAMP NOT NULL,
+    usado BOOLEAN DEFAULT FALSE,
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+
   console.log('Banco pronto.');
 }
 
@@ -192,18 +227,66 @@ const server = http.createServer(async (req, res) => {
           return ok(res, { id: u.id, nome: u.nome, email: u.email, setor: u.setor, is_admin: u.is_admin });
         }
 
+
+        // ── RECUPERAÇÃO DE SENHA (solicitar) ──────────────────
         if (req.method === 'POST' && pth === '/api/recuperar-senha') {
-          if (b.email !== ADM_EMAIL) return err(res, 403, 'Recuperação disponível somente para o administrador');
-          await pool.query('UPDATE usuarios SET senha_hash=$1 WHERE email=$2', [sha(b.nova_senha), ADM_EMAIL]);
+          const { email } = b;
+          if (!email) return err(res, 400, 'Informe o e-mail');
+          const r = await pool.query('SELECT id, nome FROM usuarios WHERE email=$1', [email]);
+          if (r.rows.length) {
+            const usuario = r.rows[0];
+            const token = crypto.randomBytes(32).toString('hex');
+            const expira = new Date(Date.now() + 60 * 60 * 1000);
+            await pool.query(
+              'INSERT INTO tokens_recuperacao (usuario_id, token, expira_em) VALUES ($1, $2, $3)',
+              [usuario.id, token, expira]
+            );
+            await enviarEmailRecuperacao(email, usuario.nome, token);
+          }
           return ok(res, { ok: true });
         }
 
+        // ── RECUPERAÇÃO DE SENHA (redefinir com token) ────────
+        if (req.method === 'POST' && pth === '/api/redefinir-senha') {
+          const { token, nova_senha } = b;
+          if (!token || !nova_senha) return err(res, 400, 'Token e nova senha são obrigatórios');
+          if (nova_senha.length < 6) return err(res, 400, 'A senha deve ter pelo menos 6 caracteres');
+          const r = await pool.query(
+            'SELECT * FROM tokens_recuperacao WHERE token=$1 AND usado=FALSE AND expira_em > NOW()',
+            [token]
+          );
+          if (!r.rows.length) return err(res, 400, 'Link inválido ou expirado. Solicite um novo.');
+          const tk = r.rows[0];
+          await pool.query('UPDATE usuarios SET senha_hash=$1 WHERE id=$2', [sha(nova_senha), tk.usuario_id]);
+          await pool.query('UPDATE tokens_recuperacao SET usado=TRUE WHERE id=$1', [tk.id]);
+          return ok(res, { ok: true });
+        }
+
+        // ── TROCA DE SENHA (requer login) ─────────────────────
+        if (req.method === 'POST' && pth === '/api/trocar-senha') {
+          const userId = parseInt(req.headers['x-user-id']);
+          if (!userId) return err(res, 401, 'Não autenticado');
+          if (!b.senha_atual || !b.nova_senha) return err(res, 400, 'Informe a senha atual e a nova senha');
+          const r = await pool.query('SELECT senha_hash FROM usuarios WHERE id=$1', [userId]);
+          if (!r.rows.length || r.rows[0].senha_hash !== sha(b.senha_atual))
+            return err(res, 403, 'Senha atual incorreta');
+          await pool.query('UPDATE usuarios SET senha_hash=$1 WHERE id=$2', [sha(b.nova_senha), userId]);
+          return ok(res, { ok: true });
+        }
+
+        // ── GUARD: todas as rotas abaixo exigem usuário autenticado ──
+        const authId = parseInt(req.headers['x-user-id']);
+        const authAdmin = req.headers['x-user-admin'] === 'true';
+        if (!authId) return err(res, 401, 'Não autenticado');
+
         // ── USUÁRIOS ──────────────────────────────────────────
         if (req.method === 'GET' && pth === '/api/usuarios') {
+          if (!authAdmin) return err(res, 403, 'Acesso restrito ao administrador');
           const r = await pool.query('SELECT id,nome,email,setor,is_admin FROM usuarios ORDER BY nome');
           return ok(res, r.rows);
         }
         if (req.method === 'POST' && pth === '/api/usuarios') {
+          if (!authAdmin) return err(res, 403, 'Acesso restrito ao administrador');
           const r = await pool.query(
             'INSERT INTO usuarios (nome,email,senha_hash,setor) VALUES ($1,$2,$3,$4) RETURNING id,nome,email,setor,is_admin',
             [b.nome, b.email, sha(b.senha), b.setor || '']
@@ -211,11 +294,13 @@ const server = http.createServer(async (req, res) => {
           return ok(res, r.rows[0], 201);
         }
         if (req.method === 'PUT' && pth.startsWith('/api/usuarios/')) {
+          if (!authAdmin) return err(res, 403, 'Acesso restrito ao administrador');
           const id = parseInt(pth.split('/')[3]);
           if (b.senha) await pool.query('UPDATE usuarios SET nome=$1,setor=$2,senha_hash=$3 WHERE id=$4', [b.nome, b.setor || '', sha(b.senha), id]);
           else await pool.query('UPDATE usuarios SET nome=$1,setor=$2 WHERE id=$3', [b.nome, b.setor || '', id]);
           return ok(res, { ok: true });
         }        if (req.method === 'DELETE' && pth.startsWith('/api/usuarios/')) {
+          if (!authAdmin) return err(res, 403, 'Acesso restrito ao administrador');
           const id = parseInt(pth.split('/')[3]);
           const u = await pool.query('SELECT email FROM usuarios WHERE id=$1', [id]);
           if (u.rows[0]?.email === ADM_EMAIL) return err(res, 403, 'Não é possível remover o administrador');
@@ -265,6 +350,46 @@ const server = http.createServer(async (req, res) => {
           if (!item) return err(res, 404, 'Item não encontrado');
           const mov = await pool.query('INSERT INTO movimentos (tipo,item_id,item_nome,qtd,data,resp,obs) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *', [b.tipo, b.itemId, item.nome, b.qtd, b.data, b.resp || '—', b.obs || '']);
           return ok(res, mov.rows[0], 201);
+        }
+
+        // ── ENTREGA ATÔMICA DE PEDIDO ─────────────────────────
+        if (req.method === 'POST' && /^\/api\/pedidos\/\d+\/entregar$/.test(pth)) {
+          const pedId = parseInt(pth.split('/')[3]);
+          const client = await pool.connect();
+          try {
+            await client.query('BEGIN');
+            const pedRes = await client.query(
+              'SELECT * FROM pedidos WHERE id=$1 FOR UPDATE', [pedId]
+            );
+            const ped = pedRes.rows[0];
+            if (!ped) { await client.query('ROLLBACK'); client.release(); return err(res, 404, 'Pedido não encontrado'); }
+            if (ped.status === 'entregue') { await client.query('ROLLBACK'); client.release(); return err(res, 409, 'Pedido já foi entregue'); }
+            const itemRes = await client.query(
+              'SELECT * FROM itens WHERE id=$1 FOR UPDATE', [ped.item_id]
+            );
+            const item = itemRes.rows[0];
+            if (!item) { await client.query('ROLLBACK'); client.release(); return err(res, 404, 'Item não encontrado'); }
+            if (item.qtd < ped.qtd) { await client.query('ROLLBACK'); client.release(); return err(res, 400, `Estoque insuficiente: disponível ${item.qtd}, necessário ${ped.qtd}`); }
+            const dt = b.data || new Date().toISOString().split('T')[0];
+            const resp = b.resp || '—';
+            const obs = [`Entrega do pedido #${ped.id} — ${ped.solicitante}`, ped.obs].filter(Boolean).join(' | ');
+            await client.query('UPDATE itens SET qtd=$1 WHERE id=$2', [item.qtd - ped.qtd, item.id]);
+            await client.query(
+              'INSERT INTO movimentos (tipo,item_id,item_nome,qtd,data,resp,obs) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+              ['sa', item.id, item.nome, ped.qtd, dt, resp, obs]
+            );
+            await client.query(
+              'UPDATE pedidos SET status=$1,data_entrega=$2 WHERE id=$3',
+              ['entregue', dt, pedId]
+            );
+            await client.query('COMMIT');
+            client.release();
+            return ok(res, { ok: true, pedido_id: pedId, item: item.nome, qtd: ped.qtd, data: dt });
+          } catch (e) {
+            await client.query('ROLLBACK');
+            client.release();
+            throw e;
+          }
         }
 
         // ── PEDIDOS ───────────────────────────────────────────
@@ -403,7 +528,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Arquivos estáticos
-  let fp = pth === '/' ? '/index.html' : pth;
+  let fp = (pth === '/' || pth === '/redefinir-senha') ? '/index.html' : pth;
   fp = path.join(__dirname, 'public', fp);
   fs.readFile(fp, (e, data) => {
     if (e) { res.writeHead(404); res.end('Não encontrado'); return; }
