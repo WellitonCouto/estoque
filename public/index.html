@@ -129,14 +129,19 @@ tbody tr:hover td{background:var(--bg)}
       <div class="f" style="margin-bottom:11px"><label>E-mail</label><input type="email" id="le" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')login()"></div>
       <div class="f" style="margin-bottom:18px"><label>Senha</label><input type="password" id="ls" placeholder="Sua senha" onkeydown="if(event.key==='Enter')login()"></div>
       <button class="btn p" style="width:100%;justify-content:center" onclick="login()">Entrar</button>
-      <span class="llink" onclick="showRec()">Esqueci minha senha (somente administrador)</span>
+      <span class="llink" onclick="showRec()">Esqueci minha senha</span>
     </div>
     <div id="rform" style="display:none">
-      <p style="font-size:13px;color:var(--tm);margin-bottom:13px">Redefinir senha do administrador.</p>
-      <div class="f" style="margin-bottom:11px"><label>E-mail do administrador</label><input type="email" id="re"></div>
-      <div class="f" style="margin-bottom:18px"><label>Nova senha</label><input type="password" id="rs"></div>
-      <button class="btn p" style="width:100%;justify-content:center" onclick="recSenha()">Redefinir senha</button>
+      <p style="font-size:13px;color:var(--tm);margin-bottom:13px">Informe seu e-mail e enviaremos um link para redefinir sua senha.</p>
+      <div class="f" style="margin-bottom:18px"><label>E-mail cadastrado</label><input type="email" id="rec-email" placeholder="seu@email.com"></div>
+      <button class="btn p" style="width:100%;justify-content:center" onclick="solicitarRecuperacao()">Enviar link de recuperação</button>
       <span class="llink" onclick="showLogin()">Voltar ao login</span>
+    </div>
+    <div id="redef-form" style="display:none">
+      <p style="font-size:13px;color:var(--tm);margin-bottom:13px">Defina sua nova senha.</p>
+      <div class="f" style="margin-bottom:11px"><label>Nova senha</label><input type="password" id="redef-senha" placeholder="Mínimo 6 caracteres"></div>
+      <div class="f" style="margin-bottom:18px"><label>Confirmar nova senha</label><input type="password" id="redef-conf" placeholder="Repita a senha"></div>
+      <button class="btn p" style="width:100%;justify-content:center" onclick="redefinirSenha()">Salvar nova senha</button>
     </div>
   </div>
 </div>
@@ -396,7 +401,7 @@ let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],de
 let MF=[];
 
 // ── UTILS ─────────────────────────────────────────────────
-async function A(m,p,b){const o={method:m,headers:{'Content-Type':'application/json'}};if(b)o.body=JSON.stringify(b);const r=await fetch('/api'+p,o);if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.erro||'Erro');}return r.json();}
+async function A(m,p,b){const o={method:m,headers:{'Content-Type':'application/json'}};if(U){o.headers['x-user-id']=U.id;o.headers['x-user-admin']=U.is_admin?'true':'false';}if(b)o.body=JSON.stringify(b);const r=await fetch('/api'+p,o);if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.erro||'Erro');}return r.json();}
 const fd=d=>{if(!d)return'—';const[y,mo,di]=d.split('-');return`${di}/${mo}/${y}`;};
 const fm=v=>{if(!v&&v!==0)return'—';return'R$ '+parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
 const hj=()=>new Date().toISOString().split('T')[0];
@@ -407,9 +412,11 @@ function pedidosAbertosPorItem(itemId){return C.pedidos.filter(p=>p.status==='ab
 
 // ── LOGIN ──────────────────────────────────────────────────
 async function login(){const e=document.getElementById('le').value.trim(),s=document.getElementById('ls').value,er=document.getElementById('lerr');er.style.display='none';if(!e||!s){er.textContent='Preencha e-mail e senha.';er.style.display='block';return;}try{U=await A('POST','/login',{email:e,senha:s});sessionStorage.setItem('U',JSON.stringify(U));startApp();}catch(ex){er.textContent=ex.message;er.style.display='block';}}
-function showRec(){document.getElementById('lform').style.display='none';document.getElementById('rform').style.display='block';}
-function showLogin(){document.getElementById('rform').style.display='none';document.getElementById('lform').style.display='block';}
-async function recSenha(){const e=document.getElementById('re').value.trim(),s=document.getElementById('rs').value,er=document.getElementById('lerr');if(!e||!s){er.textContent='Preencha os campos.';er.style.display='block';return;}try{await A('POST','/recuperar-senha',{email:e,nova_senha:s});alert('Senha redefinida com sucesso!');showLogin();}catch(ex){er.textContent=ex.message;er.style.display='block';}}
+function showRec(){document.getElementById('lform').style.display='none';document.getElementById('rform').style.display='block';document.getElementById('redef-form').style.display='none';}
+function showLogin(){['rform','redef-form'].forEach(id=>document.getElementById(id).style.display='none');document.getElementById('lform').style.display='block';document.getElementById('lerr').style.display='none';}
+async function solicitarRecuperacao(){const e=document.getElementById('rec-email').value.trim(),er=document.getElementById('lerr');er.style.display='none';if(!e){er.textContent='Informe o e-mail.';er.style.display='block';return;}try{await fetch('/api/recuperar-senha',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e})});alert('Se esse e-mail estiver cadastrado, você receberá um link em instantes. Verifique também a caixa de spam.');showLogin();}catch(ex){er.textContent='Erro ao enviar. Tente novamente.';er.style.display='block';}}
+async function redefinirSenha(){const s=document.getElementById('redef-senha').value,c=document.getElementById('redef-conf').value,er=document.getElementById('lerr');er.style.display='none';if(!s||s.length<6){er.textContent='A senha deve ter pelo menos 6 caracteres.';er.style.display='block';return;}if(s!==c){er.textContent='As senhas não coincidem.';er.style.display='block';return;}const params=new URLSearchParams(window.location.search);const token=params.get('token');if(!token){er.textContent='Link inválido.';er.style.display='block';return;}try{await fetch('/api/redefinir-senha',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,nova_senha:s})});alert('Senha redefinida com sucesso!');window.history.replaceState({},'','/');showLogin();}catch(ex){er.textContent='Link inválido ou expirado. Solicite um novo.';er.style.display='block';}}
+function verificarTokenNaURL(){const params=new URLSearchParams(window.location.search);const token=params.get('token');if(token){document.getElementById('lform').style.display='none';document.getElementById('rform').style.display='none';document.getElementById('redef-form').style.display='block';}}
 function logout(){U=null;sessionStorage.removeItem('U');document.getElementById('app').classList.remove('vis');document.getElementById('login-screen').style.display='flex';document.getElementById('ls').value='';}
 
 async function startApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').classList.add('vis');document.getElementById('sip').textContent=window.location.host;document.getElementById('unome').textContent=U.nome;document.getElementById('uemail').textContent=U.email;document.getElementById('uav').textContent=U.nome.charAt(0).toUpperCase();document.getElementById('nubtn').style.display=U.is_admin?'flex':'none';document.getElementById('cadd').style.display=U.is_admin?'block':'none';const sn=document.getElementById('saida-resp-nome');if(sn)sn.textContent=U.nome;await load();await loadCli();await loadAdm();rDash();}
@@ -471,8 +478,7 @@ async function entPed(id){
   const dt=hj();
   try{
     const obsMovimento=[`Entrega do pedido #${ped.id} — ${ped.solicitante}`,ped.obs].filter(Boolean).join(' | ');
-    await A('POST','/movimentos',{tipo:'sa',itemId:it.id,qtd:ped.qtd,data:dt,resp:U?U.nome:'—',obs:obsMovimento});
-    await A('PUT',`/pedidos/${id}`,{status:'entregue',data_entrega:dt});
+    await A('POST',`/pedidos/${id}/entregar`,{data:dt,resp:U?U.nome:'—'});
     await load();rPeds();rSelPeds();
     alert(`Pedido #${ped.id} entregue!\nSaída de ${ped.qtd} ${it.unid} de "${it.nome}" registrada no histórico.`);
   }catch(e){alert('Erro: '+e.message);}
@@ -558,6 +564,7 @@ function tmod(m){const NAVS={est:'ne',cli:'nc',adm:'na'};const BTNS={est:'bme',c
 
 // ── INIT ───────────────────────────────────────────────────
 document.getElementById('sip').textContent=window.location.host;
+verificarTokenNaURL();
 const SU=sessionStorage.getItem('U');
 if(SU){try{U=JSON.parse(SU);startApp();}catch(e){sessionStorage.removeItem('U');}}
 </script>
