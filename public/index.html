@@ -34,6 +34,9 @@ body{font-family:var(--sn);background:var(--bg);color:var(--tx);font-size:14px;l
 .uinfo span{font-size:10px;color:rgba(255,255,255,.4)}
 .blogout{margin-left:auto;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.4);font-size:15px;padding:2px}
 .blogout:hover{color:#fff}
+.slogout-bar{padding:10px 12px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.blogout-bar{width:100%;background:none;border:1px solid rgba(255,255,255,.15);border-radius:7px;color:rgba(255,255,255,.5);font-size:13px;padding:7px 10px;cursor:pointer;text-align:left;transition:all .15s}
+.blogout-bar:hover{background:rgba(255,255,255,.07);color:#fff;border-color:rgba(255,255,255,.3)}
 .modsw{display:flex;gap:3px;padding:7px 7px 0}
 .mbtn{flex:1;padding:5px 2px;border-radius:6px;border:none;font-size:10px;font-weight:600;cursor:pointer;font-family:var(--sn);color:rgba(255,255,255,.45);background:transparent;text-align:center;transition:all .15s}
 .mbtn:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
@@ -157,7 +160,6 @@ tbody tr:hover td{background:var(--bg)}
     <div class="ubadge">
       <div class="uav" id="uav">?</div>
       <div class="uinfo"><p id="unome">—</p><span id="uemail">—</span></div>
-      <button class="blogout" onclick="logout()" title="Sair">⏻</button>
     </div>
     <div class="modsw">
       <button class="mbtn on" id="bme" onclick="tmod('est')"><span class="mi">📦</span>Estoque</button>
@@ -183,6 +185,7 @@ tbody tr:hover td{background:var(--bg)}
       <button class="ni" onclick="sp('avencs',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Vencimentos</button>
     </nav>
     <div class="sft"><p>Servidor ativo</p><span class="sipbadge" id="sip">—</span></div>
+    <div class="slogout-bar"><button class="blogout-bar" onclick="logout()" title="Sair">⏻ Sair</button></div>
   </aside>
 
   <main class="main">
