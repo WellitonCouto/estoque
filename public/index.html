@@ -188,6 +188,11 @@ tbody tr:hover td{background:var(--bg)}
     <nav id="nf" style="display:none">
       <button class="ni" onclick="sp('fveiculos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M5 17H3a1 1 0 01-1-1v-4l2-5h12l2 5v4a1 1 0 01-1 1h-2M5 17a2 2 0 004 0M5 17a2 2 0 000 4h14a2 2 0 000-4"/><path stroke-width="1.5" d="M15 17a2 2 0 004 0"/></svg>Veículos</button>
       <button class="ni" onclick="sp('fmotoristas',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="1.5"/><path stroke-width="1.5" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Motoristas</button>
+      <button class="ni" onclick="sp('fabastecimentos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 7h11"/><circle cx="9" cy="21" r="1" stroke-width="1.5"/><circle cx="19" cy="21" r="1" stroke-width="1.5"/></svg>Abastecimentos</button>
+      <button class="ni" onclick="sp('fmanutencoes',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="1.5"/></svg>Manutenções</button>
+      <button class="ni" onclick="sp('flicenciamentos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Licenciamentos</button>
+      <button class="ni" onclick="sp('fkm',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Registro KM</button>
+      <button class="ni" onclick="sp('fcustos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Custos</button>
     </nav>
     <div class="sft"><p>Servidor ativo</p><span class="sipbadge" id="sip">—</span></div>
     <div class="slogout-bar"><button class="blogout-bar" onclick="logout()" title="Sair">⏻ Sair</button></div>
@@ -433,6 +438,129 @@ tbody tr:hover td{background:var(--bg)}
       </div>
     </div>
 
+
+    <!-- FROTA: ABASTECIMENTOS -->
+    <div id="page-fabastecimentos" class="page">
+      <div class="ph"><h2>Abastecimentos</h2><p>Registros de abastecimento da frota</p></div>
+      <div class="card"><div class="ct">Registrar abastecimento</div>
+        <div class="fg c2">
+          <div class="f"><label>Veículo *</label><select id="fab-vei"><option value="">Selecione...</option></select></div>
+          <div class="f"><label>Motorista</label><select id="fab-mot"><option value="">Nenhum / não informado</option></select></div>
+        </div>
+        <div class="fg c4">
+          <div class="f"><label>Data *</label><input id="fab-data" type="date"></div>
+          <div class="f"><label>KM atual</label><input id="fab-km" type="number" step="0.1" placeholder="Opcional"></div>
+          <div class="f"><label>Litros</label><input id="fab-litros" type="number" step="0.001" placeholder="Opcional"></div>
+          <div class="f"><label>Valor (R$)</label><input id="fab-valor" type="number" step="0.01" placeholder="Opcional"></div>
+        </div>
+        <button class="btn p" onclick="addAbastecimento()">Registrar</button>
+      </div>
+      <div class="card">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Histórico de abastecimentos</span>
+          <select id="fab-fil-vei" onchange="rAbastecimentos()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos os veículos</option></select>
+        </div>
+        <div class="tw"><table><thead><tr><th>Data</th><th>Veículo</th><th>Motorista</th><th>KM</th><th>Litros</th><th>Valor</th><th></th></tr></thead><tbody id="td-abastecimentos"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- FROTA: MANUTENÇÕES -->
+    <div id="page-fmanutencoes" class="page">
+      <div class="ph"><h2>Manutenções</h2><p>Registros de manutenção da frota</p></div>
+      <div class="card"><div class="ct">Registrar manutenção</div>
+        <div class="fg c2">
+          <div class="f"><label>Veículo *</label><select id="fman-vei"><option value="">Selecione...</option></select></div>
+          <div class="f"><label>Tipo *</label><input id="fman-tipo" placeholder="Ex: Troca de óleo, Pneu, Freios..."></div>
+        </div>
+        <div class="fg c3">
+          <div class="f"><label>Data *</label><input id="fman-data" type="date"></div>
+          <div class="f"><label>KM atual</label><input id="fman-km" type="number" step="0.1" placeholder="Opcional"></div>
+          <div class="f"><label>Valor (R$)</label><input id="fman-valor" type="number" step="0.01" placeholder="Opcional"></div>
+        </div>
+        <div class="f" style="margin-bottom:13px"><label>Descrição *</label><textarea id="fman-desc" placeholder="Detalhe o serviço realizado..."></textarea></div>
+        <button class="btn p" onclick="addManutencao()">Registrar</button>
+      </div>
+      <div class="card">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Histórico de manutenções</span>
+          <select id="fman-fil-vei" onchange="rManutencoes()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos os veículos</option></select>
+        </div>
+        <div class="tw"><table><thead><tr><th>Data</th><th>Veículo</th><th>Tipo</th><th>Descrição</th><th>KM</th><th>Valor</th><th></th></tr></thead><tbody id="td-manutencoes"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- FROTA: LICENCIAMENTOS -->
+    <div id="page-flicenciamentos" class="page">
+      <div class="ph"><h2>Licenciamentos</h2><p>Controle de licenciamento anual dos veículos</p></div>
+      <div class="card"><div class="ct">Registrar licenciamento</div>
+        <div class="fg c2">
+          <div class="f"><label>Veículo *</label><select id="flic-vei"><option value="">Selecione...</option></select></div>
+          <div class="f"><label>Ano *</label><input id="flic-ano" type="number" min="2000" max="2100" placeholder="Ex: 2025"></div>
+        </div>
+        <div class="fg c3">
+          <div class="f"><label>Data de pagamento</label><input id="flic-data" type="date"></div>
+          <div class="f"><label>Valor (R$)</label><input id="flic-valor" type="number" step="0.01" placeholder="Opcional"></div>
+          <div class="f"><label>Status</label><select id="flic-status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+        </div>
+        <button class="btn p" onclick="addLicenciamento()">Registrar</button>
+      </div>
+      <div class="card">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Licenciamentos registrados</span>
+          <select id="flic-fil-st" onchange="rLicenciamentos()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos</option><option value="pendente">Pendentes</option><option value="pago">Pagos</option></select>
+        </div>
+        <div class="tw"><table><thead><tr><th>Veículo</th><th>Ano</th><th>Data pagamento</th><th>Valor</th><th>Status</th><th></th></tr></thead><tbody id="td-licenciamentos"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- FROTA: REGISTRO KM -->
+    <div id="page-fkm" class="page">
+      <div class="ph"><h2>Registro de KM</h2><p>Acompanhamento de quilometragem dos veículos</p></div>
+      <div class="card"><div class="ct">Registrar KM</div>
+        <div class="fg c3">
+          <div class="f"><label>Veículo *</label><select id="fkm-vei"><option value="">Selecione...</option></select></div>
+          <div class="f"><label>Data</label><input id="fkm-data" type="date"></div>
+          <div class="f"><label>KM atual *</label><input id="fkm-km" type="number" step="0.1" placeholder="Ex: 45230"></div>
+        </div>
+        <button class="btn p" onclick="addRegistroKm()">Registrar</button>
+      </div>
+      <div class="card">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Histórico de KM</span>
+          <select id="fkm-fil-vei" onchange="rRegistrosKm()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos os veículos</option></select>
+        </div>
+        <div class="tw"><table><thead><tr><th>Data</th><th>Veículo</th><th>KM Atual</th><th></th></tr></thead><tbody id="td-km"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- FROTA: CUSTOS -->
+    <div id="page-fcustos" class="page">
+      <div class="ph"><h2>Custos da Frota</h2><p>Consolidado de despesas por veículo</p></div>
+      <div class="card"><div class="ct">Lançamento manual de custo</div>
+        <div class="fg c2">
+          <div class="f"><label>Veículo</label><select id="fcs-vei"><option value="">Geral / sem veículo</option></select></div>
+          <div class="f"><label>Tipo *</label><select id="fcs-tipo"><option value="combustivel">Combustível</option><option value="manutencao">Manutenção</option><option value="licenciamento">Licenciamento</option><option value="multa">Multa</option><option value="outros">Outros</option></select></div>
+        </div>
+        <div class="fg c3">
+          <div class="f"><label>Data</label><input id="fcs-data" type="date"></div>
+          <div class="f"><label>Valor (R$)</label><input id="fcs-valor" type="number" step="0.01" placeholder="Opcional"></div>
+          <div class="f"><label>Descrição</label><input id="fcs-desc" placeholder="Opcional"></div>
+        </div>
+        <button class="btn p" onclick="addCusto()">Lançar custo</button>
+      </div>
+      <div class="card">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Todos os custos</span>
+          <div style="display:flex;gap:8px;margin-left:auto">
+            <select id="fcs-fil-vei" onchange="rCustos()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos veículos</option></select>
+            <select id="fcs-fil-tipo" onchange="rCustos()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos os tipos</option><option value="combustivel">Combustível</option><option value="manutencao">Manutenção</option><option value="licenciamento">Licenciamento</option><option value="multa">Multa</option><option value="outros">Outros</option></select>
+          </div>
+        </div>
+        <div id="fcs-total" style="font-size:13px;color:var(--tm);margin-bottom:10px"></div>
+        <div class="tw"><table><thead><tr><th>Data</th><th>Veículo</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Origem</th><th></th></tr></thead><tbody id="td-custos"></tbody></table></div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -474,10 +602,35 @@ tbody tr:hover td{background:var(--bg)}
   <div class="mft"><button class="btn" onclick="cm('m-emot')">Cancelar</button><button class="btn p" onclick="saveMotorista()">Salvar</button></div>
 </div></div>
 
+<div class="mo" id="m-eaba"><div class="mbox"><div class="mtit">Editar abastecimento</div>
+  <div class="fg c2"><div class="f"><label>Veículo *</label><select id="eaba-vei"></select></div><div class="f"><label>Motorista</label><select id="eaba-mot"><option value="">Nenhum</option></select></div></div>
+  <div class="fg c4"><div class="f"><label>Data *</label><input id="eaba-data" type="date"></div><div class="f"><label>KM</label><input id="eaba-km" type="number" step="0.1"></div><div class="f"><label>Litros</label><input id="eaba-litros" type="number" step="0.001"></div><div class="f"><label>Valor (R$)</label><input id="eaba-valor" type="number" step="0.01"></div></div>
+  <div class="mft"><button class="btn" onclick="cm('m-eaba')">Cancelar</button><button class="btn p" onclick="saveAbastecimento()">Salvar</button></div>
+</div></div>
+
+<div class="mo" id="m-eman"><div class="mbox"><div class="mtit">Editar manutenção</div>
+  <div class="fg c2"><div class="f"><label>Veículo *</label><select id="eman-vei"></select></div><div class="f"><label>Tipo *</label><input id="eman-tipo"></div></div>
+  <div class="fg c3"><div class="f"><label>Data *</label><input id="eman-data" type="date"></div><div class="f"><label>KM</label><input id="eman-km" type="number" step="0.1"></div><div class="f"><label>Valor (R$)</label><input id="eman-valor" type="number" step="0.01"></div></div>
+  <div class="f" style="margin-bottom:14px"><label>Descrição *</label><textarea id="eman-desc"></textarea></div>
+  <div class="mft"><button class="btn" onclick="cm('m-eman')">Cancelar</button><button class="btn p" onclick="saveManutencao()">Salvar</button></div>
+</div></div>
+
+<div class="mo" id="m-elic"><div class="mbox"><div class="mtit">Editar licenciamento</div>
+  <div class="fg c2"><div class="f"><label>Veículo *</label><select id="elic-vei"></select></div><div class="f"><label>Ano *</label><input id="elic-ano" type="number"></div></div>
+  <div class="fg c3"><div class="f"><label>Data pagamento</label><input id="elic-data" type="date"></div><div class="f"><label>Valor (R$)</label><input id="elic-valor" type="number" step="0.01"></div><div class="f"><label>Status</label><select id="elic-status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div></div>
+  <div class="mft"><button class="btn" onclick="cm('m-elic')">Cancelar</button><button class="btn p" onclick="saveLicenciamento()">Salvar</button></div>
+</div></div>
+
+<div class="mo" id="m-ecs"><div class="mbox"><div class="mtit">Editar custo manual</div>
+  <div class="fg c2"><div class="f"><label>Veículo</label><select id="ecs-vei"><option value="">Geral</option></select></div><div class="f"><label>Tipo *</label><select id="ecs-tipo"><option value="combustivel">Combustível</option><option value="manutencao">Manutenção</option><option value="licenciamento">Licenciamento</option><option value="multa">Multa</option><option value="outros">Outros</option></select></div></div>
+  <div class="fg c3"><div class="f"><label>Data</label><input id="ecs-data" type="date"></div><div class="f"><label>Valor (R$)</label><input id="ecs-valor" type="number" step="0.01"></div><div class="f"><label>Descrição</label><input id="ecs-desc"></div></div>
+  <div class="mft"><button class="btn" onclick="cm('m-ecs')">Cancelar</button><button class="btn p" onclick="saveCusto()">Salvar</button></div>
+</div></div>
+
 <script>
 const ADM='adm.welliton@jscontadores.com.br';
 let U=null;
-let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],demandas:[],anotacoes:[],anotacoes_chamado:[],filtros:[],extintores:[],veiculos:[],motoristas:[]};
+let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],demandas:[],anotacoes:[],anotacoes_chamado:[],filtros:[],extintores:[],veiculos:[],motoristas:[],abastecimentos:[],manutencoes:[],licenciamentos:[],registros_km:[],custos:[]};
 let MF=[];
 
 // ── UTILS ─────────────────────────────────────────────────
@@ -505,7 +658,7 @@ async function startApp(){document.getElementById('login-screen').style.display=
 async function load(){const d=await A('GET','/dados');C.itens=d.itens||[];C.movimentos=d.movimentos||[];C.pedidos=d.pedidos||[];C.usuarios=d.usuarios||[];MF=C.movimentos;}
 async function loadCli(){const d=await A('GET','/clima');C.aparelhos=d.aparelhos||[];C.chamados=d.chamados||[];}
 async function loadAdm(){const d=await A('GET','/admin');C.demandas=d.demandas||[];C.anotacoes=d.anotacoes||[];C.filtros=d.filtros||[];C.extintores=d.extintores||[];C.anotacoes_chamado=d.anotacoes_chamado||[];}
-async function loadFrota(){const d=await A('GET','/frota');C.veiculos=d.veiculos||[];C.motoristas=d.motoristas||[];}
+async function loadFrota(){const d=await A('GET','/frota');C.veiculos=d.veiculos||[];C.motoristas=d.motoristas||[];C.abastecimentos=d.abastecimentos||[];C.manutencoes=d.manutencoes||[];C.licenciamentos=d.licenciamentos||[];C.registros_km=d.registros_km||[];C.custos=d.custos||[];}
 
 // ── PAINEL ─────────────────────────────────────────────────
 function rDash(){const it=C.itens,ok=it.filter(i=>i.qtd>i.min).length,lw=it.filter(i=>i.qtd>0&&i.qtd<=i.min).length,ot=it.filter(i=>i.qtd===0).length;document.getElementById('mets').innerHTML=`<div class="met"><div class="mv">${it.length}</div><div class="ml">Total</div></div><div class="met ok"><div class="mv">${ok}</div><div class="ml">OK</div></div><div class="met lw"><div class="mv">${lw}</div><div class="ml">Baixo</div></div><div class="met ot"><div class="mv">${ot}</div><div class="ml">Zerado</div></div>`;const al=it.filter(i=>i.qtd<=i.min);const comPedidos=al.filter(i=>pedidosAbertosPorItem(i.id)>0).length;document.getElementById('alw').innerHTML=al.length?`<div class="ab2 or"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>${al.length} item(ns) com estoque baixo ou zerado${comPedidos?` • ${comPedidos} com pedido(s) em aberto`:''}</div>`:'';document.getElementById('td-dash').innerHTML=al.length?al.map(i=>{const pedidosAbertos=pedidosAbertosPorItem(i.id);const comprar=Math.max((parseInt(i.min,10)||0)+pedidosAbertos-(parseInt(i.qtd,10)||0),0);return`<tr><td>${i.nome}</td><td>${i.cat}</td><td class="mn">${i.qtd} ${i.unid}</td><td class="mn">${i.min}</td><td class="mn">${pedidosAbertos?`${pedidosAbertos} ${i.unid}`:'—'}</td><td class="mn">${comprar} ${i.unid}</td><td>${sit(i)}</td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">Nenhum alerta</td></tr>';}
@@ -662,8 +815,196 @@ function opMotorista(id){const m=C.motoristas.find(x=>x.id===id);if(!m)return;em
 async function saveMotorista(){if(!emid)return;try{await A('PUT',`/motoristas/${emid}`,{nome:document.getElementById('emnome').value.trim(),documento:document.getElementById('emdocumento').value.trim(),vencimento_cnh:document.getElementById('emcnh').value||null,telefone:document.getElementById('emtelefone').value.trim(),status:document.getElementById('emstatus').value});await loadFrota();cm('m-emot');rMotoristas();}catch(e){alert('Erro: '+e.message);}}
 async function delMotorista(id){if(!confirm('Remover este motorista?'))return;try{await A('DELETE',`/motoristas/${id}`);await loadFrota();rMotoristas();}catch(e){alert('Erro: '+e.message);}}
 
+
+
+// ── FROTA: UTILS ──────────────────────────────────────────
+function vLabel(id){const v=C.veiculos.find(x=>x.id===id||x.id===parseInt(id));return v?`${v.placa}${v.modelo?' — '+v.modelo:''}`:'—';}
+function mLabel(id){const m=C.motoristas.find(x=>x.id===id||x.id===parseInt(id));return m?m.nome:'—';}
+const tipoLabel={combustivel:'Combustível',manutencao:'Manutenção',licenciamento:'Licenciamento',multa:'Multa',outros:'Outros'};
+
+function rFrotaSels(){
+  const vOpts='<option value="">Selecione...</option>'+C.veiculos.map(v=>`<option value="${v.id}">${v.placa}${v.modelo?' — '+v.modelo:''}</option>`).join('');
+  const vOptsOptional='<option value="">Geral / sem veículo</option>'+C.veiculos.map(v=>`<option value="${v.id}">${v.placa}${v.modelo?' — '+v.modelo:''}</option>`).join('');
+  const mOpts='<option value="">Nenhum / não informado</option>'+C.motoristas.map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  const vFil='<option value="">Todos os veículos</option>'+C.veiculos.map(v=>`<option value="${v.id}">${v.placa}${v.modelo?' — '+v.modelo:''}</option>`).join('');
+  ['fab-vei','fman-vei','flic-vei','fkm-vei'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=vOpts;});
+  ['fcs-vei','ecs-vei'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=vOptsOptional;});
+  ['fab-mot','eaba-mot'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=mOpts;});
+  ['eaba-vei','eman-vei','elic-vei'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=vOpts;});
+  ['fab-fil-vei','fman-fil-vei','fkm-fil-vei','fcs-fil-vei'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=vFil;});
+}
+
+// ── FROTA: ABASTECIMENTOS ─────────────────────────────────
+async function addAbastecimento(){
+  const vid=parseInt(document.getElementById('fab-vei').value),mid=document.getElementById('fab-mot').value,dt=document.getElementById('fab-data').value;
+  if(!vid||!dt){alert('Veículo e data são obrigatórios.');return;}
+  const km=document.getElementById('fab-km').value,lit=document.getElementById('fab-litros').value,val=document.getElementById('fab-valor').value;
+  try{
+    await A('POST','/abastecimentos',{veiculo_id:vid,motorista_id:mid?parseInt(mid):null,data:dt,km:km?parseFloat(km):null,litros:lit?parseFloat(lit):null,valor:val?parseFloat(val):null});
+    await loadFrota();rAbastecimentos();
+    ['fab-km','fab-litros','fab-valor'].forEach(id=>document.getElementById(id).value='');
+  }catch(e){alert('Erro: '+e.message);}
+}
+
+function rAbastecimentos(){
+  const fil=document.getElementById('fab-fil-vei')?.value||'';
+  const lista=fil?C.abastecimentos.filter(a=>String(a.veiculo_id)===fil):C.abastecimentos;
+  const tb=document.getElementById('td-abastecimentos');
+  tb.innerHTML=lista.length?lista.map(a=>`<tr><td class="mn">${fd(a.data)}</td><td>${vLabel(a.veiculo_id)}</td><td>${a.motorista_id?mLabel(a.motorista_id):'—'}</td><td class="mn">${a.km?Number(a.km).toLocaleString('pt-BR')+'km':'—'}</td><td class="mn">${a.litros?Number(a.litros).toLocaleString('pt-BR',{minimumFractionDigits:3})+'L':'—'}</td><td class="mn">${fm(a.valor)}</td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opAbastecimento(${a.id})">Editar</button><button class="btn sm d" onclick="delAbastecimento(${a.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhum abastecimento registrado</td></tr>';
+}
+
+let eabaid=null;
+function opAbastecimento(id){
+  const a=C.abastecimentos.find(x=>x.id===id);if(!a)return;eabaid=id;
+  rFrotaSels();
+  document.getElementById('eaba-vei').value=a.veiculo_id;
+  document.getElementById('eaba-mot').value=a.motorista_id||'';
+  document.getElementById('eaba-data').value=a.data;
+  document.getElementById('eaba-km').value=a.km||'';
+  document.getElementById('eaba-litros').value=a.litros||'';
+  document.getElementById('eaba-valor').value=a.valor||'';
+  document.getElementById('m-eaba').classList.add('op');
+}
+async function saveAbastecimento(){if(!eabaid)return;
+  try{await A('PUT',`/abastecimentos/${eabaid}`,{veiculo_id:parseInt(document.getElementById('eaba-vei').value),motorista_id:document.getElementById('eaba-mot').value?parseInt(document.getElementById('eaba-mot').value):null,data:document.getElementById('eaba-data').value,km:document.getElementById('eaba-km').value?parseFloat(document.getElementById('eaba-km').value):null,litros:document.getElementById('eaba-litros').value?parseFloat(document.getElementById('eaba-litros').value):null,valor:document.getElementById('eaba-valor').value?parseFloat(document.getElementById('eaba-valor').value):null});await loadFrota();cm('m-eaba');rAbastecimentos();}catch(e){alert('Erro: '+e.message);}
+}
+async function delAbastecimento(id){if(!confirm('Remover abastecimento?'))return;try{await A('DELETE',`/abastecimentos/${id}`);await loadFrota();rAbastecimentos();}catch(e){alert('Erro: '+e.message);}}
+
+// ── FROTA: MANUTENÇÕES ────────────────────────────────────
+async function addManutencao(){
+  const vid=parseInt(document.getElementById('fman-vei').value),tipo=document.getElementById('fman-tipo').value.trim(),dt=document.getElementById('fman-data').value,desc=document.getElementById('fman-desc').value.trim();
+  if(!vid){alert('Selecione o veículo.');return;}if(!tipo){alert('Informe o tipo de manutenção.');return;}if(!dt){alert('Informe a data.');return;}if(!desc){alert('Informe a descrição.');return;}
+  const km=document.getElementById('fman-km').value,val=document.getElementById('fman-valor').value;
+  try{
+    await A('POST','/manutencoes',{veiculo_id:vid,data:dt,km:km?parseFloat(km):null,tipo,descricao:desc,valor:val?parseFloat(val):null});
+    await loadFrota();rManutencoes();
+    ['fman-tipo','fman-km','fman-valor','fman-desc'].forEach(id=>document.getElementById(id).value='');
+  }catch(e){alert('Erro: '+e.message);}
+}
+
+function rManutencoes(){
+  const fil=document.getElementById('fman-fil-vei')?.value||'';
+  const lista=fil?C.manutencoes.filter(m=>String(m.veiculo_id)===fil):C.manutencoes;
+  const tb=document.getElementById('td-manutencoes');
+  tb.innerHTML=lista.length?lista.map(m=>`<tr><td class="mn">${fd(m.data)}</td><td>${vLabel(m.veiculo_id)}</td><td><strong>${m.tipo}</strong></td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.descricao}</td><td class="mn">${m.km?Number(m.km).toLocaleString('pt-BR')+'km':'—'}</td><td class="mn">${fm(m.valor)}</td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opManutencao(${m.id})">Editar</button><button class="btn sm d" onclick="delManutencao(${m.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhuma manutenção registrada</td></tr>';
+}
+
+let emanid=null;
+function opManutencao(id){
+  const m=C.manutencoes.find(x=>x.id===id);if(!m)return;emanid=id;
+  rFrotaSels();
+  document.getElementById('eman-vei').value=m.veiculo_id;
+  document.getElementById('eman-tipo').value=m.tipo;
+  document.getElementById('eman-data').value=m.data;
+  document.getElementById('eman-km').value=m.km||'';
+  document.getElementById('eman-valor').value=m.valor||'';
+  document.getElementById('eman-desc').value=m.descricao;
+  document.getElementById('m-eman').classList.add('op');
+}
+async function saveManutencao(){if(!emanid)return;
+  try{await A('PUT',`/manutencoes/${emanid}`,{veiculo_id:parseInt(document.getElementById('eman-vei').value),data:document.getElementById('eman-data').value,km:document.getElementById('eman-km').value?parseFloat(document.getElementById('eman-km').value):null,tipo:document.getElementById('eman-tipo').value.trim(),descricao:document.getElementById('eman-desc').value.trim(),valor:document.getElementById('eman-valor').value?parseFloat(document.getElementById('eman-valor').value):null});await loadFrota();cm('m-eman');rManutencoes();}catch(e){alert('Erro: '+e.message);}
+}
+async function delManutencao(id){if(!confirm('Remover manutenção?'))return;try{await A('DELETE',`/manutencoes/${id}`);await loadFrota();rManutencoes();}catch(e){alert('Erro: '+e.message);}}
+
+// ── FROTA: LICENCIAMENTOS ─────────────────────────────────
+async function addLicenciamento(){
+  const vid=parseInt(document.getElementById('flic-vei').value),ano=parseInt(document.getElementById('flic-ano').value);
+  if(!vid){alert('Selecione o veículo.');return;}if(!ano){alert('Informe o ano.');return;}
+  const dt=document.getElementById('flic-data').value,val=document.getElementById('flic-valor').value,st=document.getElementById('flic-status').value;
+  try{
+    await A('POST','/licenciamentos',{veiculo_id:vid,ano,data_pagamento:dt||null,valor:val?parseFloat(val):null,status:st});
+    await loadFrota();rLicenciamentos();
+    ['flic-data','flic-valor'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('flic-status').value='pendente';
+  }catch(e){alert('Erro: '+e.message);}
+}
+
+function rLicenciamentos(){
+  const fil=document.getElementById('flic-fil-st')?.value||'';
+  const lista=fil?C.licenciamentos.filter(l=>l.status===fil):C.licenciamentos;
+  const tb=document.getElementById('td-licenciamentos');
+  tb.innerHTML=lista.length?lista.map(l=>`<tr><td>${vLabel(l.veiculo_id)}</td><td class="mn">${l.ano}</td><td class="mn">${fd(l.data_pagamento)}</td><td class="mn">${fm(l.valor)}</td><td><span class="bdg ${l.status==='pago'?'ok':'lw'}">${l.status==='pago'?'Pago':'Pendente'}</span></td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opLicenciamento(${l.id})">Editar</button><button class="btn sm d" onclick="delLicenciamento(${l.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Nenhum licenciamento registrado</td></tr>';
+}
+
+let elicid=null;
+function opLicenciamento(id){
+  const l=C.licenciamentos.find(x=>x.id===id);if(!l)return;elicid=id;
+  rFrotaSels();
+  document.getElementById('elic-vei').value=l.veiculo_id;
+  document.getElementById('elic-ano').value=l.ano;
+  document.getElementById('elic-data').value=l.data_pagamento||'';
+  document.getElementById('elic-valor').value=l.valor||'';
+  document.getElementById('elic-status').value=l.status||'pendente';
+  document.getElementById('m-elic').classList.add('op');
+}
+async function saveLicenciamento(){if(!elicid)return;
+  try{await A('PUT',`/licenciamentos/${elicid}`,{veiculo_id:parseInt(document.getElementById('elic-vei').value),ano:parseInt(document.getElementById('elic-ano').value),data_pagamento:document.getElementById('elic-data').value||null,valor:document.getElementById('elic-valor').value?parseFloat(document.getElementById('elic-valor').value):null,status:document.getElementById('elic-status').value});await loadFrota();cm('m-elic');rLicenciamentos();}catch(e){alert('Erro: '+e.message);}
+}
+async function delLicenciamento(id){if(!confirm('Remover licenciamento?'))return;try{await A('DELETE',`/licenciamentos/${id}`);await loadFrota();rLicenciamentos();}catch(e){alert('Erro: '+e.message);}}
+
+// ── FROTA: REGISTROS KM ───────────────────────────────────
+async function addRegistroKm(){
+  const vid=parseInt(document.getElementById('fkm-vei').value),km=document.getElementById('fkm-km').value,dt=document.getElementById('fkm-data').value;
+  if(!vid){alert('Selecione o veículo.');return;}if(!km){alert('Informe o KM atual.');return;}
+  try{
+    await A('POST','/registros-km',{veiculo_id:vid,data:dt||null,km_atual:parseFloat(km)});
+    await loadFrota();rRegistrosKm();
+    document.getElementById('fkm-km').value='';
+  }catch(e){alert('Erro: '+e.message);}
+}
+
+function rRegistrosKm(){
+  const fil=document.getElementById('fkm-fil-vei')?.value||'';
+  const lista=fil?C.registros_km.filter(r=>String(r.veiculo_id)===fil):C.registros_km;
+  const tb=document.getElementById('td-km');
+  tb.innerHTML=lista.length?lista.map(r=>`<tr><td class="mn">${fd(r.data)}</td><td>${vLabel(r.veiculo_id)}</td><td class="mn"><strong>${Number(r.km_atual).toLocaleString('pt-BR')} km</strong></td><td><button class="btn sm d" onclick="delRegistroKm(${r.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Nenhum registro de KM</td></tr>';
+}
+async function delRegistroKm(id){if(!confirm('Remover registro?'))return;try{await A('DELETE',`/registros-km/${id}`);await loadFrota();rRegistrosKm();}catch(e){alert('Erro: '+e.message);}}
+
+// ── FROTA: CUSTOS ─────────────────────────────────────────
+async function addCusto(){
+  const tipo=document.getElementById('fcs-tipo').value,dt=document.getElementById('fcs-data').value;
+  if(!tipo){alert('Informe o tipo.');return;}
+  const vid=document.getElementById('fcs-vei').value,val=document.getElementById('fcs-valor').value,desc=document.getElementById('fcs-desc').value.trim();
+  try{
+    await A('POST','/custos',{veiculo_id:vid?parseInt(vid):null,data:dt||null,tipo,descricao:desc,valor:val?parseFloat(val):null});
+    await loadFrota();rCustos();
+    ['fcs-valor','fcs-desc'].forEach(id=>document.getElementById(id).value='');
+  }catch(e){alert('Erro: '+e.message);}
+}
+
+function rCustos(){
+  const filV=document.getElementById('fcs-fil-vei')?.value||'';
+  const filT=document.getElementById('fcs-fil-tipo')?.value||'';
+  let lista=[...C.custos];
+  if(filV)lista=lista.filter(c=>String(c.veiculo_id)===filV);
+  if(filT)lista=lista.filter(c=>c.tipo===filT);
+  const total=lista.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+  const totEl=document.getElementById('fcs-total');
+  if(totEl)totEl.innerHTML=`<strong>Total no período: ${fm(total)}</strong>${lista.length!==C.custos.length?' (filtrado)':''}`;
+  const tb=document.getElementById('td-custos');
+  const origemLabel={manual:'Manual',abastecimento:'Abastecimento',manutencao:'Manutenção',licenciamento:'Licenciamento'};
+  tb.innerHTML=lista.length?lista.map(c=>`<tr><td class="mn">${fd(c.data)}</td><td>${c.veiculo_id?vLabel(c.veiculo_id):'—'}</td><td><span class="bdg ${c.tipo==='combustivel'?'ok':c.tipo==='multa'?'al':'lw'}">${tipoLabel[c.tipo]||c.tipo}</span></td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.descricao||'—'}</td><td class="mn">${fm(c.valor)}</td><td style="font-size:11px;color:var(--tm)">${origemLabel[c.origem]||c.origem}</td><td style="display:flex;gap:5px">${c.origem==='manual'?`<button class="btn sm e" onclick="opCusto(${c.id})">Editar</button><button class="btn sm d" onclick="delCusto(${c.id})">Remover</button>`:''}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhum custo registrado</td></tr>';
+}
+
+let ecsid=null;
+function opCusto(id){
+  const c=C.custos.find(x=>x.id===id);if(!c||c.origem!=='manual')return;ecsid=id;
+  rFrotaSels();
+  document.getElementById('ecs-vei').value=c.veiculo_id||'';
+  document.getElementById('ecs-tipo').value=c.tipo;
+  document.getElementById('ecs-data').value=c.data||'';
+  document.getElementById('ecs-valor').value=c.valor||'';
+  document.getElementById('ecs-desc').value=c.descricao||'';
+  document.getElementById('m-ecs').classList.add('op');
+}
+async function saveCusto(){if(!ecsid)return;
+  try{await A('PUT',`/custos/${ecsid}`,{veiculo_id:document.getElementById('ecs-vei').value?parseInt(document.getElementById('ecs-vei').value):null,data:document.getElementById('ecs-data').value||null,tipo:document.getElementById('ecs-tipo').value,descricao:document.getElementById('ecs-desc').value.trim(),valor:document.getElementById('ecs-valor').value?parseFloat(document.getElementById('ecs-valor').value):null});await loadFrota();cm('m-ecs');rCustos();}catch(e){alert('Erro: '+e.message);}
+}
+async function delCusto(id){if(!confirm('Remover custo?'))return;try{await A('DELETE',`/custos/${id}`);await loadFrota();rCustos();}catch(e){alert('Erro: '+e.message);}}
+
 // ── MÓDULOS / NAVEGAÇÃO ────────────────────────────────────
-const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:rSels,saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,fveiculos:rVeiculos,fmotoristas:rMotoristas};
+const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:rSels,saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,fveiculos:rVeiculos,fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();}};
 function sp(n,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni').forEach(b=>b.classList.remove('on'));const pg=document.getElementById('page-'+n);if(pg)pg.classList.add('on');if(btn)btn.classList.add('on');RENDERS[n]?.();}
 function tmod(m){const NAVS={est:'ne',cli:'nc',adm:'na',fro:'nf'};const BTNS={est:'bme',cli:'bmc',adm:'bma',fro:'bmf'};const IC={est:'E',cli:'❄',adm:'🗂',fro:'🚗'};const TT={est:'Estoque',cli:'Climatização',adm:'Administrativo',fro:'Frota'};const SB={est:'Material de consumo',cli:'Ar condicionado',adm:'Gestão predial',fro:'Gestão de veículos'};const FP={est:'dashboard',cli:'ccham',adm:'ademdas',fro:'fveiculos'};['est','cli','adm','fro'].forEach(x=>{document.getElementById(NAVS[x]).style.display=m===x?'block':'none';document.getElementById(BTNS[x]).classList.toggle('on',m===x);});document.getElementById('mid').textContent=IC[m];document.getElementById('mtit').textContent=TT[m];document.getElementById('msub').textContent=SB[m];document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));document.getElementById('page-'+FP[m]).classList.add('on');const fn=document.querySelector(`#${NAVS[m]} .ni`);if(fn)fn.classList.add('on');RENDERS[FP[m]]?.();}
 
