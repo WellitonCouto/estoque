@@ -259,6 +259,21 @@ async function iniciarBanco() {
     criado_em TIMESTAMP DEFAULT NOW()
   )`);
 
+  await pool.query(`CREATE TABLE IF NOT EXISTS alertas_config (
+    id SERIAL PRIMARY KEY,
+    veiculo_id INTEGER REFERENCES veiculos(id) ON DELETE CASCADE,
+    tipo_alerta TEXT NOT NULL,
+    intervalo_km NUMERIC(10,1),
+    intervalo_dias INTEGER,
+    antecedencia_dias INTEGER NOT NULL DEFAULT 30,
+    km_referencia NUMERIC(10,1),
+    data_referencia TEXT,
+    criado_em TIMESTAMP DEFAULT NOW(),
+    UNIQUE(veiculo_id, tipo_alerta)
+  )`);
+  await pool.query(`ALTER TABLE alertas_config ADD COLUMN IF NOT EXISTS km_referencia NUMERIC(10,1)`);
+  await pool.query(`ALTER TABLE alertas_config ADD COLUMN IF NOT EXISTS data_referencia TEXT`);
+
   console.log('Banco pronto.');
 }
 
@@ -590,7 +605,7 @@ const server = http.createServer(async (req, res) => {
 
         // ── FROTA ─────────────────────────────────────────────
         if (req.method === 'GET' && pth === '/api/frota') {
-          const [vei, mot, abas, mans, lics, kms, cus] = await Promise.all([
+          const [vei, mot, abas, mans, lics, kms, cus, alts] = await Promise.all([
             pool.query('SELECT * FROM veiculos ORDER BY placa'),
             pool.query('SELECT * FROM motoristas ORDER BY nome'),
             pool.query('SELECT * FROM abastecimentos ORDER BY data DESC, criado_em DESC'),
@@ -598,8 +613,9 @@ const server = http.createServer(async (req, res) => {
             pool.query('SELECT * FROM licenciamentos ORDER BY ano DESC, criado_em DESC'),
             pool.query('SELECT * FROM registros_km ORDER BY data DESC, criado_em DESC'),
             pool.query('SELECT * FROM custos ORDER BY data DESC, criado_em DESC'),
+            pool.query('SELECT * FROM alertas_config ORDER BY veiculo_id, tipo_alerta'),
           ]);
-          return ok(res, { veiculos: vei.rows, motoristas: mot.rows, abastecimentos: abas.rows, manutencoes: mans.rows, licenciamentos: lics.rows, registros_km: kms.rows, custos: cus.rows });
+          return ok(res, { veiculos: vei.rows, motoristas: mot.rows, abastecimentos: abas.rows, manutencoes: mans.rows, licenciamentos: lics.rows, registros_km: kms.rows, custos: cus.rows, alertas_config: alts.rows });
         }
         if (req.method === 'POST' && pth === '/api/veiculos') {
           const r = await pool.query('INSERT INTO veiculos (placa,ano,renavam,modelo,possui_seguro,seguradora,vigencia_seguro) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *', [b.placa, b.ano, b.renavam, b.modelo||'', !!b.possui_seguro, b.seguradora||'', b.vigencia_seguro||null]);
@@ -742,6 +758,31 @@ const server = http.createServer(async (req, res) => {
           const r = await pool.query('SELECT origem FROM custos WHERE id=$1', [id]);
           if (r.rows[0]?.origem !== 'manual') return err(res, 403, 'Só é possível excluir lançamentos manuais');
           await pool.query('DELETE FROM custos WHERE id=$1', [id]);
+          return ok(res, { ok: true });
+        }
+
+        // ── ALERTAS CONFIG ────────────────────────────────────
+        if (req.method === 'POST' && pth === '/api/alertas-config') {
+          const r = await pool.query(
+            `INSERT INTO alertas_config (veiculo_id,tipo_alerta,intervalo_km,intervalo_dias,antecedencia_dias,km_referencia,data_referencia)
+             VALUES ($1,$2,$3,$4,$5,$6,$7)
+             ON CONFLICT (veiculo_id,tipo_alerta) DO UPDATE
+               SET intervalo_km=$3, intervalo_dias=$4, antecedencia_dias=$5, km_referencia=$6, data_referencia=$7
+             RETURNING *`,
+            [b.veiculo_id, b.tipo_alerta, b.intervalo_km||null, b.intervalo_dias||null, b.antecedencia_dias||30, b.km_referencia||null, b.data_referencia||null]
+          );
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'PUT' && pth.startsWith('/api/alertas-config/')) {
+          const id = parseInt(pth.split('/')[3]);
+          const r = await pool.query(
+            'UPDATE alertas_config SET intervalo_km=$1,intervalo_dias=$2,antecedencia_dias=$3,km_referencia=$4,data_referencia=$5 WHERE id=$6 RETURNING *',
+            [b.intervalo_km||null, b.intervalo_dias||null, b.antecedencia_dias||30, b.km_referencia||null, b.data_referencia||null, id]
+          );
+          return ok(res, r.rows[0]);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/alertas-config/')) {
+          await pool.query('DELETE FROM alertas_config WHERE id=$1', [parseInt(pth.split('/')[3])]);
           return ok(res, { ok: true });
         }
 
