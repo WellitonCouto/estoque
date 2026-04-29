@@ -193,6 +193,7 @@ tbody tr:hover td{background:var(--bg)}
       <button class="ni" onclick="sp('flicenciamentos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Licenciamentos</button>
       <button class="ni" onclick="sp('fkm',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Registro KM</button>
       <button class="ni" onclick="sp('fcustos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Custos</button>
+      <button class="ni" onclick="sp('falertas',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>Alertas</button>
     </nav>
     <div class="sft"><p>Servidor ativo</p><span class="sipbadge" id="sip">—</span></div>
     <div class="slogout-bar"><button class="blogout-bar" onclick="logout()" title="Sair">⏻ Sair</button></div>
@@ -383,6 +384,7 @@ tbody tr:hover td{background:var(--bg)}
     <!-- FROTA: VEÍCULOS -->
     <div id="page-fveiculos" class="page">
       <div class="ph"><h2>Veículos</h2><p>Cadastro e gestão da frota</p></div>
+      <div id="frota-alertas-badge"></div>
       <div class="card"><div class="ct">Cadastrar veículo</div>
         <div class="fg c3">
           <div class="f"><label>Placa *</label><input id="fvplaca" placeholder="Ex: ABC-1234" oninput="this.value=this.value.toUpperCase()"></div>
@@ -561,6 +563,29 @@ tbody tr:hover td{background:var(--bg)}
       </div>
     </div>
 
+
+    <!-- FROTA: ALERTAS DASHBOARD -->
+    <div id="page-falertas" class="page">
+      <div class="ph"><h2>Alertas da Frota</h2><p>Monitoramento de vencimentos e intervalos</p></div>
+      <div id="falerts-summary" class="mets" style="grid-template-columns:repeat(3,1fr)"></div>
+      <div class="card">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Status dos alertas</span>
+          <select id="falt-fil" onchange="rAlertas()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)">
+            <option value="">Todos</option><option value="vencido">Vencidos</option><option value="proximo">Próximos</option><option value="ok">Em dia</option>
+          </select>
+        </div>
+        <div id="falerts-list"></div>
+      </div>
+      <div class="card">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Configurar alertas por veículo</span>
+          <button class="btn sm p" onclick="abrConfigAlerta()" style="margin-left:auto">+ Novo alerta</button>
+        </div>
+        <div class="tw"><table><thead><tr><th>Veículo</th><th>Tipo</th><th>Intervalo KM</th><th>Intervalo Dias</th><th>Antecedência</th><th>Último serviço</th><th></th></tr></thead><tbody id="td-alertas-config"></tbody></table></div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -627,10 +652,39 @@ tbody tr:hover td{background:var(--bg)}
   <div class="mft"><button class="btn" onclick="cm('m-ecs')">Cancelar</button><button class="btn p" onclick="saveCusto()">Salvar</button></div>
 </div></div>
 
+<div class="mo" id="m-cfg-alerta"><div class="mbox"><div class="mtit" id="m-cfg-alerta-tit">Configurar alerta</div>
+  <div class="fg c2" style="margin-bottom:12px">
+    <div class="f"><label>Veículo *</label><select id="cfa-vei"><option value="">Selecione...</option></select></div>
+    <div class="f"><label>Tipo de alerta *</label><select id="cfa-tipo">
+      <option value="oleo">Troca de óleo</option>
+      <option value="revisao">Revisão</option>
+      <option value="licenciamento">Licenciamento</option>
+      <option value="seguro">Seguro</option>
+    </select></div>
+  </div>
+  <div id="cfa-intervalo-blk">
+    <div class="fg c2" style="margin-bottom:12px">
+      <div class="f"><label>Intervalo em KM</label><input id="cfa-km" type="number" step="1" placeholder="Ex: 5000 (opcional)"></div>
+      <div class="f"><label>Intervalo em dias</label><input id="cfa-dias" type="number" placeholder="Ex: 180 (opcional)"></div>
+    </div>
+    <div style="background:var(--acb);border:1px solid #c5d4f7;border-radius:10px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ac);margin-bottom:9px">Referência do último serviço (manual)</div>
+      <div class="fg c2">
+        <div class="f"><label>KM no último serviço</label><input id="cfa-kmref" type="number" step="1" placeholder="Ex: 42500 (opcional)"></div>
+        <div class="f"><label>Data do último serviço</label><input id="cfa-dataref" type="date"></div>
+      </div>
+      <p style="font-size:11px;color:var(--ac);margin-top:4px">Se preenchido, será usado como ponto de partida para o cálculo. Caso contrário, o sistema buscará na lista de manutenções.</p>
+    </div>
+  </div>
+  <div class="f" style="margin-bottom:14px"><label>Avisar com antecedência de (dias) *</label><input id="cfa-ant" type="number" value="30" placeholder="Ex: 30"></div>
+  <p id="cfa-info" style="font-size:12px;color:var(--tm);margin-bottom:12px"></p>
+  <div class="mft"><button class="btn" onclick="cm('m-cfg-alerta')">Cancelar</button><button class="btn p" onclick="saveConfigAlerta()">Salvar</button></div>
+</div></div>
+
 <script>
 const ADM='adm.welliton@jscontadores.com.br';
 let U=null;
-let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],demandas:[],anotacoes:[],anotacoes_chamado:[],filtros:[],extintores:[],veiculos:[],motoristas:[],abastecimentos:[],manutencoes:[],licenciamentos:[],registros_km:[],custos:[]};
+let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],demandas:[],anotacoes:[],anotacoes_chamado:[],filtros:[],extintores:[],veiculos:[],motoristas:[],abastecimentos:[],manutencoes:[],licenciamentos:[],registros_km:[],custos:[],alertas_config:[]};
 let MF=[];
 
 // ── UTILS ─────────────────────────────────────────────────
@@ -658,7 +712,7 @@ async function startApp(){document.getElementById('login-screen').style.display=
 async function load(){const d=await A('GET','/dados');C.itens=d.itens||[];C.movimentos=d.movimentos||[];C.pedidos=d.pedidos||[];C.usuarios=d.usuarios||[];MF=C.movimentos;}
 async function loadCli(){const d=await A('GET','/clima');C.aparelhos=d.aparelhos||[];C.chamados=d.chamados||[];}
 async function loadAdm(){const d=await A('GET','/admin');C.demandas=d.demandas||[];C.anotacoes=d.anotacoes||[];C.filtros=d.filtros||[];C.extintores=d.extintores||[];C.anotacoes_chamado=d.anotacoes_chamado||[];}
-async function loadFrota(){const d=await A('GET','/frota');C.veiculos=d.veiculos||[];C.motoristas=d.motoristas||[];C.abastecimentos=d.abastecimentos||[];C.manutencoes=d.manutencoes||[];C.licenciamentos=d.licenciamentos||[];C.registros_km=d.registros_km||[];C.custos=d.custos||[];}
+async function loadFrota(){const d=await A('GET','/frota');C.veiculos=d.veiculos||[];C.motoristas=d.motoristas||[];C.abastecimentos=d.abastecimentos||[];C.manutencoes=d.manutencoes||[];C.licenciamentos=d.licenciamentos||[];C.registros_km=d.registros_km||[];C.custos=d.custos||[];C.alertas_config=d.alertas_config||[];}
 
 // ── PAINEL ─────────────────────────────────────────────────
 function rDash(){const it=C.itens,ok=it.filter(i=>i.qtd>i.min).length,lw=it.filter(i=>i.qtd>0&&i.qtd<=i.min).length,ot=it.filter(i=>i.qtd===0).length;document.getElementById('mets').innerHTML=`<div class="met"><div class="mv">${it.length}</div><div class="ml">Total</div></div><div class="met ok"><div class="mv">${ok}</div><div class="ml">OK</div></div><div class="met lw"><div class="mv">${lw}</div><div class="ml">Baixo</div></div><div class="met ot"><div class="mv">${ot}</div><div class="ml">Zerado</div></div>`;const al=it.filter(i=>i.qtd<=i.min);const comPedidos=al.filter(i=>pedidosAbertosPorItem(i.id)>0).length;document.getElementById('alw').innerHTML=al.length?`<div class="ab2 or"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>${al.length} item(ns) com estoque baixo ou zerado${comPedidos?` • ${comPedidos} com pedido(s) em aberto`:''}</div>`:'';document.getElementById('td-dash').innerHTML=al.length?al.map(i=>{const pedidosAbertos=pedidosAbertosPorItem(i.id);const comprar=Math.max((parseInt(i.min,10)||0)+pedidosAbertos-(parseInt(i.qtd,10)||0),0);return`<tr><td>${i.nome}</td><td>${i.cat}</td><td class="mn">${i.qtd} ${i.unid}</td><td class="mn">${i.min}</td><td class="mn">${pedidosAbertos?`${pedidosAbertos} ${i.unid}`:'—'}</td><td class="mn">${comprar} ${i.unid}</td><td>${sit(i)}</td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">Nenhum alerta</td></tr>';}
@@ -1003,8 +1057,286 @@ async function saveCusto(){if(!ecsid)return;
 }
 async function delCusto(id){if(!confirm('Remover custo?'))return;try{await A('DELETE',`/custos/${id}`);await loadFrota();rCustos();}catch(e){alert('Erro: '+e.message);}}
 
+
+// ── FROTA: ALERTAS ────────────────────────────────────────
+const ALERTA_TIPO_LABEL={oleo:'Troca de óleo',revisao:'Revisão',licenciamento:'Licenciamento',seguro:'Seguro'};
+const ALERTA_TIPO_ICON={oleo:'🛢',revisao:'🔧',licenciamento:'📋',seguro:'🛡'};
+
+// Calcula todos os alertas a partir dos dados em C
+function calcularAlertas(){
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const alertas=[];
+
+  C.alertas_config.forEach(cfg=>{
+    const vei=C.veiculos.find(v=>v.id===cfg.veiculo_id||v.id===parseInt(cfg.veiculo_id));
+    if(!vei)return;
+    const vLabel=`${vei.placa}${vei.modelo?' — '+vei.modelo:''}`;
+    const ant=parseInt(cfg.antecedencia_dias)||30;
+
+    if(cfg.tipo_alerta==='oleo'||cfg.tipo_alerta==='revisao'){
+      // Use manual reference first; fallback to searching manutencoes
+      let ultKm=cfg.km_referencia?parseFloat(cfg.km_referencia):null;
+      let ultData=cfg.data_referencia?new Date(cfg.data_referencia+'T00:00:00'):null;
+      let refSource='manual';
+
+      if(!ultKm&&!ultData){
+        // Fallback: search manutencoes
+        refSource='auto';
+        const tipoKey=cfg.tipo_alerta==='oleo'?['óleo','oleo','oil']:['revisão','revisao','revisao'];
+        const mans=C.manutencoes
+          .filter(m=>(m.veiculo_id===cfg.veiculo_id||m.veiculo_id===parseInt(cfg.veiculo_id))
+            && tipoKey.some(k=>m.tipo.toLowerCase().includes(k)||m.descricao.toLowerCase().includes(k)))
+          .sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+        const ultima=mans[0]||null;
+        ultKm=ultima&&ultima.km?parseFloat(ultima.km):null;
+        ultData=ultima&&ultima.data?new Date(ultima.data+'T00:00:00'):null;
+      }
+
+      // Latest km reading from registros_km
+      const kms=C.registros_km
+        .filter(r=>r.veiculo_id===cfg.veiculo_id||r.veiculo_id===parseInt(cfg.veiculo_id))
+        .sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+      const kmAtual=kms[0]?parseFloat(kms[0].km_atual):null;
+
+      let statusKm=null,statusDias=null,detalhes=[];
+
+      if(cfg.intervalo_km&&ultKm){
+        const proxKm=ultKm+parseFloat(cfg.intervalo_km);
+        if(kmAtual){
+          const restante=proxKm-kmAtual;
+          if(restante<=0) statusKm='vencido';
+          else if(restante<=parseFloat(cfg.intervalo_km)*0.15) statusKm='proximo';
+          else statusKm='ok';
+          detalhes.push(`KM: ${restante>0?'faltam '+Math.round(restante)+' km':'vencido há '+Math.abs(Math.round(restante))+' km'}`);
+        } else {
+          detalhes.push(`Próxima troca: ${Math.round(proxKm)} km (km atual não registrado)`);
+          statusKm='proximo';
+        }
+      } else if(cfg.intervalo_km&&!ultKm){
+        detalhes.push('KM: sem referência de partida');
+        statusKm='proximo';
+      }
+
+      if(cfg.intervalo_dias&&ultData){
+        const proxData=new Date(ultData);proxData.setDate(proxData.getDate()+parseInt(cfg.intervalo_dias));
+        const diasRestantes=Math.round((proxData-hoje)/(864e5));
+        if(diasRestantes<0) statusDias='vencido';
+        else if(diasRestantes<=ant) statusDias='proximo';
+        else statusDias='ok';
+        detalhes.push(`Prazo: ${diasRestantes>=0?'faltam '+diasRestantes+' dias':'vencido há '+Math.abs(diasRestantes)+' dias'}`);
+      } else if(cfg.intervalo_dias&&!ultData){
+        detalhes.push('Prazo: sem data de referência');
+        statusDias='proximo';
+      }
+
+      const statuses=[statusKm,statusDias].filter(Boolean);
+      let status='ok';
+      if(statuses.includes('vencido')) status='vencido';
+      else if(statuses.includes('proximo')) status='proximo';
+      else if(statuses.length===0) status='proximo';
+
+      const ultKmFmt=ultKm?Math.round(ultKm)+' km':'?';
+      const ultDataFmt=cfg.data_referencia?cfg.data_referencia.split('-').reverse().join('/'):ultData?ultData.toLocaleDateString('pt-BR'):'?';
+      const subLabel=(ultKm||ultData)?`Último ${ALERTA_TIPO_LABEL[cfg.tipo_alerta].toLowerCase()}: ${ultDataFmt} — ${ultKmFmt}${refSource==='auto'?' (via manutenções)':''}`:('Sem referência de partida');
+
+      alertas.push({id:`${cfg.id}_${cfg.tipo_alerta}`,cfg,vei,vLabel,status,
+        titulo:ALERTA_TIPO_LABEL[cfg.tipo_alerta],
+        icon:ALERTA_TIPO_ICON[cfg.tipo_alerta],
+        descricao:detalhes.join(' · ')||subLabel,
+        sub:subLabel});
+
+    } else if(cfg.tipo_alerta==='licenciamento'){
+      const anoAtual=hoje.getFullYear();
+      const lic=C.licenciamentos
+        .filter(l=>(l.veiculo_id===cfg.veiculo_id||l.veiculo_id===parseInt(cfg.veiculo_id))&&parseInt(l.ano)===anoAtual)[0];
+
+      let status,descricao;
+      if(!lic){
+        status='vencido';descricao=`Licenciamento ${anoAtual} não encontrado`;
+      } else if(lic.status==='pago'){
+        status='ok';descricao=`Licenciamento ${anoAtual} pago`;
+      } else {
+        // pendente — check if vencimento approaching (assume 31/dez)
+        const venc=new Date(anoAtual,11,31);
+        const dias=Math.round((venc-hoje)/(864e5));
+        if(dias<=ant) status='proximo';
+        else status='proximo'; // always at least warn if unpaid
+        descricao=`Licenciamento ${anoAtual} pendente — ${dias} dias até o fim do ano`;
+      }
+
+      alertas.push({id:`${cfg.id}_lic`,cfg,vei,vLabel,status,
+        titulo:ALERTA_TIPO_LABEL[cfg.tipo_alerta],
+        icon:ALERTA_TIPO_ICON[cfg.tipo_alerta],
+        descricao,sub:lic?`Ano: ${lic.ano}`:`Ano ${anoAtual}`});
+
+    } else if(cfg.tipo_alerta==='seguro'){
+      if(!vei.possui_seguro||!vei.vigencia_seguro){
+        alertas.push({id:`${cfg.id}_seg`,cfg,vei,vLabel,status:'vencido',
+          titulo:ALERTA_TIPO_LABEL[cfg.tipo_alerta],
+          icon:ALERTA_TIPO_ICON[cfg.tipo_alerta],
+          descricao:'Veículo sem seguro ou vigência não informada',sub:'—'});
+        return;
+      }
+      const venc=new Date(vei.vigencia_seguro+'T00:00:00');
+      const dias=Math.round((venc-hoje)/(864e5));
+      let status;
+      if(dias<0) status='vencido';
+      else if(dias<=ant) status='proximo';
+      else status='ok';
+
+      alertas.push({id:`${cfg.id}_seg`,cfg,vei,vLabel,status,
+        titulo:ALERTA_TIPO_LABEL[cfg.tipo_alerta],
+        icon:ALERTA_TIPO_ICON[cfg.tipo_alerta],
+        descricao:dias>=0?`Vence em ${dias} dias (${vei.vigencia_seguro.split('-').reverse().join('/')})`:`Vencido há ${Math.abs(dias)} dias`,
+        sub:vei.seguradora||'Seguradora não informada'});
+    }
+  });
+
+  return alertas;
+}
+
+function stAlertaClass(s){return s==='vencido'?'al':s==='proximo'?'av':'ok';}
+function stAlertaLabel(s){return s==='vencido'?'Vencido':s==='proximo'?'Próximo':'Em dia';}
+
+function rAlertas(){
+  const alertas=calcularAlertas();
+  const fil=document.getElementById('falt-fil')?.value||'';
+  const lista=fil?alertas.filter(a=>a.status===fil):alertas;
+
+  // Summary cards
+  const nVenc=alertas.filter(a=>a.status==='vencido').length;
+  const nProx=alertas.filter(a=>a.status==='proximo').length;
+  const nOk=alertas.filter(a=>a.status==='ok').length;
+  const sumEl=document.getElementById('falerts-summary');
+  if(sumEl) sumEl.innerHTML=`
+    <div class="met ${nVenc>0?'ot':''}"><div class="mv">${nVenc}</div><div class="ml">Vencidos</div></div>
+    <div class="met ${nProx>0?'lw':''}"><div class="mv">${nProx}</div><div class="ml">Próximos</div></div>
+    <div class="met ok"><div class="mv">${nOk}</div><div class="ml">Em dia</div></div>`;
+
+  const el=document.getElementById('falerts-list');
+  if(!el)return;
+  if(!lista.length){
+    el.innerHTML=alertas.length?'<div style="font-size:13px;color:var(--th);padding:12px;text-align:center">Nenhum alerta com esse filtro.</div>':'<div style="font-size:13px;color:var(--th);padding:12px;text-align:center">Nenhum alerta configurado. Clique em "+ Novo alerta" para começar.</div>';
+    return;
+  }
+  el.innerHTML=lista.map(a=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;border:1px solid var(--bd);margin-bottom:8px;background:var(--sf)">
+      <span style="font-size:22px">${a.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+          <strong style="font-size:13px">${a.vLabel}</strong>
+          <span class="bdg ${stAlertaClass(a.status)}">${stAlertaLabel(a.status)}</span>
+        </div>
+        <div style="font-size:12px;color:var(--tm)">${a.titulo} · ${a.descricao}</div>
+        <div style="font-size:11px;color:var(--th);margin-top:1px">${a.sub}</div>
+      </div>
+      <button class="btn sm d" onclick="delConfigAlerta(${a.cfg.id})" title="Remover alerta">✕</button>
+    </div>`).join('');
+}
+
+function rAlertasConfig(){
+  const tb=document.getElementById('td-alertas-config');
+  if(!tb)return;
+  tb.innerHTML=C.alertas_config.length?C.alertas_config.map(cfg=>{
+    const v=C.veiculos.find(x=>x.id===cfg.veiculo_id||x.id===parseInt(cfg.veiculo_id));
+    const vl=v?`${v.placa}${v.modelo?' — '+v.modelo:''}`:'—';
+    const refInfo=(cfg.km_referencia||cfg.data_referencia)?`${cfg.km_referencia?Math.round(cfg.km_referencia)+' km':''}${cfg.km_referencia&&cfg.data_referencia?' · ':''}${cfg.data_referencia?cfg.data_referencia.split('-').reverse().join('/'):''}`:null;
+    return`<tr>
+      <td>${vl}</td>
+      <td>${ALERTA_TIPO_ICON[cfg.tipo_alerta]||''} ${ALERTA_TIPO_LABEL[cfg.tipo_alerta]||cfg.tipo_alerta}</td>
+      <td class="mn">${cfg.intervalo_km?Math.round(cfg.intervalo_km)+' km':'—'}</td>
+      <td class="mn">${cfg.intervalo_dias?cfg.intervalo_dias+' dias':'—'}</td>
+      <td class="mn">${cfg.antecedencia_dias} dias</td>
+      <td class="mn" style="font-size:11px;color:var(--tm)">${refInfo||'<span style="color:var(--th)">automático</span>'}</td>
+      <td style="display:flex;gap:5px">
+        <button class="btn sm e" onclick="opConfigAlerta(${cfg.id})">Editar</button>
+        <button class="btn sm d" onclick="delConfigAlerta(${cfg.id})">Remover</button>
+      </td></tr>`;
+  }).join(''):'<tr><td colspan="6" class="empty">Nenhum alerta configurado</td></tr>';
+}
+
+// Also expose a small badge for the frota dashboard (Veículos page)
+function rAlertasBadge(){
+  const alertas=calcularAlertas();
+  const criticos=alertas.filter(a=>a.status==='vencido'||a.status==='proximo');
+  const el=document.getElementById('frota-alertas-badge');
+  if(!el)return;
+  if(!criticos.length){el.innerHTML='';return;}
+  const nV=alertas.filter(a=>a.status==='vencido').length;
+  const nP=alertas.filter(a=>a.status==='proximo').length;
+  el.innerHTML=criticos.map(a=>`
+    <div class="ab2 ${a.status==='vencido'?'rd':'or'}" style="margin-bottom:6px">
+      ${a.icon} <strong>${a.vLabel}</strong> — ${a.titulo}: ${a.descricao}
+    </div>`).join('');
+}
+
+let cfaEditId=null;
+function abrConfigAlerta(id){
+  cfaEditId=null;
+  document.getElementById('m-cfg-alerta-tit').textContent='Novo alerta';
+  document.getElementById('cfa-vei').innerHTML='<option value="">Selecione...</option>'+C.veiculos.map(v=>`<option value="${v.id}">${v.placa}${v.modelo?' — '+v.modelo:''}</option>`).join('');
+  document.getElementById('cfa-tipo').value='oleo';
+  document.getElementById('cfa-km').value='';
+  document.getElementById('cfa-dias').value='';
+  document.getElementById('cfa-ant').value='30';
+  document.getElementById('cfa-kmref').value='';
+  document.getElementById('cfa-dataref').value='';
+  document.getElementById('cfa-info').textContent='';
+  togCfaTipo();
+  document.getElementById('m-cfg-alerta').classList.add('op');
+}
+function opConfigAlerta(id){
+  const cfg=C.alertas_config.find(x=>x.id===id);if(!cfg)return;
+  cfaEditId=id;
+  document.getElementById('m-cfg-alerta-tit').textContent='Editar alerta';
+  document.getElementById('cfa-vei').innerHTML='<option value="">Selecione...</option>'+C.veiculos.map(v=>`<option value="${v.id}">${v.placa}${v.modelo?' — '+v.modelo:''}</option>`).join('');
+  document.getElementById('cfa-vei').value=cfg.veiculo_id;
+  document.getElementById('cfa-tipo').value=cfg.tipo_alerta;
+  document.getElementById('cfa-km').value=cfg.intervalo_km||'';
+  document.getElementById('cfa-dias').value=cfg.intervalo_dias||'';
+  document.getElementById('cfa-ant').value=cfg.antecedencia_dias||30;
+  document.getElementById('cfa-kmref').value=cfg.km_referencia||'';
+  document.getElementById('cfa-dataref').value=cfg.data_referencia||'';
+  togCfaTipo();
+  document.getElementById('m-cfg-alerta').classList.add('op');
+}
+function togCfaTipo(){
+  const t=document.getElementById('cfa-tipo').value;
+  const blk=document.getElementById('cfa-intervalo-blk');
+  const info=document.getElementById('cfa-info');
+  if(t==='licenciamento'){
+    blk.style.display='none';
+    info.textContent='Alertará sobre licenciamento pendente no ano corrente.';
+  } else if(t==='seguro'){
+    blk.style.display='none';
+    info.textContent='Alertará quando a vigência do seguro estiver próxima ou vencida.';
+  } else {
+    blk.style.display='block';
+    info.textContent=t==='oleo'?'Informe o intervalo em km e/ou em dias desde a última troca de óleo.':'Informe o intervalo em km e/ou em dias desde a última revisão.';
+  }
+}
+async function saveConfigAlerta(){
+  const vid=document.getElementById('cfa-vei').value,tipo=document.getElementById('cfa-tipo').value;
+  if(!vid){alert('Selecione o veículo.');return;}
+  const km=document.getElementById('cfa-km').value,dias=document.getElementById('cfa-dias').value,ant=document.getElementById('cfa-ant').value||30;
+  if((tipo==='oleo'||tipo==='revisao')&&!km&&!dias){alert('Informe pelo menos um intervalo (km ou dias).');return;}
+  const kmref=document.getElementById('cfa-kmref').value,dataref=document.getElementById('cfa-dataref').value;
+  try{
+    if(cfaEditId){
+      await A('PUT',`/alertas-config/${cfaEditId}`,{intervalo_km:km?parseFloat(km):null,intervalo_dias:dias?parseInt(dias):null,antecedencia_dias:parseInt(ant),km_referencia:kmref?parseFloat(kmref):null,data_referencia:dataref||null});
+    } else {
+      await A('POST','/alertas-config',{veiculo_id:parseInt(vid),tipo_alerta:tipo,intervalo_km:km?parseFloat(km):null,intervalo_dias:dias?parseInt(dias):null,antecedencia_dias:parseInt(ant),km_referencia:kmref?parseFloat(kmref):null,data_referencia:dataref||null});
+    }
+    await loadFrota();cm('m-cfg-alerta');rAlertas();rAlertasConfig();rAlertasBadge();
+  }catch(e){alert('Erro: '+e.message);}
+}
+async function delConfigAlerta(id){
+  if(!confirm('Remover este alerta?'))return;
+  try{await A('DELETE',`/alertas-config/${id}`);await loadFrota();rAlertas();rAlertasConfig();rAlertasBadge();}catch(e){alert('Erro: '+e.message);}
+}
+
 // ── MÓDULOS / NAVEGAÇÃO ────────────────────────────────────
-const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:rSels,saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,fveiculos:rVeiculos,fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();}};
+const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:rSels,saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,fveiculos:()=>{rVeiculos();rAlertasBadge();},fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();},falertas:()=>{rFrotaSels();rAlertas();rAlertasConfig();}};
 function sp(n,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));const pg=document.getElementById('page-'+n);if(pg)pg.classList.add('on');if(btn)btn.classList.add('on');RENDERS[n]?.();}
 function tmod(m){const NAVS={est:'ne',cli:'nc',adm:'na',fro:'nf'};const BTNS={est:'bme',cli:'bmc',adm:'bma',fro:'bmf'};const IC={est:'E',cli:'❄',adm:'🗂',fro:'🚗'};const TT={est:'Estoque',cli:'Climatização',adm:'Administrativo',fro:'Frota'};const SB={est:'Material de consumo',cli:'Ar condicionado',adm:'Gestão predial',fro:'Gestão de veículos'};const FP={est:'dashboard',cli:'ccham',adm:'ademdas',fro:'fveiculos'};['est','cli','adm','fro'].forEach(x=>{document.getElementById(NAVS[x]).style.display=m===x?'block':'none';document.getElementById(BTNS[x]).classList.toggle('on',m===x);});document.getElementById('mid').textContent=IC[m];document.getElementById('mtit').textContent=TT[m];document.getElementById('msub').textContent=SB[m];document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));document.getElementById('page-'+FP[m]).classList.add('on');const fn=document.querySelector(`#${NAVS[m]} .ni`);if(fn)fn.classList.add('on');RENDERS[FP[m]]?.();}
 
