@@ -210,6 +210,55 @@ async function iniciarBanco() {
     criado_em TIMESTAMP DEFAULT NOW()
   )`);
 
+  // Frota expandida
+  await pool.query(`CREATE TABLE IF NOT EXISTS abastecimentos (
+    id SERIAL PRIMARY KEY,
+    veiculo_id INTEGER REFERENCES veiculos(id) ON DELETE SET NULL,
+    motorista_id INTEGER REFERENCES motoristas(id) ON DELETE SET NULL,
+    data TEXT NOT NULL,
+    km NUMERIC(10,1),
+    litros NUMERIC(10,3),
+    valor NUMERIC(12,2),
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS manutencoes (
+    id SERIAL PRIMARY KEY,
+    veiculo_id INTEGER REFERENCES veiculos(id) ON DELETE SET NULL,
+    data TEXT NOT NULL,
+    km NUMERIC(10,1),
+    tipo TEXT NOT NULL,
+    descricao TEXT NOT NULL,
+    valor NUMERIC(12,2),
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS licenciamentos (
+    id SERIAL PRIMARY KEY,
+    veiculo_id INTEGER REFERENCES veiculos(id) ON DELETE SET NULL,
+    ano INTEGER NOT NULL,
+    data_pagamento TEXT,
+    valor NUMERIC(12,2),
+    status TEXT DEFAULT 'pendente',
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS registros_km (
+    id SERIAL PRIMARY KEY,
+    veiculo_id INTEGER REFERENCES veiculos(id) ON DELETE SET NULL,
+    data TEXT,
+    km_atual NUMERIC(10,1) NOT NULL,
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS custos (
+    id SERIAL PRIMARY KEY,
+    veiculo_id INTEGER REFERENCES veiculos(id) ON DELETE SET NULL,
+    data TEXT,
+    tipo TEXT NOT NULL,
+    descricao TEXT DEFAULT '',
+    valor NUMERIC(12,2),
+    origem TEXT DEFAULT 'manual',
+    origem_id INTEGER,
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+
   console.log('Banco pronto.');
 }
 
@@ -541,11 +590,16 @@ const server = http.createServer(async (req, res) => {
 
         // ── FROTA ─────────────────────────────────────────────
         if (req.method === 'GET' && pth === '/api/frota') {
-          const [vei, mot] = await Promise.all([
+          const [vei, mot, abas, mans, lics, kms, cus] = await Promise.all([
             pool.query('SELECT * FROM veiculos ORDER BY placa'),
             pool.query('SELECT * FROM motoristas ORDER BY nome'),
+            pool.query('SELECT * FROM abastecimentos ORDER BY data DESC, criado_em DESC'),
+            pool.query('SELECT * FROM manutencoes ORDER BY data DESC, criado_em DESC'),
+            pool.query('SELECT * FROM licenciamentos ORDER BY ano DESC, criado_em DESC'),
+            pool.query('SELECT * FROM registros_km ORDER BY data DESC, criado_em DESC'),
+            pool.query('SELECT * FROM custos ORDER BY data DESC, criado_em DESC'),
           ]);
-          return ok(res, { veiculos: vei.rows, motoristas: mot.rows });
+          return ok(res, { veiculos: vei.rows, motoristas: mot.rows, abastecimentos: abas.rows, manutencoes: mans.rows, licenciamentos: lics.rows, registros_km: kms.rows, custos: cus.rows });
         }
         if (req.method === 'POST' && pth === '/api/veiculos') {
           const r = await pool.query('INSERT INTO veiculos (placa,ano,renavam,modelo,possui_seguro,seguradora,vigencia_seguro) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *', [b.placa, b.ano, b.renavam, b.modelo||'', !!b.possui_seguro, b.seguradora||'', b.vigencia_seguro||null]);
@@ -571,6 +625,123 @@ const server = http.createServer(async (req, res) => {
         }
         if (req.method === 'DELETE' && pth.startsWith('/api/motoristas/')) {
           await pool.query('DELETE FROM motoristas WHERE id=$1', [parseInt(pth.split('/')[3])]);
+          return ok(res, { ok: true });
+        }
+
+        // ── ABASTECIMENTOS ────────────────────────────────────
+        if (req.method === 'POST' && pth === '/api/abastecimentos') {
+          const r = await pool.query('INSERT INTO abastecimentos (veiculo_id,motorista_id,data,km,litros,valor) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+            [b.veiculo_id, b.motorista_id||null, b.data, b.km||null, b.litros||null, b.valor||null]);
+          if (b.valor) {
+            const vei = await pool.query('SELECT placa,modelo FROM veiculos WHERE id=$1', [b.veiculo_id]);
+            const label = vei.rows[0] ? `${vei.rows[0].placa}${vei.rows[0].modelo?' — '+vei.rows[0].modelo:''}` : '';
+            await pool.query('INSERT INTO custos (veiculo_id,data,tipo,descricao,valor,origem,origem_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+              [b.veiculo_id, b.data, 'combustivel', `Abastecimento — ${label}`, b.valor, 'abastecimento', r.rows[0].id]);
+          }
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'PUT' && pth.startsWith('/api/abastecimentos/')) {
+          const id = parseInt(pth.split('/')[3]);
+          const r = await pool.query('UPDATE abastecimentos SET veiculo_id=$1,motorista_id=$2,data=$3,km=$4,litros=$5,valor=$6 WHERE id=$7 RETURNING *',
+            [b.veiculo_id, b.motorista_id||null, b.data, b.km||null, b.litros||null, b.valor||null, id]);
+          await pool.query("UPDATE custos SET data=$1,valor=$2 WHERE origem='abastecimento' AND origem_id=$3", [b.data, b.valor||null, id]);
+          return ok(res, r.rows[0]);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/abastecimentos/')) {
+          const id = parseInt(pth.split('/')[3]);
+          await pool.query("DELETE FROM custos WHERE origem='abastecimento' AND origem_id=$1", [id]);
+          await pool.query('DELETE FROM abastecimentos WHERE id=$1', [id]);
+          return ok(res, { ok: true });
+        }
+
+        // ── MANUTENÇÕES ───────────────────────────────────────
+        if (req.method === 'POST' && pth === '/api/manutencoes') {
+          const r = await pool.query('INSERT INTO manutencoes (veiculo_id,data,km,tipo,descricao,valor) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+            [b.veiculo_id, b.data, b.km||null, b.tipo, b.descricao, b.valor||null]);
+          if (b.valor) {
+            const vei = await pool.query('SELECT placa,modelo FROM veiculos WHERE id=$1', [b.veiculo_id]);
+            const label = vei.rows[0] ? `${vei.rows[0].placa}${vei.rows[0].modelo?' — '+vei.rows[0].modelo:''}` : '';
+            await pool.query('INSERT INTO custos (veiculo_id,data,tipo,descricao,valor,origem,origem_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+              [b.veiculo_id, b.data, 'manutencao', `${b.tipo} — ${label}: ${b.descricao}`, b.valor, 'manutencao', r.rows[0].id]);
+          }
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'PUT' && pth.startsWith('/api/manutencoes/')) {
+          const id = parseInt(pth.split('/')[3]);
+          const r = await pool.query('UPDATE manutencoes SET veiculo_id=$1,data=$2,km=$3,tipo=$4,descricao=$5,valor=$6 WHERE id=$7 RETURNING *',
+            [b.veiculo_id, b.data, b.km||null, b.tipo, b.descricao, b.valor||null, id]);
+          await pool.query("UPDATE custos SET data=$1,valor=$2,descricao=$3 WHERE origem='manutencao' AND origem_id=$4",
+            [b.data, b.valor||null, `${b.tipo} — ${b.descricao}`, id]);
+          return ok(res, r.rows[0]);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/manutencoes/')) {
+          const id = parseInt(pth.split('/')[3]);
+          await pool.query("DELETE FROM custos WHERE origem='manutencao' AND origem_id=$1", [id]);
+          await pool.query('DELETE FROM manutencoes WHERE id=$1', [id]);
+          return ok(res, { ok: true });
+        }
+
+        // ── LICENCIAMENTOS ────────────────────────────────────
+        if (req.method === 'POST' && pth === '/api/licenciamentos') {
+          const r = await pool.query('INSERT INTO licenciamentos (veiculo_id,ano,data_pagamento,valor,status) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+            [b.veiculo_id, b.ano, b.data_pagamento||null, b.valor||null, b.status||'pendente']);
+          if (b.valor && b.status === 'pago') {
+            const vei = await pool.query('SELECT placa,modelo FROM veiculos WHERE id=$1', [b.veiculo_id]);
+            const label = vei.rows[0] ? `${vei.rows[0].placa}${vei.rows[0].modelo?' — '+vei.rows[0].modelo:''}` : '';
+            await pool.query('INSERT INTO custos (veiculo_id,data,tipo,descricao,valor,origem,origem_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+              [b.veiculo_id, b.data_pagamento||null, 'licenciamento', `Licenciamento ${b.ano} — ${label}`, b.valor, 'licenciamento', r.rows[0].id]);
+          }
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'PUT' && pth.startsWith('/api/licenciamentos/')) {
+          const id = parseInt(pth.split('/')[3]);
+          const r = await pool.query('UPDATE licenciamentos SET veiculo_id=$1,ano=$2,data_pagamento=$3,valor=$4,status=$5 WHERE id=$6 RETURNING *',
+            [b.veiculo_id, b.ano, b.data_pagamento||null, b.valor||null, b.status||'pendente', id]);
+          await pool.query("DELETE FROM custos WHERE origem='licenciamento' AND origem_id=$1", [id]);
+          if (b.valor && b.status === 'pago') {
+            const vei = await pool.query('SELECT placa,modelo FROM veiculos WHERE id=$1', [b.veiculo_id]);
+            const label = vei.rows[0] ? `${vei.rows[0].placa}${vei.rows[0].modelo?' — '+vei.rows[0].modelo:''}` : '';
+            await pool.query('INSERT INTO custos (veiculo_id,data,tipo,descricao,valor,origem,origem_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+              [b.veiculo_id, b.data_pagamento||null, 'licenciamento', `Licenciamento ${b.ano} — ${label}`, b.valor, 'licenciamento', id]);
+          }
+          return ok(res, r.rows[0]);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/licenciamentos/')) {
+          const id = parseInt(pth.split('/')[3]);
+          await pool.query("DELETE FROM custos WHERE origem='licenciamento' AND origem_id=$1", [id]);
+          await pool.query('DELETE FROM licenciamentos WHERE id=$1', [id]);
+          return ok(res, { ok: true });
+        }
+
+        // ── REGISTROS KM ──────────────────────────────────────
+        if (req.method === 'POST' && pth === '/api/registros-km') {
+          const r = await pool.query('INSERT INTO registros_km (veiculo_id,data,km_atual) VALUES ($1,$2,$3) RETURNING *',
+            [b.veiculo_id, b.data||null, b.km_atual]);
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/registros-km/')) {
+          await pool.query('DELETE FROM registros_km WHERE id=$1', [parseInt(pth.split('/')[3])]);
+          return ok(res, { ok: true });
+        }
+
+        // ── CUSTOS (manual) ───────────────────────────────────
+        if (req.method === 'POST' && pth === '/api/custos') {
+          const r = await pool.query('INSERT INTO custos (veiculo_id,data,tipo,descricao,valor,origem) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+            [b.veiculo_id||null, b.data||null, b.tipo, b.descricao||'', b.valor||null, 'manual']);
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'PUT' && pth.startsWith('/api/custos/')) {
+          const id = parseInt(pth.split('/')[3]);
+          const r = await pool.query('UPDATE custos SET veiculo_id=$1,data=$2,tipo=$3,descricao=$4,valor=$5 WHERE id=$6 AND origem=$7 RETURNING *',
+            [b.veiculo_id||null, b.data||null, b.tipo, b.descricao||'', b.valor||null, id, 'manual']);
+          if (!r.rows.length) return err(res, 403, 'Só é possível editar lançamentos manuais');
+          return ok(res, r.rows[0]);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/custos/')) {
+          const id = parseInt(pth.split('/')[3]);
+          const r = await pool.query('SELECT origem FROM custos WHERE id=$1', [id]);
+          if (r.rows[0]?.origem !== 'manual') return err(res, 403, 'Só é possível excluir lançamentos manuais');
+          await pool.query('DELETE FROM custos WHERE id=$1', [id]);
           return ok(res, { ok: true });
         }
 
