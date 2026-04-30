@@ -274,6 +274,30 @@ async function iniciarBanco() {
   await pool.query(`ALTER TABLE alertas_config ADD COLUMN IF NOT EXISTS km_referencia NUMERIC(10,1)`);
   await pool.query(`ALTER TABLE alertas_config ADD COLUMN IF NOT EXISTS data_referencia TEXT`);
 
+  // Pagamentos
+  await pool.query(`CREATE TABLE IF NOT EXISTS fornecedores_pag (
+    id SERIAL PRIMARY KEY,
+    nome TEXT NOT NULL,
+    cnpj TEXT DEFAULT '',
+    contato TEXT DEFAULT '',
+    tipo TEXT DEFAULT 'nota_fiscal',
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS contas_pagar (
+    id SERIAL PRIMARY KEY,
+    fornecedor_id INTEGER REFERENCES fornecedores_pag(id) ON DELETE CASCADE,
+    descricao TEXT NOT NULL,
+    valor NUMERIC(12,2) NOT NULL,
+    vencimento TEXT NOT NULL,
+    tipo TEXT DEFAULT 'nota_fiscal',
+    obs TEXT DEFAULT '',
+    status TEXT DEFAULT 'pendente',
+    data_pagamento TEXT,
+    valor_pago NUMERIC(12,2),
+    obs_pagamento TEXT DEFAULT '',
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+
   console.log('Banco pronto.');
 }
 
@@ -786,6 +810,61 @@ const server = http.createServer(async (req, res) => {
           return ok(res, { ok: true });
         }
 
+
+        // ── FORNECEDORES PAG ─────────────────────────────────
+        if (req.method === 'GET' && pth === '/api/fornecedores-pag') {
+          const r = await pool.query('SELECT * FROM fornecedores_pag ORDER BY nome');
+          return ok(res, r.rows);
+        }
+        if (req.method === 'POST' && pth === '/api/fornecedores-pag') {
+          const r = await pool.query('INSERT INTO fornecedores_pag (nome,cnpj,contato,tipo) VALUES ($1,$2,$3,$4) RETURNING *',
+            [b.nome, b.cnpj||'', b.contato||'', b.tipo||'nota_fiscal']);
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'PUT' && pth.startsWith('/api/fornecedores-pag/')) {
+          const id = parseInt(pth.split('/')[3]);
+          const r = await pool.query('UPDATE fornecedores_pag SET nome=$1,cnpj=$2,contato=$3,tipo=$4 WHERE id=$5 RETURNING *',
+            [b.nome, b.cnpj||'', b.contato||'', b.tipo||'nota_fiscal', id]);
+          return ok(res, r.rows[0]);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/fornecedores-pag/')) {
+          const id = parseInt(pth.split('/')[3]);
+          const temPendentes = await pool.query('SELECT id FROM contas_pagar WHERE fornecedor_id=$1 AND status=$2', [id, 'pendente']);
+          if (temPendentes.rows.length) return err(res, 400, 'Fornecedor tem contas pendentes');
+          await pool.query('DELETE FROM fornecedores_pag WHERE id=$1', [id]);
+          return ok(res, { ok: true });
+        }
+
+        // ── CONTAS A PAGAR ────────────────────────────────────
+        if (req.method === 'GET' && pth === '/api/contas-pagar') {
+          const r = await pool.query('SELECT * FROM contas_pagar ORDER BY vencimento ASC');
+          return ok(res, r.rows);
+        }
+        if (req.method === 'POST' && pth === '/api/contas-pagar') {
+          const r = await pool.query(
+            'INSERT INTO contas_pagar (fornecedor_id,descricao,valor,vencimento,tipo,obs) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+            [b.fornecedor_id, b.descricao, b.valor, b.vencimento, b.tipo||'nota_fiscal', b.obs||'']);
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'PUT' && pth.startsWith('/api/contas-pagar/') && !pth.endsWith('/pagar')) {
+          const id = parseInt(pth.split('/')[3]);
+          const r = await pool.query(
+            'UPDATE contas_pagar SET status=$1,data_pagamento=$2,valor_pago=$3,obs_pagamento=$4 WHERE id=$5 RETURNING *',
+            [b.status, b.data_pagamento||null, b.valor_pago||null, b.obs_pagamento||'', id]);
+          return ok(res, r.rows[0]);
+        }
+        if (req.method === 'POST' && pth.startsWith('/api/contas-pagar/') && pth.endsWith('/pagar-lote')) {
+          const fid = parseInt(pth.split('/')[3]);
+          const dt = b.data_pagamento || new Date().toISOString().slice(0,10);
+          await pool.query(
+            'UPDATE contas_pagar SET status=$1,data_pagamento=$2,valor_pago=valor,obs_pagamento=$3 WHERE fornecedor_id=$4 AND status=$5',
+            ['pago', dt, 'Pago em lote via PIX', fid, 'pendente']);
+          return ok(res, { ok: true });
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/contas-pagar/')) {
+          await pool.query('DELETE FROM contas_pagar WHERE id=$1', [parseInt(pth.split('/')[3])]);
+          return ok(res, { ok: true });
+        }
         err(res, 404, 'Rota não encontrada');
       } catch (e) {
         console.error(e);
