@@ -184,8 +184,11 @@ tbody tr:hover td{background:var(--bg)}
     <nav id="na" style="display:none">
       <button class="ni" onclick="sp('ademdas',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path stroke-width="1.5" d="M9 12h6M9 16h4"/></svg>Demandas</button>
       <button class="ni" onclick="sp('avencs',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Vencimentos</button>
+      <button class="ni" onclick="sp('apagamentos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Pagamentos</button>
     </nav>
     <nav id="nf" style="display:none">
+      <button class="ni" onclick="sp('findicadores',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Indicadores</button>
+      <button class="ni" onclick="sp('falertas',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>Alertas</button>
       <button class="ni" onclick="sp('fveiculos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M5 17H3a1 1 0 01-1-1v-4l2-5h12l2 5v4a1 1 0 01-1 1h-2M5 17a2 2 0 004 0M5 17a2 2 0 000 4h14a2 2 0 000-4"/><path stroke-width="1.5" d="M15 17a2 2 0 004 0"/></svg>Veículos</button>
       <button class="ni" onclick="sp('fmotoristas',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="1.5"/><path stroke-width="1.5" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Motoristas</button>
       <button class="ni" onclick="sp('fabastecimentos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 7h11"/><circle cx="9" cy="21" r="1" stroke-width="1.5"/><circle cx="19" cy="21" r="1" stroke-width="1.5"/></svg>Abastecimentos</button>
@@ -193,8 +196,6 @@ tbody tr:hover td{background:var(--bg)}
       <button class="ni" onclick="sp('flicenciamentos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Licenciamentos</button>
       <button class="ni" onclick="sp('fkm',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Registro KM</button>
       <button class="ni" onclick="sp('fcustos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Custos</button>
-      <button class="ni" onclick="sp('falertas',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>Alertas</button>
-      <button class="ni" onclick="sp('findicadores',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Indicadores</button>
     </nav>
     <div class="sft"><p>Servidor ativo</p><span class="sipbadge" id="sip">—</span></div>
     <div class="slogout-bar"><button class="blogout-bar" onclick="logout()" title="Sair">⏻ Sair</button></div>
@@ -359,6 +360,7 @@ tbody tr:hover td{background:var(--bg)}
           <div style="display:flex;gap:8px;margin-left:auto">
             <select id="dmfil" onchange="rDems()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="aberto">Em andamento</option><option value="concluido">Concluídas</option><option value="">Todas</option></select>
             <button class="btn sm" onclick="abrRelAdm()">Relatório PDF</button>
+            <button class="btn sm e" onclick="abrRelGer()">Relatório Gerencial</button>
           </div>
         </div>
         <div id="ldems"></div>
@@ -379,6 +381,71 @@ tbody tr:hover td{background:var(--bg)}
         <button class="btn p" onclick="addExt()">Cadastrar extintor</button>
       </div>
       <div class="card"><div class="ct">Extintores cadastrados</div><div class="tw"><table><thead><tr><th>Local</th><th>Tipo</th><th>Nº série</th><th>Vencimento</th><th>Status</th><th></th></tr></thead><tbody id="td-ext"></tbody></table></div></div>
+    </div>
+
+
+    <!-- ADM: PAGAMENTOS -->
+    <div id="page-apagamentos" class="page">
+      <div class="ph"><h2>Pagamentos</h2><p>Fornecedores, contas a pagar e histórico</p></div>
+
+      <!-- ALERTAS DE VENCIMENTO -->
+      <div id="pag-alertas"></div>
+
+      <!-- FORNECEDORES -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="ct">Cadastrar fornecedor</div>
+        <div class="fg c3">
+          <div class="f"><label>Nome *</label><input id="pag-fn" placeholder="Ex: Papelaria Central"></div>
+          <div class="f"><label>CNPJ / CPF</label><input id="pag-fcnpj" placeholder="Opcional"></div>
+          <div class="f"><label>Contato</label><input id="pag-fcontato" placeholder="Telefone ou e-mail"></div>
+        </div>
+        <button class="btn p" onclick="addFornecedor()">Cadastrar fornecedor</button>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Fornecedores</span>
+        </div>
+        <div class="tw"><table><thead><tr><th>Nome</th><th>CNPJ/CPF</th><th>Contato</th><th>Saldo pendente</th><th></th></tr></thead><tbody id="td-fornecedores"></tbody></table></div>
+      </div>
+
+      <!-- NOVA CONTA -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="ct">Registrar conta a pagar</div>
+        <div class="fg c3">
+          <div class="f"><label>Fornecedor *</label><select id="pag-forn"><option value="">Selecione...</option></select></div>
+          <div class="f"><label>Descrição *</label><input id="pag-desc" placeholder="Ex: NF 1234 — Resmas de papel"></div>
+          <div class="f"><label>Tipo</label>
+            <select id="pag-tipo">
+              <option value="nota_fiscal">Nota fiscal (alerta 7 dias antes)</option>
+              <option value="vencimento">Vencimento fixo (alerta 1 dia antes)</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg c3">
+          <div class="f"><label>Valor (R$) *</label><input id="pag-valor" type="number" step="0.01" placeholder="0,00"></div>
+          <div class="f"><label>Vencimento *</label><input id="pag-venc" type="date"></div>
+          <div class="f"><label>Observação</label><input id="pag-obs" placeholder="Opcional"></div>
+        </div>
+        <button class="btn p" onclick="addConta()">Registrar conta</button>
+      </div>
+
+      <!-- CONTAS PENDENTES (agrupadas por fornecedor) -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Contas pendentes</span>
+          <select id="pag-fil-forn" onchange="rPagamentos()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos os fornecedores</option></select>
+        </div>
+        <div id="pag-pendentes"></div>
+      </div>
+
+      <!-- HISTÓRICO -->
+      <div class="card">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Histórico de pagamentos</span>
+          <select id="pag-fil-hist" onchange="rPagamentos()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos os fornecedores</option></select>
+        </div>
+        <div class="tw"><table><thead><tr><th>Data pagto.</th><th>Fornecedor</th><th>Descrição</th><th>Tipo</th><th>Vencimento</th><th>Valor pago</th></tr></thead><tbody id="td-pag-hist"></tbody></table></div>
+      </div>
     </div>
 
 
@@ -691,6 +758,52 @@ tbody tr:hover td{background:var(--bg)}
 </div>
 
 <!-- MODAIS -->
+<!-- MODAL: RELATÓRIO GERENCIAL -->
+<div class="mo" id="m-relger"><div class="mbox lg">
+  <div class="mtit">Relatório Gerencial — Demandas</div>
+  <p style="font-size:13px;color:var(--tm);margin-bottom:14px">Selecione as demandas que farão parte do relatório e clique em Gerar.</p>
+  <div class="fg c3" style="margin-bottom:12px">
+    <div class="f"><label>Período início</label><input type="date" id="rg-di"></div>
+    <div class="f"><label>Período fim</label><input type="date" id="rg-df"></div>
+    <div class="f"><label>Status</label><select id="rg-st"><option value="">Todas</option><option value="aberto">Em andamento</option><option value="concluido">Concluídas</option></select></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+    <button class="btn sm" onclick="rgFiltrar()">Filtrar lista</button>
+    <button class="btn sm" onclick="rgMarcarTodos()">Marcar todos</button>
+    <button class="btn sm" onclick="rgDesmarcarTodos()">Desmarcar todos</button>
+    <span id="rg-cnt" style="font-size:12px;color:var(--tm);margin-left:6px"></span>
+  </div>
+  <div id="rg-lista" style="max-height:280px;overflow-y:auto;border:1px solid var(--bd);border-radius:10px;margin-bottom:14px"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+    <button class="btn p" onclick="genRelGer()">Gerar relatório</button>
+    <button class="btn" onclick="prtRelGer()">Imprimir / PDF</button>
+    <button class="btn" style="margin-left:auto" onclick="cm('m-relger')">Fechar</button>
+  </div>
+  <div id="rg-prev"></div>
+</div></div>
+
+<!-- MODAL: PAGAR CONTA -->
+<div class="mo" id="m-pagar"><div class="mbox">
+  <div class="mtit">Registrar pagamento</div>
+  <p id="m-pagar-info" style="font-size:13px;color:var(--tm);margin-bottom:13px"></p>
+  <div class="fg c2">
+    <div class="f"><label>Data do pagamento *</label><input type="date" id="pag-dt-pag"></div>
+    <div class="f"><label>Valor pago (R$) *</label><input type="number" step="0.01" id="pag-val-pag"></div>
+  </div>
+  <div class="f" style="margin-bottom:14px"><label>Observação</label><input id="pag-obs-pag" placeholder="Opcional"></div>
+  <div class="mft"><button class="btn" onclick="cm('m-pagar')">Cancelar</button><button class="btn p" onclick="confirmarPagamento()">Confirmar pagamento</button></div>
+</div></div>
+
+<!-- MODAL: EDITAR FORNECEDOR -->
+<div class="mo" id="m-eforn"><div class="mbox">
+  <div class="mtit">Editar fornecedor</div>
+  <div class="fg c3">
+    <div class="f"><label>Nome *</label><input id="eforn-nome"></div>
+    <div class="f"><label>CNPJ/CPF</label><input id="eforn-cnpj"></div>
+    <div class="f"><label>Contato</label><input id="eforn-contato"></div>
+  </div>
+  <div class="mft"><button class="btn" onclick="cm('m-eforn')">Cancelar</button><button class="btn p" onclick="saveFornecedor()">Salvar</button></div>
+</div></div>
 <div class="mo" id="m-edit"><div class="mbox"><div class="mtit">Editar item</div><div class="fg c2"><div class="f"><label>Nome</label><input id="een"></div><div class="f"><label>Categoria</label><input id="eec"></div></div><div class="fg c3"><div class="f"><label>Unidade</label><select id="eeu"><option>Unidade</option><option>Pacote</option><option>Caixa</option><option>Resma</option><option>Litro</option><option>Kg</option><option>Rolo</option></select></div><div class="f"><label>Qtd atual</label><input id="eeq" type="number" min="0"></div><div class="f"><label>Qtd mínima</label><input id="eem" type="number" min="0"></div></div><div class="mft"><button class="btn" onclick="cm('m-edit')">Cancelar</button><button class="btn p" onclick="saveEdit()">Salvar</button></div></div></div>
 <div class="mo" id="m-ap"><div class="mbox"><div class="mtit">Editar aparelho</div><div class="fg c3"><div class="f"><label>Nº sala</label><input id="eas"></div><div class="f"><label>Departamento</label><input id="ead"></div><div class="f"><label>Localização</label><input id="eal"></div></div><div class="fg c3"><div class="f"><label>Marca</label><input id="eam"></div><div class="f"><label>Modelo</label><input id="eamo"></div><div class="f"><label>Potência</label><input id="eap"></div></div><div class="mft"><button class="btn" onclick="cm('m-ap')">Cancelar</button><button class="btn p" onclick="saveAp()">Salvar</button></div></div></div>
 <div class="mo" id="m-cham"><div class="mbox"><div class="mtit">Concluir chamado</div><div class="fg c2"><div class="f"><label>Data do conserto</label><input id="mcd" type="date"></div><div class="f"><label>Observação</label><input id="mco" placeholder="Detalhes do serviço..."></div></div><div class="mft"><button class="btn" onclick="cm('m-cham')">Cancelar</button><button class="btn p" onclick="saveCham()">Concluir</button></div></div></div>
@@ -1685,10 +1798,348 @@ function expIndCSV(tipo){
   const a=document.createElement('a');a.href=url;a.download=`frota_${tipo}_${hj()}.csv`;a.click();URL.revokeObjectURL(url);
 }
 
+// ── RELATÓRIO GERENCIAL DE DEMANDAS ───────────────────────
+let rgDemsSel=new Set();
+function abrRelGer(){
+  const h=new Date();
+  document.getElementById('rg-di').value='';
+  document.getElementById('rg-df').value='';
+  document.getElementById('rg-st').value='';
+  rgDemsSel=new Set();
+  document.getElementById('rg-prev').innerHTML='';
+  rgFiltrar();
+  document.getElementById('m-relger').classList.add('op');
+}
+function rgFiltrar(){
+  const di=document.getElementById('rg-di').value;
+  const df=document.getElementById('rg-df').value;
+  const st=document.getElementById('rg-st').value;
+  const lista=C.demandas.filter(d=>{
+    if(st&&d.status!==st)return false;
+    if(di&&(d.data_solicitacao||'')<di)return false;
+    if(df&&(d.data_solicitacao||'')>df)return false;
+    return true;
+  }).sort((a,b)=>(a.data_solicitacao||'').localeCompare(b.data_solicitacao||''));
+  const urgL={urgente:'🔴 Urgente',alta:'🟠 Alta',normal:'🟡 Normal',baixa:'🟢 Baixa'};
+  const stL={aberto:'Em andamento',concluido:'Concluída'};
+  document.getElementById('rg-lista').innerHTML=lista.length?lista.map(d=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bd);cursor:pointer" onclick="rgToggle(${d.id},this)">
+      <input type="checkbox" id="rgck-${d.id}" ${rgDemsSel.has(d.id)?'checked':''} onclick="event.stopPropagation();rgToggle(${d.id},this.closest('div'))" style="margin-top:2px;width:15px;height:15px;accent-color:var(--ac);cursor:pointer;flex-shrink:0">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500">${d.titulo}</div>
+        <div style="font-size:11px;color:var(--tm);margin-top:2px">${urgL[d.urgencia||'normal']} · ${stL[d.status]||d.status} · Solicitado por <strong>${d.solicitante||'—'}</strong> em ${fd(d.data_solicitacao)}</div>
+        ${d.descricao?`<div style="font-size:11px;color:var(--th);margin-top:2px">${d.descricao}</div>`:''}
+      </div>
+    </div>`).join(''):'<div class="empty">Nenhuma demanda encontrada com esses filtros</div>';
+  rgAtualizarCnt();
+}
+function rgToggle(id,row){
+  const ck=document.getElementById('rgck-'+id);
+  if(rgDemsSel.has(id)){rgDemsSel.delete(id);if(ck)ck.checked=false;row.style.background='';}
+  else{rgDemsSel.add(id);if(ck)ck.checked=true;row.style.background='var(--acb)';}
+  rgAtualizarCnt();
+}
+function rgAtualizarCnt(){document.getElementById('rg-cnt').textContent=rgDemsSel.size+' selecionada(s)';}
+function rgMarcarTodos(){document.querySelectorAll('#rg-lista [id^="rgck-"]').forEach(ck=>{const id=parseInt(ck.id.replace('rgck-',''));rgDemsSel.add(id);ck.checked=true;ck.closest('div[style]').style.background='var(--acb)';});rgAtualizarCnt();}
+function rgDesmarcarTodos(){document.querySelectorAll('#rg-lista [id^="rgck-"]').forEach(ck=>{const id=parseInt(ck.id.replace('rgck-',''));rgDemsSel.delete(id);ck.checked=false;ck.closest('div[style]').style.background='';});rgAtualizarCnt();}
+
+function genRelGer(){
+  if(!rgDemsSel.size){alert('Selecione ao menos uma demanda.');return;}
+  const lista=C.demandas.filter(d=>rgDemsSel.has(d.id)).sort((a,b)=>(a.data_solicitacao||'').localeCompare(b.data_solicitacao||''));
+  const urgL={urgente:'Urgente',alta:'Alta',normal:'Normal',baixa:'Baixa'};
+  const hoje=hj();
+  let html=`
+    <div style="border-bottom:2px solid #1a1916;padding-bottom:14px;margin-bottom:18px">
+      <div style="font-size:20px;font-weight:600;letter-spacing:-.02em">Relatório Gerencial de Demandas</div>
+      <div style="font-size:12px;color:#6b6860;margin-top:4px">Emitido em ${fd(hoje)} · ${lista.length} demanda(s) selecionada(s)</div>
+    </div>`;
+  lista.forEach((d,i)=>{
+    const anots=(C.anotacoes||[]).filter(a=>a.demanda_id===d.id).sort((a,b)=>(a.criado_em||'').localeCompare(b.criado_em||''));
+    const prazoAprov=d.data_sol_orcamento&&d.data_aprov_orcamento?Math.round((new Date(d.data_aprov_orcamento+'T00:00:00')-new Date(d.data_sol_orcamento+'T00:00:00'))/(864e5))+' dias':null;
+    const concluida=d.status==='concluido';
+    const diasAberto=d.data_solicitacao?Math.round((new Date()-new Date(d.data_solicitacao+'T00:00:00'))/(864e5)):null;
+    html+=`
+    <div style="margin-bottom:22px;padding:16px 18px;border:1px solid #e0ddd6;border-radius:12px;page-break-inside:avoid">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px">
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600">${i+1}. ${d.titulo}</div>
+          <div style="font-size:11px;color:#6b6860;margin-top:3px">
+            Solicitante: <strong>${d.solicitante||'—'}</strong>
+            ${d.iniciado_por?' · Iniciado por: <strong>'+d.iniciado_por+'</strong>':''}
+            · Urgência: <strong>${urgL[d.urgencia||'normal']}</strong>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;${concluida?'background:#eaf5ef;color:#1a7f4e':'background:#fef3e8;color:#b85c00'}">${concluida?'✅ Concluída':'🔄 Em andamento'}</div>
+          ${diasAberto!=null&&!concluida?`<div style="font-size:10px;color:#a8a49e;margin-top:3px">${diasAberto} dias em aberto</div>`:''}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;font-size:12px">
+        <div><span style="color:#6b6860">Data da solicitação:</span><br><strong>${fd(d.data_solicitacao)}</strong></div>
+        <div><span style="color:#6b6860">Data de conclusão:</span><br><strong>${concluida?fd(d.data_conclusao):'Pendente'}</strong></div>
+        <div><span style="color:#6b6860">Precisa de aprovação:</span><br><strong>${d.precisa_aprovacao?'Sim':'Não'}</strong></div>
+      </div>
+      ${d.descricao?`<div style="font-size:12px;color:#6b6860;margin-bottom:10px;padding:8px 12px;background:#f5f4f0;border-radius:8px"><strong>Descrição:</strong> ${d.descricao}</div>`:''}
+      ${d.precisa_aprovacao?`
+      <div style="font-size:12px;margin-bottom:10px;padding:8px 12px;background:#eef2fd;border-radius:8px;border-left:3px solid #2a5bd7">
+        <strong style="color:#2a5bd7">Aprovação pela diretoria</strong><br>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px">
+          <div><span style="color:#6b6860">Pedido de orçamento:</span><br><strong>${fd(d.data_sol_orcamento)}</strong></div>
+          <div><span style="color:#6b6860">Data da aprovação:</span><br><strong>${fd(d.data_aprov_orcamento)}</strong></div>
+          <div><span style="color:#6b6860">Prazo de aprovação:</span><br><strong>${prazoAprov||'—'}</strong></div>
+        </div>
+        ${d.valor_solicitado?`<div style="margin-top:4px"><span style="color:#6b6860">Valor aprovado:</span> <strong>${fm(d.valor_solicitado)}</strong></div>`:''}
+      </div>`:''}
+      ${anots.length?`
+      <div style="margin-top:8px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#6b6860;margin-bottom:6px">Anotações / Histórico de ações</div>
+        ${anots.map(a=>`<div style="display:flex;gap:8px;margin-bottom:5px;font-size:12px;padding:5px 10px;border-left:2px solid #c5d4f7;background:#f5f4f0;border-radius:0 6px 6px 0"><span style="color:#6b6860;white-space:nowrap">${fd(a.data)} · <strong>${a.autor||'—'}</strong></span><span>${a.texto}</span></div>`).join('')}
+      </div>`:''}
+    </div>`;
+  });
+  document.getElementById('rg-prev').innerHTML=html;
+}
+function prtRelGer(){
+  const cnt=document.getElementById('rg-prev').innerHTML;
+  if(!cnt){alert('Gere o relatório antes.');return;}
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'IBM Plex Sans',sans-serif;padding:28px 32px;color:#1a1916;font-size:13px}@page{size:A4;margin:14mm}@media print{body{padding:0}}</style></head><body>${cnt}</body></html>`);
+  w.document.close();setTimeout(()=>w.print(),500);
+}
+
+// ── PAGAMENTOS ─────────────────────────────────────────────
+// Fornecedores e contas ficam em memória local (não há API no server)
+// Para manter dados, usamos localStorage como cache (falha elegantemente)
+let PAG={fornecedores:[],contas:[]};
+let pagNextId=1;
+
+function pagLoad(){
+  try{const s=localStorage.getItem('jsctrl_pag');if(s){PAG=JSON.parse(s);pagNextId=Math.max(1,...PAG.fornecedores.map(f=>f.id+1),...PAG.contas.map(c=>c.id+1),1);}}catch(e){}
+}
+function pagSave(){try{localStorage.setItem('jsctrl_pag',JSON.stringify(PAG));}catch(e){}}
+function pagNewId(){return pagNextId++;}
+
+function rPagSels(){
+  ['pag-forn','pag-fil-forn','pag-fil-hist'].forEach(sid=>{
+    const s=document.getElementById(sid);if(!s)return;
+    const cur=s.value;
+    const opts='<option value="">'+((sid==='pag-forn')?'Selecione...':'Todos os fornecedores')+'</option>'+PAG.fornecedores.map(f=>`<option value="${f.id}">${f.nome}</option>`).join('');
+    s.innerHTML=opts;
+    if(cur)s.value=cur;
+  });
+}
+
+function rPagamentos(){
+  pagLoad();
+  rPagSels();
+  rPagAlertas();
+  rFornecedores();
+  rContasPendentes();
+  rPagHist();
+}
+
+function rPagAlertas(){
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const alertas=PAG.contas.filter(c=>c.status==='pendente'&&c.vencimento).map(c=>{
+    const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
+    const lim=c.tipo==='nota_fiscal'?7:1;
+    return{...c,dias};
+  }).filter(c=>c.dias<=c.lim||c.tipo==='nota_fiscal'?c.dias<=7:c.dias<=1);
+  // Simplify: show if dias <= threshold
+  const urgentes=PAG.contas.filter(c=>{
+    if(c.status!=='pendente'||!c.vencimento)return false;
+    const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
+    const lim=c.tipo==='nota_fiscal'?7:1;
+    return dias<=lim;
+  });
+  const el=document.getElementById('pag-alertas');
+  if(!el)return;
+  if(!urgentes.length){el.innerHTML='';return;}
+  el.innerHTML=urgentes.map(c=>{
+    const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
+    const forn=PAG.fornecedores.find(f=>f.id===c.fornecedor_id);
+    const cls=dias<0?'rd':'or';
+    const msg=dias<0?`Vencido há ${Math.abs(dias)} dia(s)`:dias===0?'Vence hoje!':dias===1?'Vence amanhã':`Vence em ${dias} dia(s)`;
+    return`<div class="ab2 ${cls}" style="margin-bottom:6px">💳 <strong>${forn?.nome||'?'}</strong> — ${c.descricao} — ${fm(c.valor)} — <strong>${msg}</strong></div>`;
+  }).join('');
+}
+
+function rFornecedores(){
+  const tb=document.getElementById('td-fornecedores');if(!tb)return;
+  const rows=PAG.fornecedores.map(f=>{
+    const saldo=PAG.contas.filter(c=>c.fornecedor_id===f.id&&c.status==='pendente').reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+    return`<tr><td><strong>${f.nome}</strong></td><td class="mn">${f.cnpj||'—'}</td><td>${f.contato||'—'}</td><td class="mn" style="${saldo>0?'color:var(--or);font-weight:600':''}">${saldo>0?fm(saldo):'R$ 0,00'}</td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opFornecedor(${f.id})">Editar</button><button class="btn sm d" onclick="delFornecedor(${f.id})">Remover</button></td></tr>`;
+  }).join('');
+  tb.innerHTML=rows||'<tr><td colspan="5" class="empty">Nenhum fornecedor cadastrado</td></tr>';
+}
+
+function rContasPendentes(){
+  const fil=document.getElementById('pag-fil-forn')?.value||'';
+  const el=document.getElementById('pag-pendentes');if(!el)return;
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const tipoL={nota_fiscal:'NF',vencimento:'Venc.'};
+
+  // Agrupar por fornecedor
+  const forns=fil?PAG.fornecedores.filter(f=>String(f.id)===fil):PAG.fornecedores;
+  const pending=PAG.contas.filter(c=>c.status==='pendente'&&(!fil||String(c.fornecedor_id)===fil));
+
+  if(!pending.length){el.innerHTML='<div class="empty">Nenhuma conta pendente</div>';return;}
+
+  let html='';
+  const fornIds=[...new Set(pending.map(c=>c.fornecedor_id))];
+  fornIds.forEach(fid=>{
+    const forn=PAG.fornecedores.find(f=>f.id===fid);
+    const contas=pending.filter(c=>c.fornecedor_id===fid).sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''));
+    const total=contas.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+    html+=`<div style="border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;overflow:hidden">
+      <div style="display:flex;align-items:center;padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--bd)">
+        <strong style="font-size:13px">${forn?.nome||'Fornecedor desconhecido'}</strong>
+        <span style="margin-left:auto;font-family:var(--mn);font-size:14px;font-weight:600;color:var(--or)">${fm(total)}</span>
+        <button class="btn sm p" onclick="pagarTudo(${fid})" style="margin-left:10px">Pagar tudo</button>
+      </div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--bg)"><th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Descrição</th><th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Tipo</th><th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Vencimento</th><th style="padding:7px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Valor</th><th style="padding:7px 14px;border-bottom:1px solid var(--bd)"></th></tr></thead>
+        <tbody>
+        ${contas.map(c=>{
+          const dias=c.vencimento?Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5)):null;
+          const vencCls=dias==null?'':(dias<0?'color:var(--rd);font-weight:600':dias===0?'color:var(--rd)':dias<=3?'color:var(--or)':'');
+          return`<tr>
+            <td style="padding:8px 14px;font-size:13px;border-bottom:1px solid var(--bd)">${c.descricao}${c.obs?'<br><span style="font-size:11px;color:var(--tm)">'+c.obs+'</span>':''}</td>
+            <td style="padding:8px 14px;font-size:11px;border-bottom:1px solid var(--bd)"><span class="bdg sd">${tipoL[c.tipo]||c.tipo}</span></td>
+            <td style="padding:8px 14px;font-size:12px;font-family:var(--mn);border-bottom:1px solid var(--bd);${vencCls}">${fd(c.vencimento)}${dias!=null?`<br><span style="font-size:10px">${dias<0?'Vencido há '+Math.abs(dias)+'d':dias===0?'Hoje!':'Em '+dias+'d'}</span>`:''}</td>
+            <td style="padding:8px 14px;font-family:var(--mn);font-weight:600;text-align:right;border-bottom:1px solid var(--bd)">${fm(c.valor)}</td>
+            <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn sm s" onclick="abrPagar(${c.id})">Pagar</button><button class="btn sm d" onclick="delConta(${c.id})">✕</button></div></td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function rPagHist(){
+  const fil=document.getElementById('pag-fil-hist')?.value||'';
+  const tb=document.getElementById('td-pag-hist');if(!tb)return;
+  const tipoL={nota_fiscal:'Nota Fiscal',vencimento:'Vencimento'};
+  const hist=PAG.contas.filter(c=>c.status==='pago'&&(!fil||String(c.fornecedor_id)===fil))
+    .sort((a,b)=>(b.data_pagamento||'').localeCompare(a.data_pagamento||''));
+  tb.innerHTML=hist.length?hist.map(c=>{
+    const forn=PAG.fornecedores.find(f=>f.id===c.fornecedor_id);
+    return`<tr>
+      <td class="mn">${fd(c.data_pagamento)}</td>
+      <td><strong>${forn?.nome||'—'}</strong></td>
+      <td>${c.descricao}${c.obs?'<br><span style="font-size:11px;color:var(--tm)">'+c.obs+'</span>':''}</td>
+      <td style="font-size:11px;color:var(--tm)">${tipoL[c.tipo]||c.tipo}</td>
+      <td class="mn">${fd(c.vencimento)}</td>
+      <td class="mn" style="font-weight:600">${fm(c.valor_pago||c.valor)}</td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="6" class="empty">Nenhum pagamento realizado</td></tr>';
+}
+
+function addFornecedor(){
+  const nome=document.getElementById('pag-fn').value.trim();
+  if(!nome){alert('Informe o nome do fornecedor.');return;}
+  pagLoad();
+  PAG.fornecedores.push({id:pagNewId(),nome,cnpj:document.getElementById('pag-fcnpj').value.trim(),contato:document.getElementById('pag-fcontato').value.trim()});
+  pagSave();
+  ['pag-fn','pag-fcnpj','pag-fcontato'].forEach(id=>document.getElementById(id).value='');
+  rPagamentos();
+}
+
+let efornId=null;
+function opFornecedor(id){
+  pagLoad();
+  const f=PAG.fornecedores.find(x=>x.id===id);if(!f)return;
+  efornId=id;
+  document.getElementById('eforn-nome').value=f.nome;
+  document.getElementById('eforn-cnpj').value=f.cnpj||'';
+  document.getElementById('eforn-contato').value=f.contato||'';
+  document.getElementById('m-eforn').classList.add('op');
+}
+function saveFornecedor(){
+  if(!efornId)return;
+  pagLoad();
+  const f=PAG.fornecedores.find(x=>x.id===efornId);
+  if(!f)return;
+  f.nome=document.getElementById('eforn-nome').value.trim();
+  f.cnpj=document.getElementById('eforn-cnpj').value.trim();
+  f.contato=document.getElementById('eforn-contato').value.trim();
+  pagSave();cm('m-eforn');rPagamentos();
+}
+function delFornecedor(id){
+  pagLoad();
+  const temContas=PAG.contas.some(c=>c.fornecedor_id===id&&c.status==='pendente');
+  if(temContas){alert('Este fornecedor tem contas pendentes. Pague ou remova as contas antes.');return;}
+  if(!confirm('Remover fornecedor?'))return;
+  PAG.fornecedores=PAG.fornecedores.filter(f=>f.id!==id);
+  pagSave();rPagamentos();
+}
+
+function addConta(){
+  const fid=parseInt(document.getElementById('pag-forn').value);
+  const desc=document.getElementById('pag-desc').value.trim();
+  const valor=parseFloat(document.getElementById('pag-valor').value);
+  const venc=document.getElementById('pag-venc').value;
+  const tipo=document.getElementById('pag-tipo').value;
+  const obs=document.getElementById('pag-obs').value.trim();
+  if(!fid){alert('Selecione o fornecedor.');return;}
+  if(!desc){alert('Informe a descrição.');return;}
+  if(!valor||valor<=0){alert('Informe o valor.');return;}
+  if(!venc){alert('Informe o vencimento.');return;}
+  pagLoad();
+  PAG.contas.push({id:pagNewId(),fornecedor_id:fid,descricao:desc,valor,vencimento:venc,tipo,obs,status:'pendente',criado_em:hj()});
+  pagSave();
+  ['pag-desc','pag-valor','pag-venc','pag-obs'].forEach(id=>document.getElementById(id).value='');
+  rPagamentos();
+}
+
+let pagarId=null;
+function abrPagar(id){
+  pagLoad();
+  const c=PAG.contas.find(x=>x.id===id);if(!c)return;
+  pagarId=id;
+  const forn=PAG.fornecedores.find(f=>f.id===c.fornecedor_id);
+  document.getElementById('m-pagar-info').innerHTML=`<strong>${forn?.nome||'—'}</strong> — ${c.descricao} — <strong>${fm(c.valor)}</strong> · Vencimento: ${fd(c.vencimento)}`;
+  document.getElementById('pag-dt-pag').value=hj();
+  document.getElementById('pag-val-pag').value=c.valor;
+  document.getElementById('pag-obs-pag').value='';
+  document.getElementById('m-pagar').classList.add('op');
+}
+function pagarTudo(fornId){
+  pagLoad();
+  const contas=PAG.contas.filter(c=>c.fornecedor_id===fornId&&c.status==='pendente');
+  if(!contas.length)return;
+  const total=contas.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+  const forn=PAG.fornecedores.find(f=>f.id===fornId);
+  if(!confirm(`Marcar TODAS as contas pendentes de "${forn?.nome}" como pagas?\nTotal: ${fm(total)}`))return;
+  const dt=hj();
+  contas.forEach(c=>{c.status='pago';c.data_pagamento=dt;c.valor_pago=c.valor;c.obs_pagamento='Pago em lote';});
+  pagSave();rPagamentos();
+}
+function confirmarPagamento(){
+  if(!pagarId)return;
+  pagLoad();
+  const c=PAG.contas.find(x=>x.id===pagarId);if(!c)return;
+  const dt=document.getElementById('pag-dt-pag').value;
+  const val=parseFloat(document.getElementById('pag-val-pag').value);
+  const obs=document.getElementById('pag-obs-pag').value.trim();
+  if(!dt){alert('Informe a data do pagamento.');return;}
+  if(!val||val<=0){alert('Informe o valor pago.');return;}
+  c.status='pago';c.data_pagamento=dt;c.valor_pago=val;c.obs_pagamento=obs;
+  pagSave();cm('m-pagar');rPagamentos();
+}
+function delConta(id){
+  if(!confirm('Remover esta conta?'))return;
+  pagLoad();
+  PAG.contas=PAG.contas.filter(c=>c.id!==id);
+  pagSave();rPagamentos();
+}
+
 // ── MÓDULOS / NAVEGAÇÃO ────────────────────────────────────
-const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:rSels,saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,fveiculos:()=>{rVeiculos();rAlertasBadge();},fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();},falertas:()=>{rFrotaSels();rAlertas();rAlertasConfig();},findicadores:()=>{rIndSels();rIndicadores();}};
+const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:rSels,saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,apagamentos:()=>{pagLoad();rPagamentos();},fveiculos:()=>{rVeiculos();rAlertasBadge();},fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();},falertas:()=>{rFrotaSels();rAlertas();rAlertasConfig();},findicadores:()=>{rIndSels();rIndicadores();}};
 function sp(n,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));const pg=document.getElementById('page-'+n);if(pg)pg.classList.add('on');if(btn)btn.classList.add('on');RENDERS[n]?.();}
-function tmod(m){const NAVS={est:'ne',cli:'nc',adm:'na',fro:'nf'};const BTNS={est:'bme',cli:'bmc',adm:'bma',fro:'bmf'};const IC={est:'E',cli:'❄',adm:'🗂',fro:'🚗'};const TT={est:'Estoque',cli:'Climatização',adm:'Administrativo',fro:'Frota'};const SB={est:'Material de consumo',cli:'Ar condicionado',adm:'Gestão predial',fro:'Gestão de veículos'};const FP={est:'dashboard',cli:'ccham',adm:'ademdas',fro:'fveiculos'};['est','cli','adm','fro'].forEach(x=>{document.getElementById(NAVS[x]).style.display=m===x?'block':'none';document.getElementById(BTNS[x]).classList.toggle('on',m===x);});document.getElementById('mid').textContent=IC[m];document.getElementById('mtit').textContent=TT[m];document.getElementById('msub').textContent=SB[m];document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));document.getElementById('page-'+FP[m]).classList.add('on');const fn=document.querySelector(`#${NAVS[m]} .ni`);if(fn)fn.classList.add('on');RENDERS[FP[m]]?.();}
+function tmod(m){const NAVS={est:'ne',cli:'nc',adm:'na',fro:'nf'};const BTNS={est:'bme',cli:'bmc',adm:'bma',fro:'bmf'};const IC={est:'E',cli:'❄',adm:'🗂',fro:'🚗'};const TT={est:'Estoque',cli:'Climatização',adm:'Administrativo',fro:'Frota'};const SB={est:'Material de consumo',cli:'Ar condicionado',adm:'Gestão predial',fro:'Gestão de veículos'};const FP={est:'dashboard',cli:'ccham',adm:'ademdas',fro:'findicadores'};['est','cli','adm','fro'].forEach(x=>{document.getElementById(NAVS[x]).style.display=m===x?'block':'none';document.getElementById(BTNS[x]).classList.toggle('on',m===x);});document.getElementById('mid').textContent=IC[m];document.getElementById('mtit').textContent=TT[m];document.getElementById('msub').textContent=SB[m];document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));document.getElementById('page-'+FP[m]).classList.add('on');const fn=document.querySelector(`#${NAVS[m]} .ni`);if(fn)fn.classList.add('on');RENDERS[FP[m]]?.();}
 
 // ── INIT ───────────────────────────────────────────────────
 document.getElementById('sip').textContent=window.location.host;
