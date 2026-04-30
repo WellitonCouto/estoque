@@ -411,7 +411,7 @@ tbody tr:hover td{background:var(--bg)}
         <div class="fl" style="margin-bottom:13px">
           <span class="ct" style="margin:0">Fornecedores</span>
         </div>
-        <div class="tw"><table><thead><tr><th>Nome</th><th>CNPJ/CPF</th><th>Contato</th><th>Tipo de pagamento</th><th>Saldo pendente</th><th></th></tr></thead><tbody id="td-fornecedores"></tbody></table></div>
+        <div id="tb-forn-wrap" class="tw" style="overflow-y:auto"><table><thead><tr><th>Nome</th><th>CNPJ/CPF</th><th>Contato</th><th>Saldo pendente</th><th></th></tr></thead><tbody id="td-fornecedores"></tbody></table></div>
       </div>
 
       <!-- NOVA CONTA -->
@@ -1994,11 +1994,11 @@ function rPagAlertas(){
   const hoje=new Date();hoje.setHours(0,0,0,0);
   const urgentes=PAG.contas.filter(c=>{
     if(c.status!=='pendente'||!c.vencimento)return false;
-    const forn=PAG.fornecedores.find(f=>f.id===c.fornecedor_id);
-    const tipo=forn?.tipo||c.tipo||'nota_fiscal';
     const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
-    const lim=tipo==='nota_fiscal'?7:1;
-    return dias<=lim;
+    // Se NF ainda não recebida: avisa com 7 dias de antecedência (exceto no vencimento)
+    // Se NF já recebida: só avisa no dia do vencimento (dias===0) ou se vencido
+    if(c.nf_recebida){return dias<=0;}
+    else{return dias<=7 && dias>0;} // 7 dias antes, some no dia (dia do vencimento avisa só quando NF recebida)
   });
   const el=document.getElementById('pag-alertas');
   if(!el)return;
@@ -2006,27 +2006,48 @@ function rPagAlertas(){
   el.innerHTML=urgentes.map(c=>{
     const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
     const forn=PAG.fornecedores.find(f=>f.id===c.fornecedor_id);
-    const cls=dias<0?'rd':'or';
-    const msg=dias<0?`Vencido há ${Math.abs(dias)} dia(s)`:dias===0?'Vence hoje!':dias===1?'Vence amanhã':`Vence em ${dias} dia(s)`;
-    return`<div class="ab2 ${cls}" style="margin-bottom:6px">💳 <strong>${forn?.nome||'?'}</strong> — ${c.descricao} — ${fm(c.valor)} — <strong>${msg}</strong></div>`;
+    if(c.nf_recebida){
+      // No vencimento ou vencido
+      const cls=dias<0?'rd':'rd';
+      const msg=dias<0?`Vencido há ${Math.abs(dias)} dia(s)`:'Vence hoje!';
+      return`<div class="ab2 ${cls}" style="margin-bottom:6px">💳 <strong>${forn?.nome||'?'}</strong> — ${fm(c.valor)} — <strong>${msg}</strong></div>`;
+    } else {
+      // Aviso de 7 dias: solicitar nota fiscal
+      return`<div class="ab2 or" style="margin-bottom:6px">📄 <strong>${forn?.nome||'?'}</strong> — ${c.descricao} — ${fm(c.valor)} — <strong>Solicite a nota fiscal (vence em ${dias} dia${dias===1?'':'s'})</strong></div>`;
+    }
   }).join('');
 }
 
 function rFornecedores(){
+  const wrap=document.getElementById('tb-forn-wrap');
   const tb=document.getElementById('td-fornecedores');if(!tb)return;
-  const tipoL={nota_fiscal:'Nota fiscal',vencimento:'Vencimento fixo'};
-  const rows=PAG.fornecedores.map(f=>{
-    const saldo=PAG.contas.filter(c=>c.fornecedor_id===f.id&&c.status==='pendente').reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
-    return`<tr><td><strong>${f.nome}</strong></td><td class="mn">${f.cnpj||'—'}</td><td>${f.contato||'—'}</td><td><span class="bdg ${f.tipo==='nota_fiscal'?'sd':'en'}">${tipoL[f.tipo||'nota_fiscal']}</span></td><td class="mn" style="${saldo>0?'color:var(--or);font-weight:600':''}">${saldo>0?fm(saldo):'R$ 0,00'}</td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opFornecedor(${f.id})">Editar</button><button class="btn sm d" onclick="delFornecedor(${f.id})">Remover</button></td></tr>`;
-  }).join('');
-  tb.innerHTML=rows||'<tr><td colspan="6" class="empty">Nenhum fornecedor cadastrado</td></tr>';
+  // Calcular saldo pendente de cada fornecedor
+  const comSaldo=PAG.fornecedores.map(f=>({
+    ...f,
+    saldo:PAG.contas.filter(c=>c.fornecedor_id===f.id&&c.status==='pendente').reduce((s,c)=>s+(parseFloat(c.valor)||0),0)
+  }));
+  // Ordem: pendentes primeiro (por nome), depois sem pendentes (por nome)
+  comSaldo.sort((a,b)=>{
+    if(a.saldo>0&&b.saldo<=0)return -1;
+    if(a.saldo<=0&&b.saldo>0)return 1;
+    return a.nome.localeCompare(b.nome,'pt-BR');
+  });
+  const rows=comSaldo.map(f=>`<tr>
+    <td><strong>${f.nome}</strong></td>
+    <td class="mn">${f.cnpj||'—'}</td>
+    <td>${f.contato||'—'}</td>
+    <td class="mn" style="${f.saldo>0?'color:var(--or);font-weight:600':''}">${f.saldo>0?fm(f.saldo):'—'}</td>
+    <td style="display:flex;gap:5px"><button class="btn sm e" onclick="opFornecedor(${f.id})">Editar</button><button class="btn sm d" onclick="delFornecedor(${f.id})">Remover</button></td>
+  </tr>`).join('');
+  tb.innerHTML=rows||'<tr><td colspan="5" class="empty">Nenhum fornecedor cadastrado</td></tr>';
+  // Limitar altura para mostrar ~15 linhas (~42px cada), o resto rola
+  if(wrap)wrap.style.maxHeight=comSaldo.length>15?'630px':'';
 }
 
 function rContasPendentes(){
   const fil=document.getElementById('pag-fil-forn')?.value||'';
   const el=document.getElementById('pag-pendentes');if(!el)return;
   const hoje=new Date();hoje.setHours(0,0,0,0);
-  const tipoL={nota_fiscal:'Nota fiscal — alerta 7 dias antes',vencimento:'Vencimento fixo — alerta 1 dia antes'};
 
   const pending=PAG.contas.filter(c=>c.status==='pendente'&&(!fil||String(c.fornecedor_id)===fil));
   if(!pending.length){el.innerHTML='<div class="empty">Nenhuma conta pendente</div>';return;}
@@ -2037,38 +2058,63 @@ function rContasPendentes(){
     const forn=PAG.fornecedores.find(f=>f.id===fid);
     const contas=pending.filter(c=>c.fornecedor_id===fid).sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''));
     const total=contas.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
-    const tipoForn=forn?.tipo||'nota_fiscal';
+    const todasNfRecebidas=contas.every(c=>c.nf_recebida);
+    const algumaNfRecebida=contas.some(c=>c.nf_recebida);
+    const nfIcone=todasNfRecebidas?'✅':'📄';
+    // Vencimento mais próximo
+    const proxVenc=contas[0]?.vencimento;
+    const diasProx=proxVenc?Math.round((new Date(proxVenc+'T00:00:00')-hoje)/(864e5)):null;
+    const vencTag=diasProx==null?'':(diasProx<0?`<span style="font-size:11px;color:var(--rd);font-weight:600">Vencido!</span>`:diasProx===0?`<span style="font-size:11px;color:var(--rd);font-weight:600">Vence hoje!</span>`:`<span style="font-size:11px;color:var(--tm)">vence ${fd(proxVenc)}</span>`);
+    const uid='cp-'+fid;
     html+=`<div style="border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;overflow:hidden">
-      <div style="display:flex;align-items:center;padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--bd);gap:10px">
+      <div style="display:flex;align-items:center;padding:10px 14px;background:var(--bg);gap:10px;cursor:pointer" onclick="document.getElementById('${uid}').style.display=document.getElementById('${uid}').style.display==='none'?'block':'none'">
+        <span style="font-size:14px">${nfIcone}</span>
         <strong style="font-size:13px">${forn?.nome||'Fornecedor desconhecido'}</strong>
-        <span class="bdg ${tipoForn==='nota_fiscal'?'sd':'en'}" style="font-size:10px">${tipoForn==='nota_fiscal'?'Nota fiscal':'Venc. fixo'}</span>
-        <span style="font-size:11px;color:var(--tm)">${tipoL[tipoForn]}</span>
+        ${vencTag}
         <span style="margin-left:auto;font-family:var(--mn);font-size:14px;font-weight:600;color:var(--or)">${fm(total)}</span>
-        <button class="btn sm p" onclick="pagarTudo(${fid})" style="margin-left:6px">Pagar tudo</button>
+        <button class="btn sm p" onclick="event.stopPropagation();pagarTudo(${fid})" style="margin-left:6px">Pagar tudo</button>
+        <span style="font-size:11px;color:var(--tm);user-select:none">▼</span>
       </div>
-      <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:var(--bg)">
-          <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Descrição</th>
-          <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Vencimento</th>
-          <th style="padding:7px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Valor</th>
-          <th style="padding:7px 14px;border-bottom:1px solid var(--bd)"></th>
-        </tr></thead>
-        <tbody>
-        ${contas.map(c=>{
-          const dias=c.vencimento?Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5)):null;
-          const vencCls=dias==null?'':(dias<0?'color:var(--rd);font-weight:600':dias===0?'color:var(--rd)':dias<=3?'color:var(--or)':'');
-          return`<tr>
-            <td style="padding:8px 14px;font-size:13px;border-bottom:1px solid var(--bd)">${c.descricao}${c.obs?'<br><span style="font-size:11px;color:var(--tm)">'+c.obs+'</span>':''}</td>
-            <td style="padding:8px 14px;font-size:12px;font-family:var(--mn);border-bottom:1px solid var(--bd);${vencCls}">${fd(c.vencimento)}${dias!=null?`<br><span style="font-size:10px">${dias<0?'Vencido há '+Math.abs(dias)+'d':dias===0?'Hoje!':'Em '+dias+'d'}</span>`:''}</td>
-            <td style="padding:8px 14px;font-family:var(--mn);font-weight:600;text-align:right;border-bottom:1px solid var(--bd)">${fm(c.valor)}</td>
-            <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn sm s" onclick="abrPagar(${c.id})">Pagar</button><button class="btn sm d" onclick="delConta(${c.id})">✕</button></div></td>
-          </tr>`;
-        }).join('')}
-        </tbody>
-      </table>
+      <div id="${uid}" style="display:none">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:var(--bg)">
+            <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Descrição</th>
+            <th style="padding:7px 14px;text-align:center;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">NF</th>
+            <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Vencimento</th>
+            <th style="padding:7px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Valor</th>
+            <th style="padding:7px 14px;border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)"></th>
+          </tr></thead>
+          <tbody>
+          ${contas.map(c=>{
+            const dias=c.vencimento?Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5)):null;
+            const vencCls=dias==null?'':(dias<0?'color:var(--rd);font-weight:600':dias===0?'color:var(--rd)':dias<=3?'color:var(--or)':'');
+            return`<tr>
+              <td style="padding:8px 14px;font-size:13px;border-bottom:1px solid var(--bd)">${c.descricao}${c.obs?'<br><span style="font-size:11px;color:var(--tm)">'+c.obs+'</span>':''}</td>
+              <td style="padding:8px 14px;text-align:center;border-bottom:1px solid var(--bd)">
+                <label title="${c.nf_recebida?'Nota fiscal recebida':'Nota fiscal pendente'}" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px">
+                  <input type="checkbox" ${c.nf_recebida?'checked':''} onchange="toggleNfRecebida(${c.id},this.checked)" style="accent-color:var(--gn);width:15px;height:15px">
+                  <span style="font-size:10px;color:var(--tm)">${c.nf_recebida?'Recebida':'Pendente'}</span>
+                </label>
+              </td>
+              <td style="padding:8px 14px;font-size:12px;font-family:var(--mn);border-bottom:1px solid var(--bd);${vencCls}">${fd(c.vencimento)}${dias!=null?`<br><span style="font-size:10px">${dias<0?'Vencido há '+Math.abs(dias)+'d':dias===0?'Hoje!':'Em '+dias+'d'}</span>`:''}</td>
+              <td style="padding:8px 14px;font-family:var(--mn);font-weight:600;text-align:right;border-bottom:1px solid var(--bd)">${fm(c.valor)}</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn sm s" onclick="abrPagar(${c.id})">Pagar</button><button class="btn sm d" onclick="delConta(${c.id})">✕</button></div></td>
+            </tr>`;
+          }).join('')}
+          </tbody>
+        </table>
+      </div>
     </div>`;
   });
   el.innerHTML=html;
+}
+
+async function toggleNfRecebida(id,recebida){
+  await fetch(`/api/contas-pagar/${id}`,{method:'PUT',headers:pagHdrs(),body:JSON.stringify({nf_recebida:recebida})});
+  await pagLoad();
+  rPagAlertas();
+  rContasPendentes();
+  rFornecedores();
 }
 
 function rPagHist(){
