@@ -2169,8 +2169,6 @@ function pagarTudo(fornId){
 
   // Preencher info no modal
   document.getElementById('m-pt-info').innerHTML=`<strong>${forn?.nome||'—'}</strong> — Total pendente: <strong style="color:var(--or)">${fm(total)}</strong>`;
-  document.getElementById('m-pt-valor').textContent=fm(total);
-  document.getElementById('m-pt-forn').textContent=forn?.nome||'—';
 
   // Resetar estado
   document.getElementById('pt-email-chk').checked=false;
