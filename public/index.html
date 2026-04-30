@@ -794,6 +794,44 @@ tbody tr:hover td{background:var(--bg)}
   <div class="mft"><button class="btn" onclick="cm('m-pagar')">Cancelar</button><button class="btn p" onclick="confirmarPagamento()">Confirmar pagamento</button></div>
 </div></div>
 
+<!-- MODAL: PAGAR TUDO (com controle de e-mail e confirmação) -->
+<div class="mo" id="m-pagar-tudo"><div class="mbox">
+  <div class="mtit">💳 Pagar tudo</div>
+  <p id="m-pt-info" style="font-size:13px;color:var(--tm);margin-bottom:16px"></p>
+
+  <!-- PASSO 1: E-mail -->
+  <div style="border:1px solid var(--bd);border-radius:10px;overflow:hidden;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg)">
+      <input type="checkbox" id="pt-email-chk" onchange="ptTogEmail()" style="width:16px;height:16px;accent-color:var(--ac);cursor:pointer;flex-shrink:0">
+      <label for="pt-email-chk" style="font-size:13px;font-weight:500;cursor:pointer;color:var(--tx)">✉️ E-mail enviado ao financeiro</label>
+    </div>
+    <div id="pt-email-blk" style="display:none;padding:12px 14px;border-top:1px solid var(--bd)">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);margin-bottom:6px">Texto para copiar no e-mail</div>
+      <textarea id="pt-email-txt" style="width:100%;min-height:148px;padding:9px 11px;border:1px solid var(--bd);border-radius:8px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;line-height:1.6;background:var(--bg);color:var(--tx);resize:vertical"></textarea>
+      <button id="pt-copiar-btn" class="btn sm e" style="margin-top:8px" onclick="ptCopiarEmail()">📋 Copiar texto</button>
+    </div>
+  </div>
+
+  <!-- PASSO 2: Confirmação do pagamento -->
+  <div style="border:1px solid var(--bd);border-radius:10px;overflow:hidden;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg)">
+      <input type="checkbox" id="pt-pago-chk" onchange="ptTogPago()" style="width:16px;height:16px;accent-color:var(--gn);cursor:pointer;flex-shrink:0">
+      <label for="pt-pago-chk" style="font-size:13px;font-weight:500;cursor:pointer;color:var(--tx)">✅ Pagamento confirmado (comprovante recebido)</label>
+    </div>
+    <div id="pt-pago-blk" style="display:none;padding:12px 14px;border-top:1px solid var(--bd)">
+      <div class="f">
+        <label>Data do pagamento</label>
+        <input type="date" id="pt-dt-pag">
+      </div>
+    </div>
+  </div>
+
+  <div class="mft">
+    <button class="btn" onclick="cm('m-pagar-tudo')">Cancelar</button>
+    <button class="btn p" onclick="ptConfirmarPagamento()">Concluir pagamento</button>
+  </div>
+</div></div>
+
 <!-- MODAL: EDITAR FORNECEDOR -->
 <div class="mo" id="m-eforn"><div class="mbox">
   <div class="mtit">Editar fornecedor</div>
@@ -2120,16 +2158,63 @@ function abrPagar(id){
   document.getElementById('pag-obs-pag').value='';
   document.getElementById('m-pagar').classList.add('op');
 }
+let pagarTudoFornId=null;
 function pagarTudo(fornId){
   pagLoad();
   const contas=PAG.contas.filter(c=>c.fornecedor_id===fornId&&c.status==='pendente');
   if(!contas.length)return;
   const total=contas.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
   const forn=PAG.fornecedores.find(f=>f.id===fornId);
-  if(!confirm(`Marcar TODAS as contas pendentes de "${forn?.nome}" como pagas?\nTotal: ${fm(total)}`))return;
-  const dt=hj();
-  contas.forEach(c=>{c.status='pago';c.data_pagamento=dt;c.valor_pago=c.valor;c.obs_pagamento='Pago em lote';});
-  pagSave();rPagamentos();
+  pagarTudoFornId=fornId;
+
+  // Preencher info no modal
+  document.getElementById('m-pt-info').innerHTML=`<strong>${forn?.nome||'—'}</strong> — Total pendente: <strong style="color:var(--or)">${fm(total)}</strong>`;
+  document.getElementById('m-pt-valor').textContent=fm(total);
+  document.getElementById('m-pt-forn').textContent=forn?.nome||'—';
+
+  // Resetar estado
+  document.getElementById('pt-email-chk').checked=false;
+  document.getElementById('pt-pago-chk').checked=false;
+  document.getElementById('pt-email-blk').style.display='none';
+  document.getElementById('pt-pago-blk').style.display='none';
+  document.getElementById('pt-dt-pag').value=hj();
+
+  // Gerar texto do e-mail
+  const hora=new Date().getHours();
+  const saudacao=hora<12?'bom dia':hora<18?'boa tarde':'boa noite';
+  const emailTxt=`Prezada Regina, ${saudacao}.\n\nVenho por meio deste solicitar o pagamento para ${forn?.nome||'[empresa]'}.\n\nValor: ${fm(total)}\nPIX: \n\nSegue anexo nota fiscal, qualquer dúvida estou à disposição.`;
+  document.getElementById('pt-email-txt').value=emailTxt;
+
+  document.getElementById('m-pagar-tudo').classList.add('op');
+}
+function ptTogEmail(){
+  const chk=document.getElementById('pt-email-chk').checked;
+  document.getElementById('pt-email-blk').style.display=chk?'block':'none';
+}
+function ptTogPago(){
+  const chk=document.getElementById('pt-pago-chk').checked;
+  document.getElementById('pt-pago-blk').style.display=chk?'block':'none';
+}
+function ptCopiarEmail(){
+  const txt=document.getElementById('pt-email-txt').value;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.getElementById('pt-copiar-btn');
+    const orig=btn.textContent;
+    btn.textContent='✓ Copiado!';
+    setTimeout(()=>btn.textContent=orig,2000);
+  }).catch(()=>alert(document.getElementById('pt-email-txt').value));
+}
+function ptConfirmarPagamento(){
+  if(!pagarTudoFornId)return;
+  const pago=document.getElementById('pt-pago-chk').checked;
+  if(!pago){alert('Marque "Pagamento confirmado" antes de concluir.');return;}
+  const dt=document.getElementById('pt-dt-pag').value||hj();
+  pagLoad();
+  const contas=PAG.contas.filter(c=>c.fornecedor_id===pagarTudoFornId&&c.status==='pendente');
+  contas.forEach(c=>{c.status='pago';c.data_pagamento=dt;c.valor_pago=c.valor;c.obs_pagamento='Pago em lote via PIX';});
+  pagSave();
+  cm('m-pagar-tudo');
+  rPagamentos();
 }
 function confirmarPagamento(){
   if(!pagarId)return;
