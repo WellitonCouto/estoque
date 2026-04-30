@@ -854,6 +854,10 @@ const server = http.createServer(async (req, res) => {
             const r = await pool.query('UPDATE contas_pagar SET nf_recebida=$1 WHERE id=$2 RETURNING *', [b.nf_recebida, id]);
             return ok(res, r.rows[0]);
           }
+          if (b.vencimento && !b.status) {
+            const r = await pool.query('UPDATE contas_pagar SET vencimento=$1 WHERE id=$2 RETURNING *', [b.vencimento, id]);
+            return ok(res, r.rows[0]);
+          }
           const r = await pool.query(
             'UPDATE contas_pagar SET status=$1,data_pagamento=$2,valor_pago=$3,obs_pagamento=$4 WHERE id=$5 RETURNING *',
             [b.status, b.data_pagamento||null, b.valor_pago||null, b.obs_pagamento||'', id]);
