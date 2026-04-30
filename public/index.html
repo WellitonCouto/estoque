@@ -394,10 +394,16 @@ tbody tr:hover td{background:var(--bg)}
       <!-- FORNECEDORES -->
       <div class="card" style="margin-bottom:12px">
         <div class="ct">Cadastrar fornecedor</div>
-        <div class="fg c3">
+        <div class="fg c4">
           <div class="f"><label>Nome *</label><input id="pag-fn" placeholder="Ex: Papelaria Central"></div>
           <div class="f"><label>CNPJ / CPF</label><input id="pag-fcnpj" placeholder="Opcional"></div>
           <div class="f"><label>Contato</label><input id="pag-fcontato" placeholder="Telefone ou e-mail"></div>
+          <div class="f"><label>Tipo de pagamento</label>
+            <select id="pag-ftipo">
+              <option value="nota_fiscal">Nota fiscal (alerta 7 dias antes)</option>
+              <option value="vencimento">Vencimento fixo (alerta 1 dia antes)</option>
+            </select>
+          </div>
         </div>
         <button class="btn p" onclick="addFornecedor()">Cadastrar fornecedor</button>
       </div>
@@ -405,21 +411,15 @@ tbody tr:hover td{background:var(--bg)}
         <div class="fl" style="margin-bottom:13px">
           <span class="ct" style="margin:0">Fornecedores</span>
         </div>
-        <div class="tw"><table><thead><tr><th>Nome</th><th>CNPJ/CPF</th><th>Contato</th><th>Saldo pendente</th><th></th></tr></thead><tbody id="td-fornecedores"></tbody></table></div>
+        <div class="tw"><table><thead><tr><th>Nome</th><th>CNPJ/CPF</th><th>Contato</th><th>Tipo de pagamento</th><th>Saldo pendente</th><th></th></tr></thead><tbody id="td-fornecedores"></tbody></table></div>
       </div>
 
       <!-- NOVA CONTA -->
       <div class="card" style="margin-bottom:12px">
         <div class="ct">Registrar conta a pagar</div>
-        <div class="fg c3">
+        <div class="fg c2">
           <div class="f"><label>Fornecedor *</label><select id="pag-forn"><option value="">Selecione...</option></select></div>
           <div class="f"><label>Descrição *</label><input id="pag-desc" placeholder="Ex: NF 1234 — Resmas de papel"></div>
-          <div class="f"><label>Tipo</label>
-            <select id="pag-tipo">
-              <option value="nota_fiscal">Nota fiscal (alerta 7 dias antes)</option>
-              <option value="vencimento">Vencimento fixo (alerta 1 dia antes)</option>
-            </select>
-          </div>
         </div>
         <div class="fg c3">
           <div class="f"><label>Valor (R$) *</label><input id="pag-valor" type="number" step="0.01" placeholder="0,00"></div>
@@ -797,10 +797,18 @@ tbody tr:hover td{background:var(--bg)}
 <!-- MODAL: EDITAR FORNECEDOR -->
 <div class="mo" id="m-eforn"><div class="mbox">
   <div class="mtit">Editar fornecedor</div>
-  <div class="fg c3">
+  <div class="fg c2">
     <div class="f"><label>Nome *</label><input id="eforn-nome"></div>
     <div class="f"><label>CNPJ/CPF</label><input id="eforn-cnpj"></div>
+  </div>
+  <div class="fg c2">
     <div class="f"><label>Contato</label><input id="eforn-contato"></div>
+    <div class="f"><label>Tipo de pagamento</label>
+      <select id="eforn-tipo">
+        <option value="nota_fiscal">Nota fiscal (alerta 7 dias antes)</option>
+        <option value="vencimento">Vencimento fixo (alerta 1 dia antes)</option>
+      </select>
+    </div>
   </div>
   <div class="mft"><button class="btn" onclick="cm('m-eforn')">Cancelar</button><button class="btn p" onclick="saveFornecedor()">Salvar</button></div>
 </div></div>
@@ -1940,16 +1948,12 @@ function rPagamentos(){
 
 function rPagAlertas(){
   const hoje=new Date();hoje.setHours(0,0,0,0);
-  const alertas=PAG.contas.filter(c=>c.status==='pendente'&&c.vencimento).map(c=>{
-    const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
-    const lim=c.tipo==='nota_fiscal'?7:1;
-    return{...c,dias};
-  }).filter(c=>c.dias<=c.lim||c.tipo==='nota_fiscal'?c.dias<=7:c.dias<=1);
-  // Simplify: show if dias <= threshold
   const urgentes=PAG.contas.filter(c=>{
     if(c.status!=='pendente'||!c.vencimento)return false;
+    const forn=PAG.fornecedores.find(f=>f.id===c.fornecedor_id);
+    const tipo=forn?.tipo||c.tipo||'nota_fiscal';
     const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
-    const lim=c.tipo==='nota_fiscal'?7:1;
+    const lim=tipo==='nota_fiscal'?7:1;
     return dias<=lim;
   });
   const el=document.getElementById('pag-alertas');
@@ -1966,23 +1970,21 @@ function rPagAlertas(){
 
 function rFornecedores(){
   const tb=document.getElementById('td-fornecedores');if(!tb)return;
+  const tipoL={nota_fiscal:'Nota fiscal',vencimento:'Vencimento fixo'};
   const rows=PAG.fornecedores.map(f=>{
     const saldo=PAG.contas.filter(c=>c.fornecedor_id===f.id&&c.status==='pendente').reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
-    return`<tr><td><strong>${f.nome}</strong></td><td class="mn">${f.cnpj||'—'}</td><td>${f.contato||'—'}</td><td class="mn" style="${saldo>0?'color:var(--or);font-weight:600':''}">${saldo>0?fm(saldo):'R$ 0,00'}</td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opFornecedor(${f.id})">Editar</button><button class="btn sm d" onclick="delFornecedor(${f.id})">Remover</button></td></tr>`;
+    return`<tr><td><strong>${f.nome}</strong></td><td class="mn">${f.cnpj||'—'}</td><td>${f.contato||'—'}</td><td><span class="bdg ${f.tipo==='nota_fiscal'?'sd':'en'}">${tipoL[f.tipo||'nota_fiscal']}</span></td><td class="mn" style="${saldo>0?'color:var(--or);font-weight:600':''}">${saldo>0?fm(saldo):'R$ 0,00'}</td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opFornecedor(${f.id})">Editar</button><button class="btn sm d" onclick="delFornecedor(${f.id})">Remover</button></td></tr>`;
   }).join('');
-  tb.innerHTML=rows||'<tr><td colspan="5" class="empty">Nenhum fornecedor cadastrado</td></tr>';
+  tb.innerHTML=rows||'<tr><td colspan="6" class="empty">Nenhum fornecedor cadastrado</td></tr>';
 }
 
 function rContasPendentes(){
   const fil=document.getElementById('pag-fil-forn')?.value||'';
   const el=document.getElementById('pag-pendentes');if(!el)return;
   const hoje=new Date();hoje.setHours(0,0,0,0);
-  const tipoL={nota_fiscal:'NF',vencimento:'Venc.'};
+  const tipoL={nota_fiscal:'Nota fiscal — alerta 7 dias antes',vencimento:'Vencimento fixo — alerta 1 dia antes'};
 
-  // Agrupar por fornecedor
-  const forns=fil?PAG.fornecedores.filter(f=>String(f.id)===fil):PAG.fornecedores;
   const pending=PAG.contas.filter(c=>c.status==='pendente'&&(!fil||String(c.fornecedor_id)===fil));
-
   if(!pending.length){el.innerHTML='<div class="empty">Nenhuma conta pendente</div>';return;}
 
   let html='';
@@ -1991,21 +1993,28 @@ function rContasPendentes(){
     const forn=PAG.fornecedores.find(f=>f.id===fid);
     const contas=pending.filter(c=>c.fornecedor_id===fid).sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''));
     const total=contas.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+    const tipoForn=forn?.tipo||'nota_fiscal';
     html+=`<div style="border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;overflow:hidden">
-      <div style="display:flex;align-items:center;padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--bd)">
+      <div style="display:flex;align-items:center;padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--bd);gap:10px">
         <strong style="font-size:13px">${forn?.nome||'Fornecedor desconhecido'}</strong>
+        <span class="bdg ${tipoForn==='nota_fiscal'?'sd':'en'}" style="font-size:10px">${tipoForn==='nota_fiscal'?'Nota fiscal':'Venc. fixo'}</span>
+        <span style="font-size:11px;color:var(--tm)">${tipoL[tipoForn]}</span>
         <span style="margin-left:auto;font-family:var(--mn);font-size:14px;font-weight:600;color:var(--or)">${fm(total)}</span>
-        <button class="btn sm p" onclick="pagarTudo(${fid})" style="margin-left:10px">Pagar tudo</button>
+        <button class="btn sm p" onclick="pagarTudo(${fid})" style="margin-left:6px">Pagar tudo</button>
       </div>
       <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:var(--bg)"><th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Descrição</th><th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Tipo</th><th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Vencimento</th><th style="padding:7px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Valor</th><th style="padding:7px 14px;border-bottom:1px solid var(--bd)"></th></tr></thead>
+        <thead><tr style="background:var(--bg)">
+          <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Descrição</th>
+          <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Vencimento</th>
+          <th style="padding:7px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd)">Valor</th>
+          <th style="padding:7px 14px;border-bottom:1px solid var(--bd)"></th>
+        </tr></thead>
         <tbody>
         ${contas.map(c=>{
           const dias=c.vencimento?Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5)):null;
           const vencCls=dias==null?'':(dias<0?'color:var(--rd);font-weight:600':dias===0?'color:var(--rd)':dias<=3?'color:var(--or)':'');
           return`<tr>
             <td style="padding:8px 14px;font-size:13px;border-bottom:1px solid var(--bd)">${c.descricao}${c.obs?'<br><span style="font-size:11px;color:var(--tm)">'+c.obs+'</span>':''}</td>
-            <td style="padding:8px 14px;font-size:11px;border-bottom:1px solid var(--bd)"><span class="bdg sd">${tipoL[c.tipo]||c.tipo}</span></td>
             <td style="padding:8px 14px;font-size:12px;font-family:var(--mn);border-bottom:1px solid var(--bd);${vencCls}">${fd(c.vencimento)}${dias!=null?`<br><span style="font-size:10px">${dias<0?'Vencido há '+Math.abs(dias)+'d':dias===0?'Hoje!':'Em '+dias+'d'}</span>`:''}</td>
             <td style="padding:8px 14px;font-family:var(--mn);font-weight:600;text-align:right;border-bottom:1px solid var(--bd)">${fm(c.valor)}</td>
             <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn sm s" onclick="abrPagar(${c.id})">Pagar</button><button class="btn sm d" onclick="delConta(${c.id})">✕</button></div></td>
@@ -2021,16 +2030,17 @@ function rContasPendentes(){
 function rPagHist(){
   const fil=document.getElementById('pag-fil-hist')?.value||'';
   const tb=document.getElementById('td-pag-hist');if(!tb)return;
-  const tipoL={nota_fiscal:'Nota Fiscal',vencimento:'Vencimento'};
+  const tipoL={nota_fiscal:'Nota Fiscal',vencimento:'Venc. Fixo'};
   const hist=PAG.contas.filter(c=>c.status==='pago'&&(!fil||String(c.fornecedor_id)===fil))
     .sort((a,b)=>(b.data_pagamento||'').localeCompare(a.data_pagamento||''));
   tb.innerHTML=hist.length?hist.map(c=>{
     const forn=PAG.fornecedores.find(f=>f.id===c.fornecedor_id);
+    const tipoForn=forn?.tipo||c.tipo||'nota_fiscal';
     return`<tr>
       <td class="mn">${fd(c.data_pagamento)}</td>
       <td><strong>${forn?.nome||'—'}</strong></td>
       <td>${c.descricao}${c.obs?'<br><span style="font-size:11px;color:var(--tm)">'+c.obs+'</span>':''}</td>
-      <td style="font-size:11px;color:var(--tm)">${tipoL[c.tipo]||c.tipo}</td>
+      <td style="font-size:11px;color:var(--tm)">${tipoL[tipoForn]||tipoForn}</td>
       <td class="mn">${fd(c.vencimento)}</td>
       <td class="mn" style="font-weight:600">${fm(c.valor_pago||c.valor)}</td>
     </tr>`;
@@ -2041,9 +2051,10 @@ function addFornecedor(){
   const nome=document.getElementById('pag-fn').value.trim();
   if(!nome){alert('Informe o nome do fornecedor.');return;}
   pagLoad();
-  PAG.fornecedores.push({id:pagNewId(),nome,cnpj:document.getElementById('pag-fcnpj').value.trim(),contato:document.getElementById('pag-fcontato').value.trim()});
+  PAG.fornecedores.push({id:pagNewId(),nome,cnpj:document.getElementById('pag-fcnpj').value.trim(),contato:document.getElementById('pag-fcontato').value.trim(),tipo:document.getElementById('pag-ftipo').value});
   pagSave();
   ['pag-fn','pag-fcnpj','pag-fcontato'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pag-ftipo').value='nota_fiscal';
   rPagamentos();
 }
 
@@ -2055,6 +2066,7 @@ function opFornecedor(id){
   document.getElementById('eforn-nome').value=f.nome;
   document.getElementById('eforn-cnpj').value=f.cnpj||'';
   document.getElementById('eforn-contato').value=f.contato||'';
+  document.getElementById('eforn-tipo').value=f.tipo||'nota_fiscal';
   document.getElementById('m-eforn').classList.add('op');
 }
 function saveFornecedor(){
@@ -2065,6 +2077,7 @@ function saveFornecedor(){
   f.nome=document.getElementById('eforn-nome').value.trim();
   f.cnpj=document.getElementById('eforn-cnpj').value.trim();
   f.contato=document.getElementById('eforn-contato').value.trim();
+  f.tipo=document.getElementById('eforn-tipo').value;
   pagSave();cm('m-eforn');rPagamentos();
 }
 function delFornecedor(id){
@@ -2081,13 +2094,14 @@ function addConta(){
   const desc=document.getElementById('pag-desc').value.trim();
   const valor=parseFloat(document.getElementById('pag-valor').value);
   const venc=document.getElementById('pag-venc').value;
-  const tipo=document.getElementById('pag-tipo').value;
   const obs=document.getElementById('pag-obs').value.trim();
   if(!fid){alert('Selecione o fornecedor.');return;}
   if(!desc){alert('Informe a descrição.');return;}
   if(!valor||valor<=0){alert('Informe o valor.');return;}
   if(!venc){alert('Informe o vencimento.');return;}
   pagLoad();
+  const forn=PAG.fornecedores.find(f=>f.id===fid);
+  const tipo=forn?.tipo||'nota_fiscal';
   PAG.contas.push({id:pagNewId(),fornecedor_id:fid,descricao:desc,valor,vencimento:venc,tipo,obs,status:'pendente',criado_em:hj()});
   pagSave();
   ['pag-desc','pag-valor','pag-venc','pag-obs'].forEach(id=>document.getElementById(id).value='');
