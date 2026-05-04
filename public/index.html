@@ -239,19 +239,35 @@ tbody tr:hover td{background:var(--bg)}
     <!-- SAÍDA -->
     <div id="page-saida" class="page">
       <div class="ph"><h2>Registrar saída</h2><p>Retirada de material para uso interno</p></div>
-      <div class="card"><div class="ct">Dados da saída</div>
+      <div class="card"><div class="ct">Dados gerais da saída</div>
+        <div class="fg c3">
+          <div class="f"><label>Registrado por</label><div style="padding:8px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;background:#f0ede8;color:var(--tm)" id="saida-resp-nome">—</div></div>
+          <div class="f"><label>Data</label><input id="sd" type="date"></div>
+          <div class="f"><label>Observação geral</label><input id="so" placeholder="Ex: Kit novo colaborador"></div>
+        </div>
+      </div>
+      <div class="card"><div class="ct">Adicionar item à saída</div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;padding:9px 13px;background:var(--acb);border-radius:10px;border:1px solid #c5d4f7">
           <input type="checkbox" id="stped" onchange="togPed()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--ac)">
-          <label for="stped" style="font-size:13px;cursor:pointer;color:var(--ac);font-weight:500">Esta saída atende a um pedido em aberto</label>
+          <label for="stped" style="font-size:13px;cursor:pointer;color:var(--ac);font-weight:500">Este item atende a um pedido em aberto</label>
         </div>
         <div id="sblped" style="display:none;margin-bottom:13px">
           <div class="f"><label>Pedido em aberto</label><select id="spsel" onchange="preePed()"></select></div>
           <div id="spinfo" style="display:none;margin-top:7px;padding:8px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;font-size:13px;color:var(--tm)"></div>
         </div>
         <div class="fg c2"><div class="f"><label>Item</label><select id="si"></select></div><div class="f"><label>Quantidade</label><input id="sq" type="number" min="1" placeholder="0"></div></div>
-        <div class="fg c2"><div class="f"><label>Registrado por</label><div style="padding:8px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;background:#f0ede8;color:var(--tm)" id="saida-resp-nome">—</div></div><div class="f"><label>Data</label><input id="sd" type="date"></div></div>
-        <div class="f" style="margin-bottom:13px"><label>Observação</label><input id="so" placeholder="Ex: Uso setor financeiro"></div>
-        <button class="btn p" onclick="reg('sa')">Confirmar saída</button>
+        <button class="btn e" onclick="adicionarAoCarrinho()">+ Adicionar ao carrinho</button>
+      </div>
+      <div class="card" id="carrinho-card" style="display:none">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Itens a dar saída</span>
+          <span id="carrinho-count" style="margin-left:8px;font-size:12px;color:var(--tm)"></span>
+        </div>
+        <div class="tw"><table><thead><tr><th>Item</th><th>Qtd</th><th>Disponível</th><th></th></tr></thead><tbody id="td-carrinho"></tbody></table></div>
+        <div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn d" onclick="limparCarrinho()">Limpar carrinho</button>
+          <button class="btn p" onclick="confirmarSaidaLote()">✓ Confirmar saída de todos os itens</button>
+        </div>
       </div>
     </div>
 
@@ -635,6 +651,7 @@ tbody tr:hover td{background:var(--bg)}
     <!-- FROTA: ALERTAS DASHBOARD -->
     <div id="page-falertas" class="page">
       <div class="ph"><h2>Alertas da Frota</h2><p>Monitoramento de vencimentos e intervalos</p></div>
+      <div id="km-segunda-banner"></div>
       <div id="falerts-summary" class="mets" style="grid-template-columns:repeat(3,1fr)"></div>
       <div class="card">
         <div class="fl" style="margin-bottom:13px">
@@ -1004,7 +1021,15 @@ function togPed(){const c=document.getElementById('stped').checked;document.getE
 function preePed(){const id=parseInt(document.getElementById('spsel').value);const p=C.pedidos.find(x=>x.id===id);if(!p){document.getElementById('spinfo').style.display='none';return;}const it=C.itens.find(i=>i.id===p.item_id);if(it)document.getElementById('si').value=it.id;document.getElementById('sq').value=p.qtd;const sr=document.getElementById('sr');if(sr&&p.solicitante)for(let o of sr.options)if(o.value===p.solicitante){sr.value=p.solicitante;break;}const inf=document.getElementById('spinfo');inf.style.display='block';inf.innerHTML=`📋 Pedido #${p.id} — ${fd(p.data_pedido)} por <strong>${p.solicitante}</strong>${p.obs?' — "'+p.obs+'"':''}`;}
 
 // ── MOVIMENTOS ─────────────────────────────────────────────
-async function reg(t){const pe=t==='en',pp=pe?'e':'s';const iid=parseInt(document.getElementById(pp[0]+'i').value),q=parseInt(document.getElementById(pp[0]+'q').value),dt=document.getElementById(pp[0]+'d').value,ob=document.getElementById(pp[0]+'o').value;const resp=U?U.nome:'—';if(!q||q<1){alert('Quantidade inválida.');return;}const tp=pe?'en':'sa';const hasPed=!pe&&document.getElementById('stped')?.checked;const pedId=hasPed?parseInt(document.getElementById('spsel').value):null;if(hasPed&&!pedId){alert('Selecione o pedido.');return;}try{await A('POST','/movimentos',{tipo:tp,itemId:iid,qtd:q,data:dt,obs:ob,resp});if(pedId)await A('PUT',`/pedidos/${pedId}`,{status:'entregue',data_entrega:dt});await load();document.getElementById(pp[0]+'q').value='';document.getElementById(pp[0]+'o').value='';if(!pe){const ck=document.getElementById('stped');if(ck){ck.checked=false;togPed();}}rSels();alert(`${pe?'Entrada':'Saída'} registrada!${pedId?'\nPedido marcado como entregue.':''}`);}catch(e){alert('Erro: '+e.message);}}
+async function reg(t){const pe=t==='en',pp=pe?'e':'s';const iid=parseInt(document.getElementById(pp[0]+'i').value),q=parseInt(document.getElementById(pp[0]+'q').value),dt=document.getElementById(pp[0]+'d').value,ob=document.getElementById(pp[0]+'o').value;const resp=U?U.nome:'—';if(!q||q<1){alert('Quantidade inválida.');return;}const tp=pe?'en':'sa';try{await A('POST','/movimentos',{tipo:tp,itemId:iid,qtd:q,data:dt,obs:ob,resp});await load();document.getElementById(pp[0]+'q').value='';document.getElementById(pp[0]+'o').value='';rSels();alert('Entrada registrada!');}catch(e){alert('Erro: '+e.message);}}
+
+// ── CARRINHO DE SAÍDA ──────────────────────────────────────
+let carrinhoSaida=[];
+function rCarrinho(){const tb=document.getElementById('td-carrinho');const card=document.getElementById('carrinho-card');if(!carrinhoSaida.length){card.style.display='none';return;}card.style.display='block';document.getElementById('carrinho-count').textContent=`${carrinhoSaida.length} item(ns)`;tb.innerHTML=carrinhoSaida.map((e,idx)=>{const it=C.itens.find(i=>i.id===e.itemId);const disp=it?it.qtd:0;const alerta=e.qtd>disp?` <span style="color:var(--rd);font-size:11px">⚠ insuficiente</span>`:'';return`<tr><td><strong>${e.nome}</strong></td><td class="mn">${e.qtd}</td><td class="mn">${disp}${alerta}</td><td><button class="btn sm d" onclick="removerDoCarrinho(${idx})">✕</button></td></tr>`;}).join('');}
+function adicionarAoCarrinho(){const iid=parseInt(document.getElementById('si').value),q=parseInt(document.getElementById('sq').value);if(!iid||!q||q<1){alert('Selecione o item e informe a quantidade.');return;}const it=C.itens.find(i=>i.id===iid);if(!it){alert('Item não encontrado.');return;}const existente=carrinhoSaida.find(e=>e.itemId===iid);if(existente){existente.qtd+=q;}else{carrinhoSaida.push({itemId:iid,nome:it.nome,qtd:q});}document.getElementById('sq').value='';const ck=document.getElementById('stped');if(ck&&ck.checked){ck.checked=false;togPed();}rCarrinho();}
+function removerDoCarrinho(idx){carrinhoSaida.splice(idx,1);rCarrinho();}
+function limparCarrinho(){if(!confirm('Limpar todos os itens do carrinho?'))return;carrinhoSaida=[];rCarrinho();}
+async function confirmarSaidaLote(){if(!carrinhoSaida.length){alert('Carrinho vazio.');return;}const dt=document.getElementById('sd').value,ob=document.getElementById('so').value,resp=U?U.nome:'—';for(const e of carrinhoSaida){const it=C.itens.find(i=>i.id===e.itemId);if(it&&e.qtd>it.qtd){alert(`Estoque insuficiente para "${e.nome}": disponível ${it.qtd}, solicitado ${e.qtd}.`);return;}}const total=carrinhoSaida.length;try{await A('POST','/movimentos/lote',{itens:carrinhoSaida,data:dt,obs:ob,resp});carrinhoSaida=[];await load();rCarrinho();rSels();document.getElementById('so').value='';alert(`Saída registrada! ${total} item(ns) baixados do estoque.`);}catch(e){alert('Erro: '+e.message);}}
 
 // ── HISTÓRICO ──────────────────────────────────────────────
 function apFilt(){const p=document.getElementById('fper').value,in2=document.getElementById('fite').value,re=document.getElementById('fres').value,ti=document.getElementById('ftip')?.value||'';document.getElementById('fdats').style.display=p==='pe'?'grid':'none';const h=new Date();h.setHours(0,0,0,0);let mv=[...C.movimentos];if(p==='hj')mv=mv.filter(m=>m.data===h.toISOString().split('T')[0]);else if(p==='sm'){const ini=new Date(h);ini.setDate(h.getDate()-h.getDay());mv=mv.filter(m=>m.data>=ini.toISOString().split('T')[0]);}else if(p==='ms'){const s=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}`;mv=mv.filter(m=>m.data&&m.data.startsWith(s));}else if(p==='pe'){const i=document.getElementById('fdi').value,f=document.getElementById('fdf').value;if(i)mv=mv.filter(m=>m.data>=i);if(f)mv=mv.filter(m=>m.data<=f);}if(in2)mv=mv.filter(m=>m.item_nome===in2);if(re)mv=mv.filter(m=>m.resp===re);if(ti)mv=mv.filter(m=>m.tipo===ti);MF=mv;rHist();}
@@ -1461,6 +1486,36 @@ function calcularAlertas(){
 
 function stAlertaClass(s){return s==='vencido'?'al':s==='proximo'?'av':'ok';}
 function stAlertaLabel(s){return s==='vencido'?'Vencido':s==='proximo'?'Próximo':'Em dia';}
+
+// ── LEMBRETE SEGUNDA-FEIRA: CONFERIR KM ───────────────────
+function semanaISO(){const d=new Date();const thu=new Date(d);thu.setDate(d.getDate()-(d.getDay()+6)%7+3);const jan4=new Date(thu.getFullYear(),0,4);return`${thu.getFullYear()}-W${String(Math.ceil(((thu-jan4)/864e5+((jan4.getDay()||7)-1)/7+1)/7)).padStart(2,'0')}`;}
+function rKmSegundaBanner(){
+  const el=document.getElementById('km-segunda-banner');
+  if(!el)return;
+  const hoje=new Date();
+  // 1 = segunda-feira
+  if(hoje.getDay()!==1){el.innerHTML='';return;}
+  const chave='km_lembrete_dispensado_'+semanaISO();
+  if(localStorage.getItem(chave)){el.innerHTML='';return;}
+  el.innerHTML=`
+    <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 18px;background:#fffbeb;border:1px solid #f0d875;border-radius:12px;margin-bottom:16px">
+      <span style="font-size:22px;flex-shrink:0">📏</span>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px;color:#856404;margin-bottom:3px">Lembrete semanal — Confira a quilometragem</div>
+        <div style="font-size:13px;color:#92400e">É segunda-feira! Registre o KM atual de cada veículo para manter o controle da frota atualizado e os alertas precisos.</div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn sm p" onclick="sp('fkm',document.querySelector('#nf .ni:nth-child(5)'))">Ir para Registro KM</button>
+          <button class="btn sm" onclick="dispensarKmLembrete()" style="color:#856404;border-color:#f0d875">Dispensar — carro não rodou essa semana</button>
+        </div>
+      </div>
+    </div>`;
+}
+function dispensarKmLembrete(){
+  const chave='km_lembrete_dispensado_'+semanaISO();
+  localStorage.setItem(chave,'1');
+  const el=document.getElementById('km-segunda-banner');
+  if(el)el.innerHTML='';
+}
 
 function rAlertas(){
   const alertas=calcularAlertas();
@@ -2266,7 +2321,7 @@ async function delConta(id){
 }
 
 // ── MÓDULOS / NAVEGAÇÃO ────────────────────────────────────
-const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:rSels,saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,apagamentos:()=>{rPagamentos();},fveiculos:()=>{rVeiculos();rAlertasBadge();},fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();},falertas:()=>{rFrotaSels();rAlertas();rAlertasConfig();},findicadores:()=>{rIndSels();rIndicadores();}};
+const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:rSels,saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,apagamentos:()=>{rPagamentos();},fveiculos:()=>{rVeiculos();rAlertasBadge();},fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();},falertas:()=>{rFrotaSels();rAlertas();rAlertasConfig();rKmSegundaBanner();},findicadores:()=>{rIndSels();rIndicadores();}};
 function sp(n,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));const pg=document.getElementById('page-'+n);if(pg)pg.classList.add('on');if(btn)btn.classList.add('on');RENDERS[n]?.();}
 function tmod(m){const NAVS={est:'ne',cli:'nc',adm:'na',fro:'nf'};const BTNS={est:'bme',cli:'bmc',adm:'bma',fro:'bmf'};const IC={est:'E',cli:'❄',adm:'🗂',fro:'🚗'};const TT={est:'Estoque',cli:'Climatização',adm:'Administrativo',fro:'Frota'};const SB={est:'Material de consumo',cli:'Ar condicionado',adm:'Gestão predial',fro:'Gestão de veículos'};const FP={est:'dashboard',cli:'ccham',adm:'ademdas',fro:'findicadores'};['est','cli','adm','fro'].forEach(x=>{document.getElementById(NAVS[x]).style.display=m===x?'block':'none';document.getElementById(BTNS[x]).classList.toggle('on',m===x);});document.getElementById('mid').textContent=IC[m];document.getElementById('mtit').textContent=TT[m];document.getElementById('msub').textContent=SB[m];document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));document.getElementById('page-'+FP[m]).classList.add('on');const fn=document.querySelector(`#${NAVS[m]} .ni`);if(fn)fn.classList.add('on');RENDERS[FP[m]]?.();}
 
