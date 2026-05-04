@@ -461,6 +461,37 @@ const server = http.createServer(async (req, res) => {
           return ok(res, mov.rows[0], 201);
         }
 
+        // ── SAÍDA EM LOTE ─────────────────────────────────────
+        if (req.method === 'POST' && pth === '/api/movimentos/lote') {
+          // b.itens = [{itemId, qtd}], b.data, b.resp, b.obs
+          const itens = b.itens;
+          if (!Array.isArray(itens) || !itens.length) return err(res, 400, 'Lista de itens vazia');
+          const client = await pool.connect();
+          try {
+            await client.query('BEGIN');
+            const resultados = [];
+            for (const entry of itens) {
+              const itemRes = await client.query('SELECT * FROM itens WHERE id=$1 FOR UPDATE', [entry.itemId]);
+              const item = itemRes.rows[0];
+              if (!item) { await client.query('ROLLBACK'); client.release(); return err(res, 404, `Item ${entry.itemId} não encontrado`); }
+              if (item.qtd < entry.qtd) { await client.query('ROLLBACK'); client.release(); return err(res, 400, `Estoque insuficiente para "${item.nome}": disponível ${item.qtd}, solicitado ${entry.qtd}`); }
+              await client.query('UPDATE itens SET qtd=$1 WHERE id=$2', [item.qtd - entry.qtd, item.id]);
+              const mov = await client.query(
+                'INSERT INTO movimentos (tipo,item_id,item_nome,qtd,data,resp,obs) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+                ['sa', item.id, item.nome, entry.qtd, b.data || new Date().toISOString().split('T')[0], b.resp || '—', b.obs || '']
+              );
+              resultados.push(mov.rows[0]);
+            }
+            await client.query('COMMIT');
+            client.release();
+            return ok(res, { ok: true, movimentos: resultados }, 201);
+          } catch (e) {
+            await client.query('ROLLBACK');
+            client.release();
+            throw e;
+          }
+        }
+
         // ── ENTREGA ATÔMICA DE PEDIDO ─────────────────────────
         if (req.method === 'POST' && /^\/api\/pedidos\/\d+\/entregar$/.test(pth)) {
           const pedId = parseInt(pth.split('/')[3]);
