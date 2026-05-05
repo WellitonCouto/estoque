@@ -282,9 +282,15 @@ async function iniciarBanco() {
     nome TEXT NOT NULL,
     cnpj TEXT DEFAULT '',
     contato TEXT DEFAULT '',
+    pix TEXT DEFAULT '',
+    favorecido TEXT DEFAULT '',
+    instituicao TEXT DEFAULT '',
     tipo TEXT DEFAULT 'nota_fiscal',
     criado_em TIMESTAMP DEFAULT NOW()
   )`);
+  await pool.query(`ALTER TABLE fornecedores_pag ADD COLUMN IF NOT EXISTS pix TEXT DEFAULT ''`);
+  await pool.query(`ALTER TABLE fornecedores_pag ADD COLUMN IF NOT EXISTS favorecido TEXT DEFAULT ''`);
+  await pool.query(`ALTER TABLE fornecedores_pag ADD COLUMN IF NOT EXISTS instituicao TEXT DEFAULT ''`);
   await pool.query(`CREATE TABLE IF NOT EXISTS contas_pagar (
     id SERIAL PRIMARY KEY,
     fornecedor_id INTEGER REFERENCES fornecedores_pag(id) ON DELETE CASCADE,
@@ -850,14 +856,14 @@ const server = http.createServer(async (req, res) => {
           return ok(res, r.rows);
         }
         if (req.method === 'POST' && pth === '/api/fornecedores-pag') {
-          const r = await pool.query('INSERT INTO fornecedores_pag (nome,cnpj,contato,tipo) VALUES ($1,$2,$3,$4) RETURNING *',
-            [b.nome, b.cnpj||'', b.contato||'', b.tipo||'nota_fiscal']);
+          const r = await pool.query('INSERT INTO fornecedores_pag (nome,cnpj,contato,pix,favorecido,instituicao,tipo) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+            [b.nome, b.cnpj||'', b.contato||'', b.pix||'', b.favorecido||'', b.instituicao||'', b.tipo||'nota_fiscal']);
           return ok(res, r.rows[0], 201);
         }
         if (req.method === 'PUT' && pth.startsWith('/api/fornecedores-pag/')) {
           const id = parseInt(pth.split('/')[3]);
-          const r = await pool.query('UPDATE fornecedores_pag SET nome=$1,cnpj=$2,contato=$3,tipo=$4 WHERE id=$5 RETURNING *',
-            [b.nome, b.cnpj||'', b.contato||'', b.tipo||'nota_fiscal', id]);
+          const r = await pool.query('UPDATE fornecedores_pag SET nome=$1,cnpj=$2,contato=$3,pix=$4,favorecido=$5,instituicao=$6,tipo=$7 WHERE id=$8 RETURNING *',
+            [b.nome, b.cnpj||'', b.contato||'', b.pix||'', b.favorecido||'', b.instituicao||'', b.tipo||'nota_fiscal', id]);
           return ok(res, r.rows[0]);
         }
         if (req.method === 'DELETE' && pth.startsWith('/api/fornecedores-pag/')) {
