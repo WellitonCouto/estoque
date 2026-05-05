@@ -273,6 +273,7 @@ async function iniciarBanco() {
   )`);
   await pool.query(`ALTER TABLE alertas_config ADD COLUMN IF NOT EXISTS km_referencia NUMERIC(10,1)`);
   await pool.query(`ALTER TABLE contas_pagar ADD COLUMN IF NOT EXISTS nf_recebida BOOLEAN DEFAULT FALSE`);
+  await pool.query(`ALTER TABLE contas_pagar ADD COLUMN IF NOT EXISTS email_enviado BOOLEAN DEFAULT FALSE`);
   await pool.query(`ALTER TABLE alertas_config ADD COLUMN IF NOT EXISTS data_referencia TEXT`);
 
   // Pagamentos
@@ -883,6 +884,11 @@ const server = http.createServer(async (req, res) => {
           // Atualização parcial: nf_recebida apenas
           if (typeof b.nf_recebida !== 'undefined' && !b.status) {
             const r = await pool.query('UPDATE contas_pagar SET nf_recebida=$1 WHERE id=$2 RETURNING *', [b.nf_recebida, id]);
+            return ok(res, r.rows[0]);
+          }
+          // Atualização parcial: email_enviado apenas
+          if (typeof b.email_enviado !== 'undefined' && !b.status) {
+            const r = await pool.query('UPDATE contas_pagar SET email_enviado=$1 WHERE id=$2 RETURNING *', [b.email_enviado, id]);
             return ok(res, r.rows[0]);
           }
           if (b.vencimento && !b.status) {
