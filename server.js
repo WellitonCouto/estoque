@@ -272,8 +272,6 @@ async function iniciarBanco() {
     UNIQUE(veiculo_id, tipo_alerta)
   )`);
   await pool.query(`ALTER TABLE alertas_config ADD COLUMN IF NOT EXISTS km_referencia NUMERIC(10,1)`);
-  await pool.query(`ALTER TABLE contas_pagar ADD COLUMN IF NOT EXISTS nf_recebida BOOLEAN DEFAULT FALSE`);
-  await pool.query(`ALTER TABLE contas_pagar ADD COLUMN IF NOT EXISTS email_enviado BOOLEAN DEFAULT FALSE`);
   await pool.query(`ALTER TABLE alertas_config ADD COLUMN IF NOT EXISTS data_referencia TEXT`);
 
   // Pagamentos
@@ -300,11 +298,15 @@ async function iniciarBanco() {
     tipo TEXT DEFAULT 'nota_fiscal',
     obs TEXT DEFAULT '',
     status TEXT DEFAULT 'pendente',
+    entrega_recebida BOOLEAN DEFAULT FALSE,
     data_pagamento TEXT,
     valor_pago NUMERIC(12,2),
     obs_pagamento TEXT DEFAULT '',
     criado_em TIMESTAMP DEFAULT NOW()
   )`);
+  await pool.query(`ALTER TABLE contas_pagar ADD COLUMN IF NOT EXISTS nf_recebida BOOLEAN DEFAULT FALSE`);
+  await pool.query(`ALTER TABLE contas_pagar ADD COLUMN IF NOT EXISTS email_enviado BOOLEAN DEFAULT FALSE`);
+  await pool.query(`ALTER TABLE contas_pagar ADD COLUMN IF NOT EXISTS entrega_recebida BOOLEAN DEFAULT FALSE`);
 
   console.log('Banco pronto.');
 }
@@ -895,6 +897,11 @@ const server = http.createServer(async (req, res) => {
           // Atualização parcial: email_enviado apenas
           if (typeof b.email_enviado !== 'undefined' && !b.status) {
             const r = await pool.query('UPDATE contas_pagar SET email_enviado=$1 WHERE id=$2 RETURNING *', [b.email_enviado, id]);
+            return ok(res, r.rows[0]);
+          }
+          // AtualizaÃ§Ã£o parcial: entrega_recebida apenas
+          if (typeof b.entrega_recebida !== 'undefined' && !b.status) {
+            const r = await pool.query('UPDATE contas_pagar SET entrega_recebida=$1 WHERE id=$2 RETURNING *', [b.entrega_recebida, id]);
             return ok(res, r.rows[0]);
           }
           if (b.vencimento && !b.status) {
