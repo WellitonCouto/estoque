@@ -843,8 +843,8 @@ tbody tr:hover td{background:var(--bg)}
   </div>
 
   <div class="mft">
-    <button class="btn" onclick="cm('m-pagar-tudo')">Cancelar</button>
-    <button class="btn p" onclick="ptConfirmarPagamento()">Concluir pagamento</button>
+    <button class="btn" onclick="cm('m-pagar-tudo')">Fechar</button>
+    <button class="btn p" id="pt-concluir-btn" onclick="ptConfirmarPagamento()" style="display:none">Concluir pagamento</button>
   </div>
 </div></div>
 
@@ -2149,7 +2149,7 @@ function rContasPendentes(){
                 </label>
               </td>
               <td style="padding:8px 14px;text-align:center;border-bottom:1px solid var(--bd)">
-                \${c.email_enviado?'<span style="font-size:11px;font-weight:500;color:var(--gn)">✅ Enviado</span>':'<span style="font-size:11px;color:var(--th)">—</span>'}
+                ${c.email_enviado?'<span style="font-size:11px;font-weight:500;color:var(--gn)">✅ Enviado</span>':'<span style="font-size:11px;color:var(--th)">—</span>'}
               </td>
               <td style="padding:8px 14px;font-size:12px;font-family:var(--mn);border-bottom:1px solid var(--bd);${vencCls}">${c.vencimento?fd(c.vencimento):'<span style="color:var(--tm);font-style:italic">Ag. entrega</span>'}${dias!=null?`<br><span style="font-size:10px">${dias<0?'Vencido há '+Math.abs(dias)+'d':dias===0?'Hoje!':'Em '+dias+'d'}</span>`:''}</td>
               <td style="padding:8px 14px;font-family:var(--mn);font-weight:600;text-align:right;border-bottom:1px solid var(--bd)">${fm(c.valor)}</td>
@@ -2270,6 +2270,8 @@ function pagarTudo(fornId){
   if(emailLabel){emailLabel.textContent=todasEmailEnviado?'✅ E-mail enviado ao financeiro':'✉️ E-mail enviado ao financeiro';emailLabel.style.color=todasEmailEnviado?'var(--gn)':'var(--tx)';}
   document.getElementById('pt-pago-chk').checked=false;
   document.getElementById('pt-pago-blk').style.display='none';
+  const concluirBtn=document.getElementById('pt-concluir-btn');
+  if(concluirBtn)concluirBtn.style.display='none';
   document.getElementById('pt-dt-pag').value=hj();
   const hora=new Date().getHours();
   const saudacao=hora<12?'bom dia':hora<18?'boa tarde':'boa noite';
@@ -2300,6 +2302,8 @@ async function ptTogEmail(){
 function ptTogPago(){
   const chk=document.getElementById('pt-pago-chk').checked;
   document.getElementById('pt-pago-blk').style.display=chk?'block':'none';
+  const btn=document.getElementById('pt-concluir-btn');
+  if(btn)btn.style.display=chk?'inline-flex':'none';
 }
 function ptCopiarEmail(){
   const txt=document.getElementById('pt-email-txt').value;
@@ -2313,7 +2317,7 @@ function ptCopiarEmail(){
 async function ptConfirmarPagamento(){
   if(!pagarTudoFornId)return;
   const pago=document.getElementById('pt-pago-chk').checked;
-  if(!pago){alert('Marque "Pagamento confirmado" antes de concluir.');return;}
+  if(!pago)return;
   const dt=document.getElementById('pt-dt-pag').value||hj();
   await fetch(`/api/contas-pagar/${pagarTudoFornId}/pagar-lote`,{method:'POST',headers:pagHdrs(),body:JSON.stringify({data_pagamento:dt})});
   cm('m-pagar-tudo');
