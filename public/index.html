@@ -2131,6 +2131,7 @@ function rContasPendentes(){
           <thead><tr style="background:var(--bg)">
             <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Descrição</th>
             <th style="padding:7px 14px;text-align:center;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">NF</th>
+            <th style="padding:7px 14px;text-align:center;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">E-mail</th>
             <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Vencimento</th>
             <th style="padding:7px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Valor</th>
             <th style="padding:7px 14px;border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)"></th>
@@ -2145,6 +2146,12 @@ function rContasPendentes(){
                 <label title="${c.nf_recebida?'Nota fiscal recebida':'Nota fiscal pendente'}" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px">
                   <input type="checkbox" ${c.nf_recebida?'checked':''} onchange="toggleNfRecebida(${c.id},this.checked)" style="accent-color:var(--gn);width:15px;height:15px">
                   <span style="font-size:10px;color:var(--tm)">${c.nf_recebida?'Recebida':'Pendente'}</span>
+                </label>
+              </td>
+              <td style="padding:8px 14px;text-align:center;border-bottom:1px solid var(--bd)">
+                <label title="${c.email_enviado?'E-mail enviado':'E-mail não enviado'}" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px">
+                  <input type="checkbox" ${c.email_enviado?'checked':''} onchange="toggleEmailEnviado(${c.id},this.checked)" style="accent-color:var(--bl);width:15px;height:15px">
+                  <span style="font-size:10px;color:var(--tm)">${c.email_enviado?'Enviado':'Pendente'}</span>
                 </label>
               </td>
               <td style="padding:8px 14px;font-size:12px;font-family:var(--mn);border-bottom:1px solid var(--bd);${vencCls}">${c.vencimento?fd(c.vencimento):'<span style="color:var(--tm);font-style:italic">Ag. entrega</span>'}${dias!=null?`<br><span style="font-size:10px">${dias<0?'Vencido há '+Math.abs(dias)+'d':dias===0?'Hoje!':'Em '+dias+'d'}</span>`:''}</td>
@@ -2162,6 +2169,14 @@ function rContasPendentes(){
 
 async function toggleNfRecebida(id,recebida){
   await fetch(`/api/contas-pagar/${id}`,{method:'PUT',headers:pagHdrs(),body:JSON.stringify({nf_recebida:recebida})});
+  await pagLoad();
+  rPagAlertas();
+  rContasPendentes();
+  rFornecedores();
+}
+
+async function toggleEmailEnviado(id,enviado){
+  await fetch(`/api/contas-pagar/${id}`,{method:'PUT',headers:pagHdrs(),body:JSON.stringify({email_enviado:enviado})});
   await pagLoad();
   rPagAlertas();
   rContasPendentes();
