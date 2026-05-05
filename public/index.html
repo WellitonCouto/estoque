@@ -1297,6 +1297,7 @@ async function addRegistroKm(){
   if(!vid){alert('Selecione o veículo.');return;}if(!km){alert('Informe o KM atual.');return;}
   try{
     await A('POST','/registros-km',{veiculo_id:vid,data:dt||null,km_atual:parseFloat(km)});
+    resolverKmLembrete();
     await loadFrota();rRegistrosKm();
     document.getElementById('fkm-km').value='';
   }catch(e){alert('Erro: '+e.message);}
@@ -1495,33 +1496,35 @@ function stAlertaLabel(s){return s==='vencido'?'Vencido':s==='proximo'?'Próximo
 
 // ── LEMBRETE SEGUNDA-FEIRA: CONFERIR KM ───────────────────
 function semanaISO(){const d=new Date();const thu=new Date(d);thu.setDate(d.getDate()-(d.getDay()+6)%7+3);const jan4=new Date(thu.getFullYear(),0,4);return`${thu.getFullYear()}-W${String(Math.ceil(((thu-jan4)/864e5+((jan4.getDay()||7)-1)/7+1)/7)).padStart(2,'0')}`;}
+function semanaComecou(){const h=new Date();return h.getDay()!==0;}
+function kmLembreteChave(tipo){return`km_lembrete_${tipo}_${semanaISO()}`;}
+function limparKmLembreteBanners(){['km-segunda-banner','km-segunda-banner-ind'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});}
+function resolverKmLembrete(){
+  localStorage.setItem(kmLembreteChave('resolvido'),'1');
+  limparKmLembreteBanners();
+}
 function rKmSegundaBanner(elId){
   elId=elId||'km-segunda-banner';
   const el=document.getElementById(elId);
   if(!el)return;
-  const hoje=new Date();
-  if(hoje.getDay()!==1){el.innerHTML='';return;}
-  const chave='km_lembrete_dispensado_'+semanaISO();
-  if(localStorage.getItem(chave)){el.innerHTML='';return;}
+  if(localStorage.getItem(kmLembreteChave('dispensado'))||localStorage.getItem(kmLembreteChave('resolvido'))){el.innerHTML='';return;}
   el.innerHTML=`
     <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 18px;background:#fffbeb;border:1px solid #f0d875;border-radius:12px;margin-bottom:16px">
-      <span style="font-size:22px;flex-shrink:0">📏</span>
+      <span style="font-size:22px;flex-shrink:0">KM</span>
       <div style="flex:1">
-        <div style="font-weight:600;font-size:14px;color:#856404;margin-bottom:3px">Lembrete semanal — Confira a quilometragem</div>
-        <div style="font-size:13px;color:#92400e">É segunda-feira! Registre o KM atual de cada veículo para manter o controle da frota atualizado e os alertas precisos.</div>
+        <div style="font-weight:600;font-size:14px;color:#856404;margin-bottom:3px">Lembrete semanal - Confira a quilometragem</div>
+        <div style="font-size:13px;color:#92400e">Registre o KM atual de cada veiculo para manter o controle da frota atualizado e os alertas precisos. Este lembrete fica visivel ate voce registrar ou dispensar.</div>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn sm p" onclick="sp('fkm',document.querySelector('#nf .ni:nth-child(5)'))">Ir para Registro KM</button>
-          <button class="btn sm" onclick="dispensarKmLembrete()" style="color:#856404;border-color:#f0d875">Dispensar — carro não rodou essa semana</button>
+          <button class="btn sm" onclick="dispensarKmLembrete()" style="color:#856404;border-color:#f0d875">Dispensar - carro nao rodou essa semana</button>
         </div>
       </div>
     </div>`;
 }
 function dispensarKmLembrete(){
-  const chave='km_lembrete_dispensado_'+semanaISO();
-  localStorage.setItem(chave,'1');
-  ['km-segunda-banner','km-segunda-banner-ind'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+  localStorage.setItem(kmLembreteChave('dispensado'),'1');
+  limparKmLembreteBanners();
 }
-
 function rAlertas(){
   const alertas=calcularAlertas();
   const fil=document.getElementById('falt-fil')?.value||'';
