@@ -5,10 +5,11 @@ const crypto = require('crypto');
 const { Pool } = require('pg');
 
 const PORT = process.env.PORT || 3000;
-const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_FSbyD98m_3Pfjnr1TafChbe3UjqaZVruc';
+const RESEND_API_KEY = process.env.RESEND_API_KEY; // obrigatório via variável de ambiente
 const APP_URL = process.env.APP_URL || 'https://estoque-q5rf.onrender.com';
 
 async function enviarEmailRecuperacao(destinatario, nomeUsuario, token) {
+  if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY não configurada no servidor');
   const link = `${APP_URL}/redefinir-senha?token=${token}`;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -33,18 +34,71 @@ async function enviarEmailRecuperacao(destinatario, nomeUsuario, token) {
 }
 const ADM_EMAIL = 'adm.welliton@jscontadores.com.br';
 
+// Sessões em memória: token -> { id, nome, email, setor, is_admin, expira }
+const SESSION_TTL_HORAS = 8;
+
+async function criarSessao(usuario) {
+  const token = crypto.randomBytes(32).toString('hex');
+  const expira = new Date(Date.now() + SESSION_TTL_HORAS * 60 * 60 * 1000);
+  await pool.query(
+    'INSERT INTO sessoes (token, usuario_id, nome, email, setor, is_admin, expira_em) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+    [token, usuario.id, usuario.nome, usuario.email, usuario.setor || '', usuario.is_admin, expira]
+  );
+  return token;
+}
+
+async function resolverSessao(req) {
+  const auth = req.headers['authorization'] || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  if (!token) return null;
+  const r = await pool.query(
+    'SELECT * FROM sessoes WHERE token=$1 AND expira_em > NOW()',
+    [token]
+  );
+  if (!r.rows.length) return null;
+  return r.rows[0];
+}
+
+// Limpeza periódica de sessões expiradas no banco
+setInterval(async () => {
+  await pool.query('DELETE FROM sessoes WHERE expira_em < NOW()');
+}, 30 * 60 * 1000); // a cada 30 min
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
-const sha = s => crypto.createHash('sha256').update(s).digest('hex');
+// Hash de senha com PBKDF2 + salt (seguro contra rainbow tables)
+function hashSenha(senha, salt) {
+  if (!salt) salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(senha, salt, 100000, 64, 'sha512').toString('hex');
+  return `${salt}:${hash}`;
+}
+function verificarSenha(senha, armazenado) {
+  // Suporte legado: hashes antigos SHA-256 sem salt (formato sem ':')
+  if (!armazenado.includes(':')) {
+    return crypto.createHash('sha256').update(senha).digest('hex') === armazenado;
+  }
+  const [salt] = armazenado.split(':');
+  return hashSenha(senha, salt) === armazenado;
+}
+const sha = s => crypto.createHash('sha256').update(s).digest('hex'); // mantido apenas para migração
 
-function dynUpdate(obj) {
-  const keys = Object.keys(obj);
+// Colunas permitidas por tabela — evita SQL injection via nomes de campo
+const COLUNAS_PERMITIDAS = {
+  pedidos: new Set(['item_id','item_nome','qtd','solicitante','data_pedido','data_entrega','status','obs']),
+  chamados: new Set(['aparelho_id','sala','departamento','marca','modelo','potencia','tipo','problema','data_chamado','data_conserto','status','obs']),
+  demandas: new Set(['titulo','descricao','solicitante','iniciado_por','urgencia','data_solicitacao','precisa_aprovacao','valor_solicitado','data_sol_orcamento','data_aprov_orcamento','status','data_conclusao']),
+};
+
+function dynUpdate(obj, tabela) {
+  const permitidas = COLUNAS_PERMITIDAS[tabela];
+  const keys = Object.keys(obj).filter(k => !permitidas || permitidas.has(k));
+  if (!keys.length) throw new Error('Nenhum campo válido para atualização');
   return {
-    sets: keys.map((k, i) => `${k}=$${i + 1}`).join(','),
-    vals: Object.values(obj)
+    sets: keys.map((k, i) => `"${k}"=$${i + 1}`).join(','),
+    vals: keys.map(k => obj[k])
   };
 }
 
@@ -180,11 +234,13 @@ async function iniciarBanco() {
 
   const adm = await pool.query('SELECT id FROM usuarios WHERE email=$1', [ADM_EMAIL]);
   if (!adm.rows.length) {
+    // Gera senha inicial aleatória — deve ser redefinida via "Esqueci minha senha"
+    const senhaInicial = crypto.randomBytes(12).toString('base64');
     await pool.query(
       'INSERT INTO usuarios (nome,email,senha_hash,is_admin) VALUES ($1,$2,$3,TRUE)',
-      ['Welliton', ADM_EMAIL, sha('admin123')]
+      ['Welliton', ADM_EMAIL, hashSenha(senhaInicial)]
     );
-    console.log('Admin criado. Senha padrão: admin123 — troque após o primeiro acesso.');
+    console.log('Admin criado. Use "Esqueci minha senha" no login para definir sua senha.');
   }
 
   // Migrações — adiciona colunas novas sem recriar tabelas existentes
@@ -207,6 +263,18 @@ async function iniciarBanco() {
     token TEXT UNIQUE NOT NULL,
     expira_em TIMESTAMP NOT NULL,
     usado BOOLEAN DEFAULT FALSE,
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+
+  await pool.query(`CREATE TABLE IF NOT EXISTS sessoes (
+    id SERIAL PRIMARY KEY,
+    token TEXT UNIQUE NOT NULL,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL,
+    setor TEXT DEFAULT '',
+    is_admin BOOLEAN DEFAULT FALSE,
+    expira_em TIMESTAMP NOT NULL,
     criado_em TIMESTAMP DEFAULT NOW()
   )`);
 
@@ -339,10 +407,15 @@ const server = http.createServer(async (req, res) => {
 
         // ── AUTH ──────────────────────────────────────────────
         if (req.method === 'POST' && pth === '/api/login') {
-          const r = await pool.query('SELECT * FROM usuarios WHERE email=$1 AND senha_hash=$2', [b.email, sha(b.senha)]);
-          if (!r.rows.length) return err(res, 401, 'E-mail ou senha incorretos');
+          const r = await pool.query('SELECT * FROM usuarios WHERE email=$1', [b.email]);
+          if (!r.rows.length || !verificarSenha(b.senha, r.rows[0].senha_hash)) return err(res, 401, 'E-mail ou senha incorretos');
           const u = r.rows[0];
-          return ok(res, { id: u.id, nome: u.nome, email: u.email, setor: u.setor, is_admin: u.is_admin });
+          // Migração transparente: re-hash com PBKDF2 se ainda estiver em SHA-256 legado
+          if (!u.senha_hash.includes(':')) {
+            await pool.query('UPDATE usuarios SET senha_hash=$1 WHERE id=$2', [hashSenha(b.senha), u.id]);
+          }
+          const token = await criarSessao(u);
+          return ok(res, { token, id: u.id, nome: u.nome, email: u.email, setor: u.setor, is_admin: u.is_admin });
         }
 
 
@@ -375,27 +448,28 @@ const server = http.createServer(async (req, res) => {
           );
           if (!r.rows.length) return err(res, 400, 'Link inválido ou expirado. Solicite um novo.');
           const tk = r.rows[0];
-          await pool.query('UPDATE usuarios SET senha_hash=$1 WHERE id=$2', [sha(nova_senha), tk.usuario_id]);
+          await pool.query('UPDATE usuarios SET senha_hash=$1 WHERE id=$2', [hashSenha(nova_senha), tk.usuario_id]);
           await pool.query('UPDATE tokens_recuperacao SET usado=TRUE WHERE id=$1', [tk.id]);
           return ok(res, { ok: true });
         }
 
         // ── TROCA DE SENHA (requer login) ─────────────────────
         if (req.method === 'POST' && pth === '/api/trocar-senha') {
-          const userId = parseInt(req.headers['x-user-id']);
-          if (!userId) return err(res, 401, 'Não autenticado');
+          const sessTs = await resolverSessao(req);
+          if (!sessTs) return err(res, 401, 'Não autenticado');
           if (!b.senha_atual || !b.nova_senha) return err(res, 400, 'Informe a senha atual e a nova senha');
-          const r = await pool.query('SELECT senha_hash FROM usuarios WHERE id=$1', [userId]);
-          if (!r.rows.length || r.rows[0].senha_hash !== sha(b.senha_atual))
+          const r = await pool.query('SELECT senha_hash FROM usuarios WHERE id=$1', [sessTs.id]);
+          if (!r.rows.length || !verificarSenha(b.senha_atual, r.rows[0].senha_hash))
             return err(res, 403, 'Senha atual incorreta');
-          await pool.query('UPDATE usuarios SET senha_hash=$1 WHERE id=$2', [sha(b.nova_senha), userId]);
+          await pool.query('UPDATE usuarios SET senha_hash=$1 WHERE id=$2', [hashSenha(b.nova_senha), sessTs.id]);
           return ok(res, { ok: true });
         }
 
-        // ── GUARD: todas as rotas abaixo exigem usuário autenticado ──
-        const authId = parseInt(req.headers['x-user-id']);
-        const authAdmin = req.headers['x-user-admin'] === 'true';
-        if (!authId) return err(res, 401, 'Não autenticado');
+        // ── GUARD: todas as rotas abaixo exigem sessão válida ──
+        const sess = await resolverSessao(req);
+        if (!sess) return err(res, 401, 'Não autenticado');
+        const authId = sess.id;
+        const authAdmin = sess.is_admin;
 
         // ── USUÁRIOS ──────────────────────────────────────────
         if (req.method === 'GET' && pth === '/api/usuarios') {
@@ -407,14 +481,14 @@ const server = http.createServer(async (req, res) => {
           if (!authAdmin) return err(res, 403, 'Acesso restrito ao administrador');
           const r = await pool.query(
             'INSERT INTO usuarios (nome,email,senha_hash,setor) VALUES ($1,$2,$3,$4) RETURNING id,nome,email,setor,is_admin',
-            [b.nome, b.email, sha(b.senha), b.setor || '']
+            [b.nome, b.email, hashSenha(b.senha), b.setor || '']
           );
           return ok(res, r.rows[0], 201);
         }
         if (req.method === 'PUT' && pth.startsWith('/api/usuarios/')) {
           if (!authAdmin) return err(res, 403, 'Acesso restrito ao administrador');
           const id = parseInt(pth.split('/')[3]);
-          if (b.senha) await pool.query('UPDATE usuarios SET nome=$1,setor=$2,senha_hash=$3 WHERE id=$4', [b.nome, b.setor || '', sha(b.senha), id]);
+          if (b.senha) await pool.query('UPDATE usuarios SET nome=$1,setor=$2,senha_hash=$3 WHERE id=$4', [b.nome, b.setor || '', hashSenha(b.senha), id]);
           else await pool.query('UPDATE usuarios SET nome=$1,setor=$2 WHERE id=$3', [b.nome, b.setor || '', id]);
           return ok(res, { ok: true });
         }        if (req.method === 'DELETE' && pth.startsWith('/api/usuarios/')) {
@@ -548,7 +622,7 @@ const server = http.createServer(async (req, res) => {
         }
         if (req.method === 'PUT' && pth.startsWith('/api/pedidos/')) {
           const id = parseInt(pth.split('/')[3]);
-          const { sets, vals } = dynUpdate(b);
+          const { sets, vals } = dynUpdate(b, 'pedidos');
           const r = await pool.query(`UPDATE pedidos SET ${sets} WHERE id=$${vals.length + 1} RETURNING *`, [...vals, id]);
           return ok(res, r.rows[0]);
         }
@@ -581,7 +655,7 @@ const server = http.createServer(async (req, res) => {
         }
         if (req.method === 'PUT' && pth.startsWith('/api/chamados/')) {
           const id = parseInt(pth.split('/')[3]);
-          const { sets, vals } = dynUpdate(b);
+          const { sets, vals } = dynUpdate(b, 'chamados');
           const r = await pool.query(`UPDATE chamados SET ${sets} WHERE id=$${vals.length + 1} RETURNING *`, [...vals, id]);
           return ok(res, r.rows[0]);
         }
@@ -608,7 +682,7 @@ const server = http.createServer(async (req, res) => {
         }
         if (req.method === 'PUT' && pth.startsWith('/api/demandas/')) {
           const id = parseInt(pth.split('/')[3]);
-          const { sets, vals } = dynUpdate(b);
+          const { sets, vals } = dynUpdate(b, 'demandas');
           const r = await pool.query(`UPDATE demandas SET ${sets} WHERE id=$${vals.length + 1} RETURNING *`, [...vals, id]);
           return ok(res, r.rows[0]);
         }
