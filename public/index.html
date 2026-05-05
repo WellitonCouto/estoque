@@ -407,28 +407,6 @@ tbody tr:hover td{background:var(--bg)}
       <!-- ALERTAS DE VENCIMENTO -->
       <div id="pag-alertas"></div>
 
-      <!-- FORNECEDORES -->
-      <div class="card" style="margin-bottom:12px">
-        <div class="ct">Cadastrar fornecedor</div>
-        <div class="fg c3">
-          <div class="f"><label>Nome *</label><input id="pag-fn" placeholder="Ex: Papelaria Central"></div>
-          <div class="f"><label>CNPJ / CPF</label><input id="pag-fcnpj" placeholder="Opcional"></div>
-          <div class="f"><label>Contato</label><input id="pag-fcontato" placeholder="Telefone ou e-mail"></div>
-        </div>
-        <div class="fg c3">
-          <div class="f"><label>PIX</label><input id="pag-fpix" placeholder="Chave PIX do fornecedor"></div>
-          <div class="f"><label>Favorecido</label><input id="pag-ffavorecido" placeholder="Nome do favorecido"></div>
-          <div class="f"><label>InstituiÃ§Ã£o</label><input id="pag-finstituicao" placeholder="Banco ou instituiÃ§Ã£o"></div>
-        </div>
-        <button class="btn p" onclick="addFornecedor()">Cadastrar fornecedor</button>
-      </div>
-      <div class="card" style="margin-bottom:12px">
-        <div class="fl" style="margin-bottom:13px">
-          <span class="ct" style="margin:0">Fornecedores</span>
-        </div>
-        <div id="tb-forn-wrap" class="tw" style="overflow-y:auto"><table><thead><tr><th>Nome</th><th>CNPJ/CPF</th><th>Contato</th><th>Saldo pendente</th><th></th></tr></thead><tbody id="td-fornecedores"></tbody></table></div>
-      </div>
-
       <!-- NOVA CONTA -->
       <div class="card" style="margin-bottom:12px">
         <div class="ct">Registrar conta a pagar</div>
@@ -451,6 +429,29 @@ tbody tr:hover td{background:var(--bg)}
           <select id="pag-fil-forn" onchange="rPagamentos()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos os fornecedores</option></select>
         </div>
         <div id="pag-pendentes"></div>
+      </div>
+
+
+      <!-- FORNECEDORES -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="ct">Cadastrar fornecedor</div>
+        <div class="fg c3">
+          <div class="f"><label>Nome *</label><input id="pag-fn" placeholder="Ex: Papelaria Central"></div>
+          <div class="f"><label>CNPJ / CPF</label><input id="pag-fcnpj" placeholder="Opcional"></div>
+          <div class="f"><label>Contato</label><input id="pag-fcontato" placeholder="Telefone ou e-mail"></div>
+        </div>
+        <div class="fg c3">
+          <div class="f"><label>PIX</label><input id="pag-fpix" placeholder="Chave PIX do fornecedor"></div>
+          <div class="f"><label>Favorecido</label><input id="pag-ffavorecido" placeholder="Nome do favorecido"></div>
+          <div class="f"><label>InstituiÃ§Ã£o</label><input id="pag-finstituicao" placeholder="Banco ou instituiÃ§Ã£o"></div>
+        </div>
+        <button class="btn p" onclick="addFornecedor()">Cadastrar fornecedor</button>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Fornecedores</span>
+        </div>
+        <div id="tb-forn-wrap" class="tw" style="overflow-y:auto"><table><thead><tr><th>Nome</th><th>CNPJ/CPF</th><th>Contato</th><th>Saldo pendente</th><th></th></tr></thead><tbody id="td-fornecedores"></tbody></table></div>
       </div>
 
       <!-- HISTÓRICO -->
@@ -2120,12 +2121,13 @@ function rContasPendentes(){
     const contas=pending.filter(c=>c.fornecedor_id===fid).sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''));
     const total=contas.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
     const todasNfRecebidas=contas.every(c=>c.nf_recebida);
-    const algumaNfRecebida=contas.some(c=>c.nf_recebida);
-    const nfIcone=todasNfRecebidas?'✅':'📄';
-    // Vencimento mais próximo
-    const proxVenc=contas[0]?.vencimento;
+    const todasEntregasRecebidas=contas.every(c=>c.vencimento||c.entrega_recebida);
+    const nfIcone=todasNfRecebidas?'&#10003;':todasEntregasRecebidas?'&#10003;':'&#9633;';
+    const semEntrega=contas.some(c=>!c.vencimento&&!c.entrega_recebida);
+    const contasComVenc=contas.filter(c=>c.vencimento).sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''));
+    const proxVenc=semEntrega?'':contasComVenc[0]?.vencimento;
     const diasProx=proxVenc?Math.round((new Date(proxVenc+'T00:00:00')-hoje)/(864e5)):null;
-    const vencTag=diasProx==null?'<span style="font-size:11px;color:var(--tm);font-style:italic">Aguardando entrega</span>':(diasProx<0?`<span style="font-size:11px;color:var(--rd);font-weight:600">Vencido!</span>`:diasProx===0?`<span style="font-size:11px;color:var(--rd);font-weight:600">Vence hoje!</span>`:`<span style="font-size:11px;color:var(--tm)">vence ${fd(proxVenc)}</span>`);
+    const vencTag=semEntrega?'<span style="font-size:11px;color:var(--tm);font-style:italic">Aguardando entrega</span>':(diasProx==null?'<span style="font-size:11px;color:var(--gn);font-weight:500">Entrega recebida</span>':(diasProx<0?`<span style="font-size:11px;color:var(--rd);font-weight:600">Vencido!</span>`:diasProx===0?`<span style="font-size:11px;color:var(--rd);font-weight:600">Vence hoje!</span>`:`<span style="font-size:11px;color:var(--tm)">vence ${fd(proxVenc)}</span>`));
     const uid='cp-'+fid;
     html+=`<div style="border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;overflow:hidden">
       <div style="display:flex;align-items:center;padding:10px 14px;background:var(--bg);gap:10px;cursor:pointer" onclick="document.getElementById('${uid}').style.display=document.getElementById('${uid}').style.display==='none'?'block':'none'">
@@ -2134,12 +2136,13 @@ function rContasPendentes(){
         ${vencTag}
         <span style="margin-left:auto;font-family:var(--mn);font-size:14px;font-weight:600;color:var(--or)">${fm(total)}</span>
         <button class="btn sm p" onclick="event.stopPropagation();pagarTudo(${fid})" style="margin-left:6px">Pagar tudo</button>
-        <span style="font-size:11px;color:var(--tm);user-select:none">▼</span>
+        <span style="font-size:11px;color:var(--tm);user-select:none">&#9662;</span>
       </div>
       <div id="${uid}" style="display:none">
         <table style="width:100%;border-collapse:collapse">
           <thead><tr style="background:var(--bg)">
-            <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Descrição</th>
+            <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Descricao</th>
+            <th style="padding:7px 14px;text-align:center;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Entrega</th>
             <th style="padding:7px 14px;text-align:center;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">NF</th>
             <th style="padding:7px 14px;text-align:center;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">E-mail</th>
             <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Vencimento</th>
@@ -2150,8 +2153,16 @@ function rContasPendentes(){
           ${contas.map(c=>{
             const dias=c.vencimento?Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5)):null;
             const vencCls=dias==null?'':(dias<0?'color:var(--rd);font-weight:600':dias===0?'color:var(--rd)':dias<=3?'color:var(--or)':'');
+            const entregaOk=!!(c.vencimento||c.entrega_recebida);
+            const entregaTxt=entregaOk?'Recebida':'Pendente';
             return`<tr>
               <td style="padding:8px 14px;font-size:13px;border-bottom:1px solid var(--bd)">${c.descricao}${c.obs?'<br><span style="font-size:11px;color:var(--tm)">'+c.obs+'</span>':''}</td>
+              <td style="padding:8px 14px;text-align:center;border-bottom:1px solid var(--bd)">
+                ${c.vencimento?'<span style="font-size:11px;font-weight:500;color:var(--gn)">Recebida</span>':`<label title="${entregaOk?'Entrega recebida':'Aguardando entrega'}" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px">
+                  <input type="checkbox" ${entregaOk?'checked':''} onchange="toggleEntregaRecebida(${c.id},this.checked)" style="accent-color:var(--gn);width:15px;height:15px">
+                  <span style="font-size:10px;color:var(--tm)">${entregaTxt}</span>
+                </label>`}
+              </td>
               <td style="padding:8px 14px;text-align:center;border-bottom:1px solid var(--bd)">
                 <label title="${c.nf_recebida?'Nota fiscal recebida':'Nota fiscal pendente'}" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px">
                   <input type="checkbox" ${c.nf_recebida?'checked':''} onchange="toggleNfRecebida(${c.id},this.checked)" style="accent-color:var(--gn);width:15px;height:15px">
@@ -2159,11 +2170,11 @@ function rContasPendentes(){
                 </label>
               </td>
               <td style="padding:8px 14px;text-align:center;border-bottom:1px solid var(--bd)">
-                ${c.email_enviado?'<span style="font-size:11px;font-weight:500;color:var(--gn)">✅ Enviado</span>':'<span style="font-size:11px;color:var(--th)">—</span>'}
+                ${c.email_enviado?'<span style="font-size:11px;font-weight:500;color:var(--gn)">Enviado</span>':'<span style="font-size:11px;color:var(--th)">-</span>'}
               </td>
-              <td style="padding:8px 14px;font-size:12px;font-family:var(--mn);border-bottom:1px solid var(--bd);${vencCls}">${c.vencimento?fd(c.vencimento):'<span style="color:var(--tm);font-style:italic">Ag. entrega</span>'}${dias!=null?`<br><span style="font-size:10px">${dias<0?'Vencido há '+Math.abs(dias)+'d':dias===0?'Hoje!':'Em '+dias+'d'}</span>`:''}</td>
+              <td style="padding:8px 14px;font-size:12px;font-family:var(--mn);border-bottom:1px solid var(--bd);${vencCls}">${c.vencimento?fd(c.vencimento):(entregaOk?'<span style="color:var(--gn);font-weight:500">Entrega recebida</span>':'<span style="color:var(--tm);font-style:italic">Ag. entrega</span>')}${dias!=null?`<br><span style="font-size:10px">${dias<0?'Vencido ha '+Math.abs(dias)+'d':dias===0?'Hoje!':'Em '+dias+'d'}</span>`:''}</td>
               <td style="padding:8px 14px;font-family:var(--mn);font-weight:600;text-align:right;border-bottom:1px solid var(--bd)">${fm(c.valor)}</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn sm s" onclick="abrPagar(${c.id})">Pagar</button><button class="btn sm d" onclick="delConta(${c.id})">✕</button></div></td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn sm s" onclick="abrPagar(${c.id})">Pagar</button><button class="btn sm d" onclick="delConta(${c.id})">x</button></div></td>
             </tr>`;
           }).join('')}
           </tbody>
@@ -2182,6 +2193,13 @@ async function toggleNfRecebida(id,recebida){
   rFornecedores();
 }
 
+async function toggleEntregaRecebida(id,recebida){
+  await fetch(`/api/contas-pagar/${id}`,{method:'PUT',headers:pagHdrs(),body:JSON.stringify({entrega_recebida:recebida})});
+  await pagLoad();
+  rPagAlertas();
+  rContasPendentes();
+  rFornecedores();
+}
 
 
 function rPagHist(){
