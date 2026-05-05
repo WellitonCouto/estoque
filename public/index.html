@@ -415,6 +415,11 @@ tbody tr:hover td{background:var(--bg)}
           <div class="f"><label>CNPJ / CPF</label><input id="pag-fcnpj" placeholder="Opcional"></div>
           <div class="f"><label>Contato</label><input id="pag-fcontato" placeholder="Telefone ou e-mail"></div>
         </div>
+        <div class="fg c3">
+          <div class="f"><label>PIX</label><input id="pag-fpix" placeholder="Chave PIX do fornecedor"></div>
+          <div class="f"><label>Favorecido</label><input id="pag-ffavorecido" placeholder="Nome do favorecido"></div>
+          <div class="f"><label>InstituiÃ§Ã£o</label><input id="pag-finstituicao" placeholder="Banco ou instituiÃ§Ã£o"></div>
+        </div>
         <button class="btn p" onclick="addFornecedor()">Cadastrar fornecedor</button>
       </div>
       <div class="card" style="margin-bottom:12px">
@@ -863,6 +868,11 @@ tbody tr:hover td{background:var(--bg)}
         <option value="vencimento">Vencimento fixo (alerta 1 dia antes)</option>
       </select>
     </div>
+  </div>
+  <div class="fg c3">
+    <div class="f"><label>PIX</label><input id="eforn-pix"></div>
+    <div class="f"><label>Favorecido</label><input id="eforn-favorecido"></div>
+    <div class="f"><label>InstituiÃ§Ã£o</label><input id="eforn-instituicao"></div>
   </div>
   <div class="mft"><button class="btn" onclick="cm('m-eforn')">Cancelar</button><button class="btn p" onclick="saveFornecedor()">Salvar</button></div>
 </div></div>
@@ -2197,8 +2207,8 @@ function rPagHist(){
 async function addFornecedor(){
   const nome=document.getElementById('pag-fn').value.trim();
   if(!nome){alert('Informe o nome do fornecedor.');return;}
-  await fetch('/api/fornecedores-pag',{method:'POST',headers:pagHdrs(),body:JSON.stringify({nome,cnpj:document.getElementById('pag-fcnpj').value.trim(),contato:document.getElementById('pag-fcontato').value.trim(),tipo:'nota_fiscal'})});
-  ['pag-fn','pag-fcnpj','pag-fcontato'].forEach(id=>document.getElementById(id).value='');
+  await fetch('/api/fornecedores-pag',{method:'POST',headers:pagHdrs(),body:JSON.stringify({nome,cnpj:document.getElementById('pag-fcnpj').value.trim(),contato:document.getElementById('pag-fcontato').value.trim(),pix:document.getElementById('pag-fpix').value.trim(),favorecido:document.getElementById('pag-ffavorecido').value.trim(),instituicao:document.getElementById('pag-finstituicao').value.trim(),tipo:'nota_fiscal'})});
+  ['pag-fn','pag-fcnpj','pag-fcontato','pag-fpix','pag-ffavorecido','pag-finstituicao'].forEach(id=>document.getElementById(id).value='');
   await rPagamentos();
 }
 
@@ -2209,12 +2219,15 @@ function opFornecedor(id){
   document.getElementById('eforn-nome').value=f.nome;
   document.getElementById('eforn-cnpj').value=f.cnpj||'';
   document.getElementById('eforn-contato').value=f.contato||'';
+  document.getElementById('eforn-pix').value=f.pix||'';
+  document.getElementById('eforn-favorecido').value=f.favorecido||'';
+  document.getElementById('eforn-instituicao').value=f.instituicao||'';
   document.getElementById('eforn-tipo').value=f.tipo||'nota_fiscal';
   document.getElementById('m-eforn').classList.add('op');
 }
 async function saveFornecedor(){
   if(!efornId)return;
-  await fetch(`/api/fornecedores-pag/${efornId}`,{method:'PUT',headers:pagHdrs(),body:JSON.stringify({nome:document.getElementById('eforn-nome').value.trim(),cnpj:document.getElementById('eforn-cnpj').value.trim(),contato:document.getElementById('eforn-contato').value.trim(),tipo:document.getElementById('eforn-tipo').value})});
+  await fetch(`/api/fornecedores-pag/${efornId}`,{method:'PUT',headers:pagHdrs(),body:JSON.stringify({nome:document.getElementById('eforn-nome').value.trim(),cnpj:document.getElementById('eforn-cnpj').value.trim(),contato:document.getElementById('eforn-contato').value.trim(),pix:document.getElementById('eforn-pix').value.trim(),favorecido:document.getElementById('eforn-favorecido').value.trim(),instituicao:document.getElementById('eforn-instituicao').value.trim(),tipo:document.getElementById('eforn-tipo').value})});
   cm('m-eforn');await rPagamentos();
 }
 async function delFornecedor(id){
@@ -2253,6 +2266,20 @@ function abrPagar(id){
   document.getElementById('pag-obs-pag').value='';
   document.getElementById('m-pagar').classList.add('op');
 }
+function montarTextoEmailPagamento(forn,total,saudacao){
+  return `Prezada Regina, ${saudacao}.
+
+Venho por meio deste solicitar o pagamento para ${forn?.nome||'[empresa]'}.
+
+Valor: ${fm(total)}
+Chave PIX: ${forn?.pix||''}
+Favorecido: ${forn?.favorecido||''}
+Instituição: ${forn?.instituicao||''}
+
+Pagamento referente a: 
+
+Segue anexo nota fiscal, qualquer dúvida estou à disposição.`;
+}
 let pagarTudoFornId=null;
 function pagarTudo(fornId){
   const contas=PAG.contas.filter(c=>c.fornecedor_id===fornId&&c.status==='pendente');
@@ -2276,7 +2303,7 @@ function pagarTudo(fornId){
   const hora=new Date().getHours();
   const saudacao=hora<12?'bom dia':hora<18?'boa tarde':'boa noite';
   const emailTxt=`Prezada Regina, ${saudacao}.\n\nVenho por meio deste solicitar o pagamento para ${forn?.nome||'[empresa]'}.\n\nValor: ${fm(total)}\nPIX: \n\nSegue anexo nota fiscal, qualquer dúvida estou à disposição.`;
-  document.getElementById('pt-email-txt').value=emailTxt;
+  document.getElementById('pt-email-txt').value=montarTextoEmailPagamento(forn,total,saudacao);
   document.getElementById('m-pagar-tudo').classList.add('op');
 }
 async function ptTogEmail(){
