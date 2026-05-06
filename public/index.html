@@ -606,7 +606,7 @@ tbody tr:hover td{background:var(--bg)}
         <div class="fg c3">
           <div class="f"><label>Veículo *</label><select id="fkm-vei"><option value="">Selecione...</option></select></div>
           <div class="f"><label>Data</label><input id="fkm-data" type="date"></div>
-          <div class="f"><label>KM atual *</label><input id="fkm-km" type="number" step="0.1" placeholder="Ex: 45230"></div>
+          <div class="f"><label>KM atual *</label><input id="fkm-km" type="number" step="1" min="0" placeholder="Ex: 261500"></div>
         </div>
         <button class="btn p" onclick="addRegistroKm()">Registrar</button>
       </div>
@@ -1296,7 +1296,7 @@ async function addRegistroKm(){
   const vid=parseInt(document.getElementById('fkm-vei').value),km=document.getElementById('fkm-km').value,dt=document.getElementById('fkm-data').value;
   if(!vid){alert('Selecione o veículo.');return;}if(!km){alert('Informe o KM atual.');return;}
   try{
-    await A('POST','/registros-km',{veiculo_id:vid,data:dt||null,km_atual:parseFloat(km)});
+    await A('POST','/registros-km',{veiculo_id:vid,data:dt||null,km_atual:Math.round(parseFloat(km))});
     resolverKmLembrete();
     await loadFrota();rRegistrosKm();
     document.getElementById('fkm-km').value='';
@@ -1307,7 +1307,7 @@ function rRegistrosKm(){
   const fil=document.getElementById('fkm-fil-vei')?.value||'';
   const lista=fil?C.registros_km.filter(r=>String(r.veiculo_id)===fil):C.registros_km;
   const tb=document.getElementById('td-km');
-  tb.innerHTML=lista.length?lista.map(r=>`<tr><td class="mn">${fd(r.data)}</td><td>${vLabel(r.veiculo_id)}</td><td class="mn"><strong>${Number(r.km_atual).toLocaleString('pt-BR')} km</strong></td><td><button class="btn sm d" onclick="delRegistroKm(${r.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Nenhum registro de KM</td></tr>';
+  tb.innerHTML=lista.length?lista.map(r=>`<tr><td class="mn">${fd(r.data)}</td><td>${vLabel(r.veiculo_id)}</td><td class="mn"><strong>${Math.round(Number(r.km_atual)).toLocaleString('pt-BR')} km</strong></td><td><button class="btn sm d" onclick="delRegistroKm(${r.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Nenhum registro de KM</td></tr>';
 }
 async function delRegistroKm(id){if(!confirm('Remover registro?'))return;try{await A('DELETE',`/registros-km/${id}`);await loadFrota();rRegistrosKm();}catch(e){alert('Erro: '+e.message);}}
 
@@ -1371,7 +1371,7 @@ function calcularAlertas(){
 
     if(cfg.tipo_alerta==='oleo'||cfg.tipo_alerta==='revisao'){
       // Use manual reference first; fallback to searching manutencoes
-      let ultKm=cfg.km_referencia?parseFloat(cfg.km_referencia):null;
+      let ultKm=cfg.km_referencia?Math.round(parseFloat(cfg.km_referencia)):null;
       let ultData=cfg.data_referencia?new Date(cfg.data_referencia+'T00:00:00'):null;
       let refSource='manual';
 
@@ -1384,7 +1384,7 @@ function calcularAlertas(){
             && tipoKey.some(k=>m.tipo.toLowerCase().includes(k)||m.descricao.toLowerCase().includes(k)))
           .sort((a,b)=>(b.data||'').localeCompare(a.data||''));
         const ultima=mans[0]||null;
-        ultKm=ultima&&ultima.km?parseFloat(ultima.km):null;
+        ultKm=ultima&&ultima.km?Math.round(parseFloat(ultima.km)):null;
         ultData=ultima&&ultima.data?new Date(ultima.data+'T00:00:00'):null;
       }
 
@@ -1392,7 +1392,7 @@ function calcularAlertas(){
       const kms=C.registros_km
         .filter(r=>r.veiculo_id===cfg.veiculo_id||r.veiculo_id===parseInt(cfg.veiculo_id))
         .sort((a,b)=>(b.data||'').localeCompare(a.data||''));
-      const kmAtual=kms[0]?parseFloat(kms[0].km_atual):null;
+      const kmAtual=kms[0]?Math.round(parseFloat(kms[0].km_atual)):null;
 
       let statusKm=null,statusDias=null,detalhes=[];
 
