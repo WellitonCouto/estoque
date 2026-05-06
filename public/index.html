@@ -1294,12 +1294,10 @@ async function delLicenciamento(id){if(!confirm('Remover licenciamento?'))return
 // ── FROTA: REGISTROS KM ───────────────────────────────────
 async function addRegistroKm(){
   const vid=parseInt(document.getElementById('fkm-vei').value),km=document.getElementById('fkm-km').value,dt=document.getElementById('fkm-data').value;
-  if(!vid){alert('Selecione o veÃ­culo.');return;}if(!km){alert('Informe o KM atual.');return;}
+  if(!vid){alert('Selecione o veículo.');return;}if(!km){alert('Informe o KM atual.');return;}
   try{
     await A('POST','/registros-km',{veiculo_id:vid,data:dt||null,km_atual:parseFloat(km)});
-    resolverKmLembrete();
     await loadFrota();rRegistrosKm();
-    rAlertas();rAlertasBadge();
     document.getElementById('fkm-km').value='';
   }catch(e){alert('Erro: '+e.message);}
 }
@@ -1310,7 +1308,8 @@ function rRegistrosKm(){
   const tb=document.getElementById('td-km');
   tb.innerHTML=lista.length?lista.map(r=>`<tr><td class="mn">${fd(r.data)}</td><td>${vLabel(r.veiculo_id)}</td><td class="mn"><strong>${Number(r.km_atual).toLocaleString('pt-BR')} km</strong></td><td><button class="btn sm d" onclick="delRegistroKm(${r.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Nenhum registro de KM</td></tr>';
 }
-async function delRegistroKm(id){if(!confirm('Remover registro?'))return;try{await A('DELETE',`/registros-km/${id}`);await loadFrota();rRegistrosKm();rAlertas();rAlertasBadge();}catch(e){alert('Erro: '+e.message);}}
+async function delRegistroKm(id){if(!confirm('Remover registro?'))return;try{await A('DELETE',`/registros-km/${id}`);await loadFrota();rRegistrosKm();}catch(e){alert('Erro: '+e.message);}}
+
 // ── FROTA: CUSTOS ─────────────────────────────────────────
 async function addCusto(){
   const tipo=document.getElementById('fcs-tipo').value,dt=document.getElementById('fcs-data').value;
@@ -1391,9 +1390,8 @@ function calcularAlertas(){
       // Latest km reading from registros_km
       const kms=C.registros_km
         .filter(r=>r.veiculo_id===cfg.veiculo_id||r.veiculo_id===parseInt(cfg.veiculo_id))
-        .sort((a,b)=>(b.data||'').localeCompare(a.data||'')||(b.criado_em||'').localeCompare(a.criado_em||'')||((parseInt(b.id)||0)-(parseInt(a.id)||0)));
+        .sort((a,b)=>(b.data||'').localeCompare(a.data||''));
       const kmAtual=kms[0]?parseFloat(kms[0].km_atual):null;
-      const kmAtualData=kms[0]?.data||null;
 
       let statusKm=null,statusDias=null,detalhes=[];
 
@@ -1434,8 +1432,7 @@ function calcularAlertas(){
 
       const ultKmFmt=ultKm?Math.round(ultKm)+' km':'?';
       const ultDataFmt=cfg.data_referencia?cfg.data_referencia.split('-').reverse().join('/'):ultData?ultData.toLocaleDateString('pt-BR'):'?';
-      const kmAtualLabel=kmAtual?`KM atual registrado: ${Math.round(kmAtual)} km${kmAtualData?' em '+kmAtualData.split('-').reverse().join('/'):''}`:'KM atual nao registrado';
-      const subLabel=((ultKm||ultData)?`Ultimo ${ALERTA_TIPO_LABEL[cfg.tipo_alerta].toLowerCase()}: ${ultDataFmt} - ${ultKmFmt}${refSource==='auto'?' (via manutencoes)':''}`:'Sem referencia de partida')+' - '+kmAtualLabel;
+      const subLabel=(ultKm||ultData)?`Último ${ALERTA_TIPO_LABEL[cfg.tipo_alerta].toLowerCase()}: ${ultDataFmt} — ${ultKmFmt}${refSource==='auto'?' (via manutenções)':''}`:('Sem referência de partida');
 
       alertas.push({id:`${cfg.id}_${cfg.tipo_alerta}`,cfg,vei,vLabel,status,
         titulo:ALERTA_TIPO_LABEL[cfg.tipo_alerta],
@@ -1498,35 +1495,33 @@ function stAlertaLabel(s){return s==='vencido'?'Vencido':s==='proximo'?'Próximo
 
 // ── LEMBRETE SEGUNDA-FEIRA: CONFERIR KM ───────────────────
 function semanaISO(){const d=new Date();const thu=new Date(d);thu.setDate(d.getDate()-(d.getDay()+6)%7+3);const jan4=new Date(thu.getFullYear(),0,4);return`${thu.getFullYear()}-W${String(Math.ceil(((thu-jan4)/864e5+((jan4.getDay()||7)-1)/7+1)/7)).padStart(2,'0')}`;}
-function semanaComecou(){const h=new Date();return h.getDay()!==0;}
-function kmLembreteChave(tipo){return`km_lembrete_${tipo}_${semanaISO()}`;}
-function limparKmLembreteBanners(){['km-segunda-banner','km-segunda-banner-ind'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});}
-function resolverKmLembrete(){
-  localStorage.setItem(kmLembreteChave('resolvido'),'1');
-  limparKmLembreteBanners();
-}
 function rKmSegundaBanner(elId){
   elId=elId||'km-segunda-banner';
   const el=document.getElementById(elId);
   if(!el)return;
-  if(localStorage.getItem(kmLembreteChave('dispensado'))||localStorage.getItem(kmLembreteChave('resolvido'))){el.innerHTML='';return;}
+  const hoje=new Date();
+  if(hoje.getDay()!==1){el.innerHTML='';return;}
+  const chave='km_lembrete_dispensado_'+semanaISO();
+  if(localStorage.getItem(chave)){el.innerHTML='';return;}
   el.innerHTML=`
     <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 18px;background:#fffbeb;border:1px solid #f0d875;border-radius:12px;margin-bottom:16px">
-      <span style="font-size:22px;flex-shrink:0">KM</span>
+      <span style="font-size:22px;flex-shrink:0">📏</span>
       <div style="flex:1">
-        <div style="font-weight:600;font-size:14px;color:#856404;margin-bottom:3px">Lembrete semanal - Confira a quilometragem</div>
-        <div style="font-size:13px;color:#92400e">Registre o KM atual de cada veiculo para manter o controle da frota atualizado e os alertas precisos. Este lembrete fica visivel ate voce registrar ou dispensar.</div>
+        <div style="font-weight:600;font-size:14px;color:#856404;margin-bottom:3px">Lembrete semanal — Confira a quilometragem</div>
+        <div style="font-size:13px;color:#92400e">É segunda-feira! Registre o KM atual de cada veículo para manter o controle da frota atualizado e os alertas precisos.</div>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn sm p" onclick="sp('fkm',document.querySelector('#nf .ni:nth-child(5)'))">Ir para Registro KM</button>
-          <button class="btn sm" onclick="dispensarKmLembrete()" style="color:#856404;border-color:#f0d875">Dispensar - carro nao rodou essa semana</button>
+          <button class="btn sm" onclick="dispensarKmLembrete()" style="color:#856404;border-color:#f0d875">Dispensar — carro não rodou essa semana</button>
         </div>
       </div>
     </div>`;
 }
 function dispensarKmLembrete(){
-  localStorage.setItem(kmLembreteChave('dispensado'),'1');
-  limparKmLembreteBanners();
+  const chave='km_lembrete_dispensado_'+semanaISO();
+  localStorage.setItem(chave,'1');
+  ['km-segunda-banner','km-segunda-banner-ind'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
 }
+
 function rAlertas(){
   const alertas=calcularAlertas();
   const fil=document.getElementById('falt-fil')?.value||'';
