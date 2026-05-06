@@ -1294,9 +1294,11 @@ async function delLicenciamento(id){if(!confirm('Remover licenciamento?'))return
 // ── FROTA: REGISTROS KM ───────────────────────────────────
 async function addRegistroKm(){
   const vid=parseInt(document.getElementById('fkm-vei').value),km=document.getElementById('fkm-km').value,dt=document.getElementById('fkm-data').value;
-  if(!vid){alert('Selecione o veículo.');return;}if(!km){alert('Informe o KM atual.');return;}
+  if(!vid){alert('Selecione o veiculo.');return;}if(!km){alert('Informe o KM atual.');return;}
+  const kmNormalizado=normalizarKm(km);
+  if(!kmNormalizado||kmNormalizado<=0){alert('Informe um KM valido. Ex: 261.500');return;}
   try{
-    await A('POST','/registros-km',{veiculo_id:vid,data:dt||null,km_atual:parseFloat(km)});
+    await A('POST','/registros-km',{veiculo_id:vid,data:dt||null,km_atual:kmNormalizado});
     resolverKmLembrete();
     await loadFrota();rRegistrosKm();
     rAlertas();rAlertasBadge();
@@ -1304,14 +1306,30 @@ async function addRegistroKm(){
   }catch(e){alert('Erro: '+e.message);}
 }
 
+function normalizarKm(valor){
+  const txt=String(valor||'').trim().replace(/\s/g,'');
+  if(!txt)return null;
+  const partes=txt.split(/[.,]/);
+  if(partes.length===1)return parseInt(txt.replace(/\D/g,''),10)||null;
+  if(partes.length===2){
+    const antes=partes[0].replace(/\D/g,'');
+    const depois=partes[1].replace(/\D/g,'');
+    if(!antes||!depois)return parseInt((antes+depois).replace(/\D/g,''),10)||null;
+    if(antes.length<=3&&depois.length<3)return parseInt(antes+depois.padEnd(3,'0'),10)||null;
+    return parseInt(antes+depois,10)||null;
+  }
+  return parseInt(txt.replace(/\D/g,''),10)||null;
+}
+
+function fmtKm(valor){return Math.round(Number(valor)||0).toLocaleString('pt-BR');}
+
 function rRegistrosKm(){
   const fil=document.getElementById('fkm-fil-vei')?.value||'';
   const lista=fil?C.registros_km.filter(r=>String(r.veiculo_id)===fil):C.registros_km;
   const tb=document.getElementById('td-km');
-  tb.innerHTML=lista.length?lista.map(r=>`<tr><td class="mn">${fd(r.data)}</td><td>${vLabel(r.veiculo_id)}</td><td class="mn"><strong>${Number(r.km_atual).toLocaleString('pt-BR')} km</strong></td><td><button class="btn sm d" onclick="delRegistroKm(${r.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Nenhum registro de KM</td></tr>';
+  tb.innerHTML=lista.length?lista.map(r=>`<tr><td class="mn">${fd(r.data)}</td><td>${vLabel(r.veiculo_id)}</td><td class="mn"><strong>${fmtKm(r.km_atual)} km</strong></td><td><button class="btn sm d" onclick="delRegistroKm(${r.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Nenhum registro de KM</td></tr>';
 }
 async function delRegistroKm(id){if(!confirm('Remover registro?'))return;try{await A('DELETE',`/registros-km/${id}`);await loadFrota();rRegistrosKm();rAlertas();rAlertasBadge();}catch(e){alert('Erro: '+e.message);}}
-
 // ── FROTA: CUSTOS ─────────────────────────────────────────
 async function addCusto(){
   const tipo=document.getElementById('fcs-tipo').value,dt=document.getElementById('fcs-data').value;
