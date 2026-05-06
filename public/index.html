@@ -975,7 +975,7 @@ let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],de
 let MF=[];
 
 // ── UTILS ─────────────────────────────────────────────────
-async function A(m,p,b){const o={method:m,headers:{'Content-Type':'application/json'}};const token=sessionStorage.getItem('token');if(token)o.headers['Authorization']='Bearer '+token;if(b)o.body=JSON.stringify(b);const r=await fetch('/api'+p,o);if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.erro||'Erro');}return r.json();}
+async function A(m,p,b){const o={method:m,headers:{'Content-Type':'application/json'}};if(U){o.headers['x-user-id']=U.id;o.headers['x-user-admin']=U.is_admin?'true':'false';}if(b)o.body=JSON.stringify(b);const r=await fetch('/api'+p,o);if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.erro||'Erro');}return r.json();}
 const fd=d=>{if(!d)return'—';const[y,mo,di]=d.split('-');return`${di}/${mo}/${y}`;};
 const fm=v=>{if(!v&&v!==0)return'—';return'R$ '+parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
 const hj=()=>new Date().toISOString().split('T')[0];
@@ -985,13 +985,13 @@ const sit=i=>i.qtd===0?'<span class="bdg ot">Zerado</span>':i.qtd<=i.min?'<span 
 function pedidosAbertosPorItem(itemId){return C.pedidos.filter(p=>p.status==='aberto'&&p.item_id===itemId).reduce((tot,p)=>tot+(parseInt(p.qtd,10)||0),0);}
 
 // ── LOGIN ──────────────────────────────────────────────────
-async function login(){const e=document.getElementById('le').value.trim(),s=document.getElementById('ls').value,er=document.getElementById('lerr');er.style.display='none';if(!e||!s){er.textContent='Preencha e-mail e senha.';er.style.display='block';return;}try{const resp=await A('POST','/login',{email:e,senha:s});U={id:resp.id,nome:resp.nome,email:resp.email,setor:resp.setor,is_admin:resp.is_admin};sessionStorage.setItem('token',resp.token);sessionStorage.setItem('U',JSON.stringify(U));startApp();}catch(ex){er.textContent=ex.message;er.style.display='block';}}
+async function login(){const e=document.getElementById('le').value.trim(),s=document.getElementById('ls').value,er=document.getElementById('lerr');er.style.display='none';if(!e||!s){er.textContent='Preencha e-mail e senha.';er.style.display='block';return;}try{U=await A('POST','/login',{email:e,senha:s});sessionStorage.setItem('U',JSON.stringify(U));startApp();}catch(ex){er.textContent=ex.message;er.style.display='block';}}
 function showRec(){document.getElementById('lform').style.display='none';document.getElementById('rform').style.display='block';document.getElementById('redef-form').style.display='none';}
 function showLogin(){['rform','redef-form'].forEach(id=>document.getElementById(id).style.display='none');document.getElementById('lform').style.display='block';document.getElementById('lerr').style.display='none';}
 async function solicitarRecuperacao(){const e=document.getElementById('rec-email').value.trim(),er=document.getElementById('lerr');er.style.display='none';if(!e){er.textContent='Informe o e-mail.';er.style.display='block';return;}try{await fetch('/api/recuperar-senha',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e})});alert('Se esse e-mail estiver cadastrado, você receberá um link em instantes. Verifique também a caixa de spam.');showLogin();}catch(ex){er.textContent='Erro ao enviar. Tente novamente.';er.style.display='block';}}
 async function redefinirSenha(){const s=document.getElementById('redef-senha').value,c=document.getElementById('redef-conf').value,er=document.getElementById('lerr');er.style.display='none';if(!s||s.length<6){er.textContent='A senha deve ter pelo menos 6 caracteres.';er.style.display='block';return;}if(s!==c){er.textContent='As senhas não coincidem.';er.style.display='block';return;}const params=new URLSearchParams(window.location.search);const token=params.get('token');if(!token){er.textContent='Link inválido.';er.style.display='block';return;}try{await fetch('/api/redefinir-senha',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,nova_senha:s})});alert('Senha redefinida com sucesso!');window.history.replaceState({},'','/');showLogin();}catch(ex){er.textContent='Link inválido ou expirado. Solicite um novo.';er.style.display='block';}}
 function verificarTokenNaURL(){const params=new URLSearchParams(window.location.search);const token=params.get('token');if(token){document.getElementById('lform').style.display='none';document.getElementById('rform').style.display='none';document.getElementById('redef-form').style.display='block';}}
-function logout(){U=null;sessionStorage.removeItem('U');sessionStorage.removeItem('token');document.getElementById('app').classList.remove('vis');document.getElementById('login-screen').style.display='flex';document.getElementById('ls').value='';}
+function logout(){U=null;sessionStorage.removeItem('U');document.getElementById('app').classList.remove('vis');document.getElementById('login-screen').style.display='flex';document.getElementById('ls').value='';}
 
 async function startApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').classList.add('vis');document.getElementById('sip').textContent=window.location.host;document.getElementById('unome').textContent=U.nome;document.getElementById('uemail').textContent=U.email;document.getElementById('uav').textContent=U.nome.charAt(0).toUpperCase();document.getElementById('nubtn').style.display=U.is_admin?'flex':'none';document.getElementById('cadd').style.display=U.is_admin?'block':'none';const sn=document.getElementById('saida-resp-nome');if(sn)sn.textContent=U.nome;await load();await loadCli();await loadAdm();await loadFrota();rDash();}
 
@@ -1299,6 +1299,7 @@ async function addRegistroKm(){
     await A('POST','/registros-km',{veiculo_id:vid,data:dt||null,km_atual:parseFloat(km)});
     resolverKmLembrete();
     await loadFrota();rRegistrosKm();
+    rAlertas();rAlertasBadge();
     document.getElementById('fkm-km').value='';
   }catch(e){alert('Erro: '+e.message);}
 }
@@ -1309,7 +1310,7 @@ function rRegistrosKm(){
   const tb=document.getElementById('td-km');
   tb.innerHTML=lista.length?lista.map(r=>`<tr><td class="mn">${fd(r.data)}</td><td>${vLabel(r.veiculo_id)}</td><td class="mn"><strong>${Number(r.km_atual).toLocaleString('pt-BR')} km</strong></td><td><button class="btn sm d" onclick="delRegistroKm(${r.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Nenhum registro de KM</td></tr>';
 }
-async function delRegistroKm(id){if(!confirm('Remover registro?'))return;try{await A('DELETE',`/registros-km/${id}`);await loadFrota();rRegistrosKm();}catch(e){alert('Erro: '+e.message);}}
+async function delRegistroKm(id){if(!confirm('Remover registro?'))return;try{await A('DELETE',`/registros-km/${id}`);await loadFrota();rRegistrosKm();rAlertas();rAlertasBadge();}catch(e){alert('Erro: '+e.message);}}
 
 // ── FROTA: CUSTOS ─────────────────────────────────────────
 async function addCusto(){
@@ -1391,8 +1392,9 @@ function calcularAlertas(){
       // Latest km reading from registros_km
       const kms=C.registros_km
         .filter(r=>r.veiculo_id===cfg.veiculo_id||r.veiculo_id===parseInt(cfg.veiculo_id))
-        .sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+        .sort((a,b)=>(b.data||'').localeCompare(a.data||'')||(b.criado_em||'').localeCompare(a.criado_em||'')||((parseInt(b.id)||0)-(parseInt(a.id)||0)));
       const kmAtual=kms[0]?parseFloat(kms[0].km_atual):null;
+      const kmAtualData=kms[0]?.data||null;
 
       let statusKm=null,statusDias=null,detalhes=[];
 
@@ -1433,7 +1435,8 @@ function calcularAlertas(){
 
       const ultKmFmt=ultKm?Math.round(ultKm)+' km':'?';
       const ultDataFmt=cfg.data_referencia?cfg.data_referencia.split('-').reverse().join('/'):ultData?ultData.toLocaleDateString('pt-BR'):'?';
-      const subLabel=(ultKm||ultData)?`Último ${ALERTA_TIPO_LABEL[cfg.tipo_alerta].toLowerCase()}: ${ultDataFmt} — ${ultKmFmt}${refSource==='auto'?' (via manutenções)':''}`:('Sem referência de partida');
+      const kmAtualLabel=kmAtual?`KM atual registrado: ${Math.round(kmAtual)} km${kmAtualData?' em '+kmAtualData.split('-').reverse().join('/'):''}`:'KM atual nao registrado';
+      const subLabel=((ultKm||ultData)?`Ultimo ${ALERTA_TIPO_LABEL[cfg.tipo_alerta].toLowerCase()}: ${ultDataFmt} - ${ultKmFmt}${refSource==='auto'?' (via manutencoes)':''}`:'Sem referencia de partida')+' - '+kmAtualLabel;
 
       alertas.push({id:`${cfg.id}_${cfg.tipo_alerta}`,cfg,vei,vLabel,status,
         titulo:ALERTA_TIPO_LABEL[cfg.tipo_alerta],
@@ -2024,7 +2027,7 @@ function prtRelGer(){
 // Dados armazenados no servidor (PostgreSQL) — compartilhado entre todos os usuários
 let PAG={fornecedores:[],contas:[]};
 
-function pagHdrs(){const token=sessionStorage.getItem('token');return{'Content-Type':'application/json','Authorization':token?'Bearer '+token:''};}
+function pagHdrs(){return{'Content-Type':'application/json','x-user-id':String(U?.id||0),'x-user-admin':String(U?.is_admin||false)};}
 
 async function pagLoad(){
   try{
