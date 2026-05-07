@@ -376,6 +376,23 @@ async function iniciarBanco() {
   await pool.query(`ALTER TABLE contas_pagar ADD COLUMN IF NOT EXISTS email_enviado BOOLEAN DEFAULT FALSE`);
   await pool.query(`ALTER TABLE contas_pagar ADD COLUMN IF NOT EXISTS entrega_recebida BOOLEAN DEFAULT FALSE`);
 
+  // Compras online
+  await pool.query(`CREATE TABLE IF NOT EXISTS compras_online (
+    id SERIAL PRIMARY KEY,
+    item_id INTEGER REFERENCES itens(id) ON DELETE SET NULL,
+    item_nome TEXT NOT NULL,
+    qtd INTEGER NOT NULL DEFAULT 1,
+    site TEXT NOT NULL,
+    valor NUMERIC(12,2),
+    data TEXT,
+    previsao TEXT,
+    obs TEXT DEFAULT '',
+    status TEXT DEFAULT 'pendente',
+    recebido_em TEXT,
+    criado_por TEXT DEFAULT '',
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+
   console.log('Banco pronto.');
 }
 
@@ -508,7 +525,8 @@ const server = http.createServer(async (req, res) => {
             pool.query('SELECT * FROM pedidos ORDER BY criado_em ASC'),
             pool.query('SELECT id,nome,email,setor,is_admin FROM usuarios ORDER BY nome'),
           ]);
-          return ok(res, { itens: itens.rows, movimentos: movs.rows, pedidos: pedidos.rows, usuarios: usuarios.rows });
+          const compras = await pool.query("SELECT * FROM compras_online ORDER BY criado_em DESC");
+          return ok(res, { itens: itens.rows, movimentos: movs.rows, pedidos: pedidos.rows, usuarios: usuarios.rows, compras_online: compras.rows });
         }
 
         // ── ITENS ─────────────────────────────────────────────
@@ -628,6 +646,65 @@ const server = http.createServer(async (req, res) => {
         }
         if (req.method === 'DELETE' && pth.startsWith('/api/pedidos/')) {
           await pool.query('DELETE FROM pedidos WHERE id=$1', [parseInt(pth.split('/')[3])]);
+          return ok(res, { ok: true });
+        }
+
+        // ── COMPRAS ONLINE ────────────────────────────────────
+        if (req.method === 'GET' && pth === '/api/compras-online') {
+          const r = await pool.query('SELECT * FROM compras_online ORDER BY criado_em DESC');
+          return ok(res, r.rows);
+        }
+        if (req.method === 'POST' && pth === '/api/compras-online') {
+          const r = await pool.query(
+            'INSERT INTO compras_online (item_id,item_nome,qtd,site,valor,data,previsao,obs,status,criado_por) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *',
+            [b.item_id||null, b.item_nome||'', b.qtd||1, b.site||'', b.valor||null, b.data||null, b.previsao||null, b.obs||'', b.status||'pendente', b.criado_por||'']
+          );
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'PUT' && pth.startsWith('/api/compras-online/') && !pth.endsWith('/receber')) {
+          const id = parseInt(pth.split('/')[3]);
+          const r = await pool.query(
+            'UPDATE compras_online SET item_id=$1,item_nome=$2,qtd=$3,site=$4,valor=$5,data=$6,previsao=$7,obs=$8 WHERE id=$9 RETURNING *',
+            [b.item_id||null, b.item_nome||'', b.qtd||1, b.site||'', b.valor||null, b.data||null, b.previsao||null, b.obs||'', id]
+          );
+          return ok(res, r.rows[0]);
+        }
+        if (req.method === 'POST' && pth.match(/^\/api\/compras-online\/\d+\/receber$/)) {
+          const id = parseInt(pth.split('/')[3]);
+          const client = await pool.connect();
+          try {
+            await client.query('BEGIN');
+            const cr = await client.query('SELECT * FROM compras_online WHERE id=$1 FOR UPDATE', [id]);
+            const compra = cr.rows[0];
+            if (!compra) { await client.query('ROLLBACK'); client.release(); return err(res, 404, 'Compra não encontrada'); }
+            if (compra.status === 'recebido') { await client.query('ROLLBACK'); client.release(); return err(res, 409, 'Compra já marcada como recebida'); }
+            const qtd = b.qtd || compra.qtd;
+            const dt = b.data || new Date().toISOString().split('T')[0];
+            const obs = b.obs || `Compra online — ${compra.site}`;
+            const resp = b.resp || '—';
+            // Dar entrada no estoque
+            if (compra.item_id) {
+              await client.query('UPDATE itens SET qtd = qtd + $1 WHERE id=$2', [qtd, compra.item_id]);
+              await client.query(
+                'INSERT INTO movimentos (tipo,item_id,item_nome,qtd,data,resp,obs) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+                ['en', compra.item_id, compra.item_nome, qtd, dt, resp, obs]
+              );
+            }
+            await client.query(
+              "UPDATE compras_online SET status='recebido', recebido_em=$1 WHERE id=$2",
+              [dt, id]
+            );
+            await client.query('COMMIT');
+            client.release();
+            return ok(res, { ok: true });
+          } catch(e) {
+            await client.query('ROLLBACK');
+            client.release();
+            throw e;
+          }
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/compras-online/')) {
+          await pool.query('DELETE FROM compras_online WHERE id=$1', [parseInt(pth.split('/')[3])]);
           return ok(res, { ok: true });
         }
 
