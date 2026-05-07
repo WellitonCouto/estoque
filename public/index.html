@@ -98,6 +98,7 @@ tbody tr:hover td{background:var(--bg)}
 .bdg.sd{background:var(--orb);color:var(--or)}.bdg.sd::before{background:var(--or)}
 .bdg.co{background:var(--rdb);color:var(--rd)}.bdg.co::before{background:var(--rd)}
 .bdg.pv{background:var(--gnb);color:var(--gn)}.bdg.pv::before{background:var(--gn)}
+.bdg.pm{background:#f0f4ff;color:#2a5bd7;border:1px solid #c5d4f7}.bdg.pm::before{background:#2a5bd7}
 .bdg.ab{background:var(--orb);color:var(--or)}.bdg.ab::before{background:var(--or)}
 .bdg.cn{background:var(--gnb);color:var(--gn)}.bdg.cn::before{background:var(--gn)}
 .bdg.et{background:var(--gnb);color:var(--gn)}.bdg.et::before{background:var(--gn)}
@@ -180,6 +181,7 @@ tbody tr:hover td{background:var(--bg)}
     <nav id="nc" style="display:none">
       <button class="ni" onclick="sp('ccham',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 2a7 7 0 00-7 7c0 3.5 2 6 5 7.4V18h4v-1.6c3-1.4 5-3.9 5-7.4a7 7 0 00-7-7z"/><path stroke-width="1.5" d="M9 21h6"/></svg>Chamados</button>
       <button class="ni" onclick="sp('capar',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="7" width="20" height="10" rx="2" stroke-width="1.5"/><path stroke-width="1.5" d="M6 11h1M9 11h1M6 14h12"/></svg>Aparelhos</button>
+      <button class="ni" onclick="sp('cpmoc',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path stroke-width="1.5" d="M7 10h10M7 14h6"/><circle cx="17" cy="17" r="3" stroke-width="1.5"/><path stroke-width="1.5" d="M16 17l1 1 2-2"/></svg>PMOC</button>
       <button class="ni" onclick="sp('crel',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>Relatório PDF</button>
     </nav>
     <nav id="na" style="display:none">
@@ -350,6 +352,58 @@ tbody tr:hover td{background:var(--bg)}
       </div>
       <div class="card"><div class="ct">Aparelhos</div><div class="tw"><table><thead><tr><th>Sala</th><th>Departamento</th><th>Localização</th><th>Marca</th><th>Modelo</th><th>Potência</th><th></th></tr></thead><tbody id="td-ap"></tbody></table></div></div>
       <div class="card"><div class="ct">Backup climatização</div><p style="font-size:13px;color:var(--tm);margin-bottom:12px">Exporta aparelhos e chamados em um único arquivo JSON.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn p" onclick="expBkpCli()">⬇ Exportar backup clima</button><label class="btn" style="cursor:pointer">⬆ Importar backup clima<input type="file" accept=".json" style="display:none" onchange="impBkpCli(event)"></label></div></div>
+    </div>
+
+    <!-- CLIMA: PMOC -->
+    <div id="page-cpmoc" class="page">
+      <div class="ph"><h2>PMOC — Manutenção Preventiva Mensal</h2><p>Registre a execução do PMOC (lavagem e higienização dos filtros) para todos os aparelhos</p></div>
+
+      <!-- Bloco de registro rápido -->
+      <div class="card">
+        <div class="ct">Registrar PMOC do mês</div>
+        <div style="background:var(--acb);border:1px solid #c5d4f7;border-radius:10px;padding:13px 16px;margin-bottom:14px;font-size:13px;color:var(--ac)">
+          <strong>💧 O que é o PMOC?</strong> Uma vez por mês os técnicos lavam e higienizam os filtros de todos os aparelhos de ar condicionado. Use este painel para registrar a execução com um clique para todos os aparelhos de uma vez.
+        </div>
+        <div class="fg c3" style="margin-bottom:12px">
+          <div class="f"><label>Data de execução</label><input id="pmoc-data" type="date"></div>
+          <div class="f"><label>Técnico / Empresa responsável</label><input id="pmoc-tec" placeholder="Ex: Climatech Serviços"></div>
+          <div class="f"><label>Observação geral (opcional)</label><input id="pmoc-obs" placeholder="Ex: Todos os filtros lavados com produto específico"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <button class="btn p" onclick="regPmocTodos()" style="background:var(--gn);border-color:var(--gn)">✅ Registrar PMOC em todos os aparelhos</button>
+          <span style="font-size:12px;color:var(--tm)" id="pmoc-count-info"></span>
+        </div>
+      </div>
+
+      <!-- Status do mês atual -->
+      <div class="card" id="pmoc-status-card">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Status do PMOC — mês atual</span>
+          <button class="btn sm" onclick="rPmocStatus()" style="margin-left:auto">↺ Atualizar</button>
+        </div>
+        <div id="pmoc-status-body"></div>
+      </div>
+
+      <!-- Histórico de PMOC -->
+      <div class="card">
+        <div class="fl" style="margin-bottom:13px">
+          <span class="ct" style="margin:0">Histórico de PMOC</span>
+          <div style="display:flex;gap:8px;margin-left:auto;align-items:center">
+            <select id="pmoc-fil-ano" onchange="rPmocHist()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"></select>
+            <select id="pmoc-fil-mes" onchange="rPmocHist()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)">
+              <option value="">Todos os meses</option>
+              <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
+              <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
+              <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
+              <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+            </select>
+          </div>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Data</th><th>Sala</th><th>Departamento</th><th>Equipamento</th><th>Técnico</th><th>Observação</th><th></th></tr></thead>
+          <tbody id="td-pmoc-hist"></tbody>
+        </table></div>
+      </div>
     </div>
 
     <!-- CLIMA: RELATÓRIO -->
@@ -1325,12 +1379,126 @@ function opAp(id){const a=C.aparelhos.find(x=>x.id===id);if(!a)return;eapid=id;d
 async function saveAp(){if(!eapid)return;try{await A('PUT',`/aparelhos/${eapid}`,{sala:document.getElementById('eas').value.trim(),departamento:document.getElementById('ead').value.trim(),localizacao:document.getElementById('eal').value.trim(),marca:document.getElementById('eam').value.trim(),modelo:document.getElementById('eamo').value.trim(),potencia:document.getElementById('eap').value.trim()});await loadCli();cm('m-ap');rAps();}catch(e){alert('Erro: '+e.message);}}
 async function delAp(id){if(!confirm('Remover aparelho?'))return;try{await A('DELETE',`/aparelhos/${id}`);await loadCli();rAps();}catch(e){alert('Erro: '+e.message);}}
 function preeAp(){const id=parseInt(document.getElementById('cha').value);const a=C.aparelhos.find(x=>x.id===id);document.getElementById('chd').value=a?a.departamento:'';document.getElementById('chm').value=a?a.marca:'';document.getElementById('chp').value=a?a.potencia:'';}
-function rChams(){const fil=document.getElementById('chfil')?.value||'';const l=fil?C.chamados.filter(c=>c.status===fil):C.chamados;const tn={corretiva:'Corretiva',preventiva:'Preventiva'};document.getElementById('td-cham').innerHTML=l.length?l.map(c=>{const nAnots=(C.anotacoes_chamado||[]).filter(a=>a.chamado_id===c.id).length;return`<tr><td class="mn">${c.data_chamado||'—'}</td><td><strong>${c.sala||'—'}</strong></td><td>${c.departamento||'—'}</td><td><span class="bdg ${c.tipo==='corretiva'?'co':'pv'}">${tn[c.tipo]||c.tipo}</span></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.problema||'—'}</td><td><span class="bdg ${c.status==='aberto'||c.status==='ab'?'ab':'cn'}">${c.status==='aberto'||c.status==='ab'?'Em aberto':'Concluído'}</span></td><td style="display:flex;gap:4px">${c.status==='aberto'||c.status==='ab'?`<button class="btn sm p" onclick="opCham(${c.id})">Concluir</button>`:`<span class="mn" style="font-size:11px;color:var(--tm)">${c.data_conserto||''}</span>`}<button class="btn sm e" onclick="opAnotsCham(${c.id})">Notas(${nAnots})</button><button class="btn sm d" onclick="delCham(${c.id})">✕</button></td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">Nenhum chamado</td></tr>';}
+function rChams(){const fil=document.getElementById('chfil')?.value||'';const base=C.chamados.filter(c=>c.tipo!=='pmoc');const l=fil?base.filter(c=>c.status===fil):base;const tn={corretiva:'Corretiva',preventiva:'Preventiva'};document.getElementById('td-cham').innerHTML=l.length?l.map(c=>{const nAnots=(C.anotacoes_chamado||[]).filter(a=>a.chamado_id===c.id).length;return`<tr><td class="mn">${c.data_chamado||'—'}</td><td><strong>${c.sala||'—'}</strong></td><td>${c.departamento||'—'}</td><td><span class="bdg ${c.tipo==='corretiva'?'co':'pv'}">${tn[c.tipo]||c.tipo}</span></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.problema||'—'}</td><td><span class="bdg ${c.status==='aberto'||c.status==='ab'?'ab':'cn'}">${c.status==='aberto'||c.status==='ab'?'Em aberto':'Concluído'}</span></td><td style="display:flex;gap:4px">${c.status==='aberto'||c.status==='ab'?`<button class="btn sm p" onclick="opCham(${c.id})">Concluir</button>`:`<span class="mn" style="font-size:11px;color:var(--tm)">${c.data_conserto||''}</span>`}<button class="btn sm e" onclick="opAnotsCham(${c.id})">Notas(${nAnots})</button><button class="btn sm d" onclick="delCham(${c.id})">✕</button></td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">Nenhum chamado</td></tr>';}
 async function addCham(){const aid=parseInt(document.getElementById('cha').value),t=document.getElementById('cht').value,pr=document.getElementById('chpr').value.trim(),dc=document.getElementById('chdc').value,ds=document.getElementById('chds').value,ob=document.getElementById('cho').value.trim();if(!aid){alert('Selecione um aparelho.');return;}if(!pr){alert('Descreva o problema.');return;}if(!dc){alert('Informe a data do chamado.');return;}const ap=C.aparelhos.find(x=>x.id===aid);try{await A('POST','/chamados',{aparelho_id:aid,tipo:t,problema:pr,data_chamado:dc,data_conserto:ds||null,obs:ob,sala:ap.sala,departamento:ap.departamento,marca:ap.marca,modelo:ap.modelo,potencia:ap.potencia,status:ds?'cn':'ab'});await loadCli();rChams();['chpr','chds','cho'].forEach(id=>document.getElementById(id).value='');document.getElementById('cha').value='';preeAp();alert('Chamado registrado!');}catch(e){alert('Erro: '+e.message);}}
 let ecid=null;
 function opCham(id){ecid=id;document.getElementById('mcd').value=hj();document.getElementById('mco').value='';document.getElementById('m-cham').classList.add('op');}
 async function saveCham(){if(!ecid)return;const d=document.getElementById('mcd').value,o=document.getElementById('mco').value;if(!d){alert('Informe a data do conserto.');return;}try{await A('PUT',`/chamados/${ecid}`,{status:'cn',data_conserto:d,obs:o});await loadCli();cm('m-cham');rChams();}catch(e){alert('Erro: '+e.message);}}
 async function delCham(id){if(!confirm('Remover chamado?'))return;try{await A('DELETE',`/chamados/${id}`);await loadCli();rChams();}catch(e){alert('Erro: '+e.message);}}
+
+// ── PMOC ────────────────────────────────────────────────────
+function initPmocPage(){
+  // Preenche data com hoje
+  const di=document.getElementById('pmoc-data');
+  if(di&&!di.value)di.value=hj();
+  // Preenche filtros de ano
+  const sa=document.getElementById('pmoc-fil-ano');
+  if(sa){
+    const ano=new Date().getFullYear();
+    sa.innerHTML='';
+    for(let y=ano;y>=ano-3;y--){const o=document.createElement('option');o.value=y;o.textContent=y;sa.appendChild(o);}
+  }
+  // Atualiza info de quantidade de aparelhos
+  const ci=document.getElementById('pmoc-count-info');
+  if(ci)ci.textContent=`${C.aparelhos.length} aparelho(s) cadastrado(s) serão registrados.`;
+  rPmocStatus();
+  rPmocHist();
+}
+
+async function regPmocTodos(){
+  if(!C.aparelhos.length){alert('Nenhum aparelho cadastrado.');return;}
+  const data=document.getElementById('pmoc-data').value;
+  const tec=document.getElementById('pmoc-tec').value.trim();
+  const obs=document.getElementById('pmoc-obs').value.trim();
+  if(!data){alert('Informe a data de execução do PMOC.');return;}
+
+  // Verifica se já há PMOC registrado no mês/ano
+  const [y,m]=data.split('-');
+  const jaExiste=C.chamados.some(c=>c.tipo==='pmoc'&&c.data_chamado&&c.data_chamado.startsWith(`${y}-${m}`));
+  if(jaExiste){
+    if(!confirm(`Já existe PMOC registrado em ${m}/${y}. Deseja registrar novamente?`))return;
+  }
+
+  if(!confirm(`Registrar PMOC de ${data.split('-').reverse().join('/')} para ${C.aparelhos.length} aparelho(s)?`))return;
+
+  let ok=0,er=0;
+  const obsCompleta=(tec?`Técnico: ${tec}. `:'')+(obs||'Lavagem e higienização de filtros conforme PMOC.');
+  for(const ap of C.aparelhos){
+    try{
+      await A('POST','/chamados',{
+        aparelho_id:ap.id,tipo:'pmoc',
+        problema:'PMOC — Lavagem e higienização de filtros',
+        data_chamado:data,data_conserto:data,
+        obs:obsCompleta,
+        sala:ap.sala,departamento:ap.departamento,
+        marca:ap.marca,modelo:ap.modelo||'',potencia:ap.potencia,
+        status:'cn'
+      });
+      ok++;
+    }catch(e){er++;}
+  }
+  await loadCli();
+  rChams();
+  rPmocStatus();
+  rPmocHist();
+  document.getElementById('pmoc-obs').value='';
+  alert(`PMOC registrado!\n✅ ${ok} aparelho(s) registrado(s)${er?`\n⚠️ ${er} erro(s)`:''}.`);
+}
+
+function rPmocStatus(){
+  const now=new Date();
+  const y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,'0');
+  const chavesMes=`${y}-${m}`;
+  const pmocMes=C.chamados.filter(c=>c.tipo==='pmoc'&&c.data_chamado&&c.data_chamado.startsWith(chavesMes));
+  const idsComPmoc=new Set(pmocMes.map(c=>c.aparelho_id));
+  const el=document.getElementById('pmoc-status-body');
+  if(!el)return;
+  if(!C.aparelhos.length){el.innerHTML='<p style="color:var(--th);font-size:13px">Nenhum aparelho cadastrado.</p>';return;}
+
+  const feito=C.aparelhos.filter(a=>idsComPmoc.has(a.id));
+  const pendente=C.aparelhos.filter(a=>!idsComPmoc.has(a.id));
+  const dataExec=pmocMes.length?pmocMes[0].data_chamado:'';
+
+  let html='';
+  if(feito.length===C.aparelhos.length){
+    html+=`<div style="background:var(--gnb);border:1px solid #a7d7bb;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px"><span style="font-size:20px">✅</span><div><strong style="color:var(--gn)">PMOC realizado em ${MNM[parseInt(m)]} de ${y}</strong><br><span style="font-size:12px;color:var(--gn)">Todos os ${C.aparelhos.length} aparelhos foram higienizados em ${dataExec.split('-').reverse().join('/')}.</span></div></div>`;
+  } else if(feito.length>0){
+    html+=`<div style="background:var(--orb);border:1px solid #f0bc7b;border-radius:10px;padding:12px 16px;margin-bottom:12px"><strong style="color:var(--or)">⚠️ PMOC parcialmente registrado — ${feito.length} de ${C.aparelhos.length} aparelhos</strong></div>`;
+  } else {
+    html+=`<div style="background:var(--rdb);border:1px solid #f5c6c3;border-radius:10px;padding:12px 16px;margin-bottom:12px"><strong style="color:var(--rd)">🔴 PMOC ainda não realizado em ${MNM[parseInt(m)]} de ${y}</strong></div>`;
+  }
+
+  html+=`<div class="tw"><table><thead><tr><th>Sala</th><th>Departamento</th><th>Equipamento</th><th>Status PMOC</th></tr></thead><tbody>`;
+  html+=C.aparelhos.map(a=>{
+    const ok=idsComPmoc.has(a.id);
+    return`<tr><td><strong>${a.sala}</strong></td><td>${a.departamento}</td><td>${a.marca}${a.modelo?' '+a.modelo:''} ${a.potencia}</td><td><span class="bdg ${ok?'ok':'ot'}">${ok?'✓ Realizado':'Pendente'}</span></td></tr>`;
+  }).join('');
+  html+=`</tbody></table></div>`;
+  el.innerHTML=html;
+}
+
+function rPmocHist(){
+  const ano=document.getElementById('pmoc-fil-ano')?.value||new Date().getFullYear();
+  const mes=document.getElementById('pmoc-fil-mes')?.value||'';
+  const pmocs=C.chamados.filter(c=>{
+    if(c.tipo!=='pmoc')return false;
+    const dt=c.data_chamado||'';
+    if(!dt.startsWith(ano))return false;
+    if(mes&&!dt.startsWith(`${ano}-${mes}`))return false;
+    return true;
+  }).sort((a,b)=>(b.data_chamado||'').localeCompare(a.data_chamado||''));
+  const tb=document.getElementById('td-pmoc-hist');
+  if(!tb)return;
+  tb.innerHTML=pmocs.length?pmocs.map(c=>`<tr>
+    <td class="mn">${fd(c.data_chamado)}</td>
+    <td><strong>${c.sala||'—'}</strong></td>
+    <td>${c.departamento||'—'}</td>
+    <td>${c.marca||''}${c.modelo?' '+c.modelo:''} ${c.potencia||''}</td>
+    <td style="font-size:12px;color:var(--tm)">${(c.obs||'').replace('Técnico: ','').split('.')[0]||'—'}</td>
+    <td style="font-size:12px;color:var(--tm);max-width:180px">${c.obs||'—'}</td>
+    <td><button class="btn sm d" onclick="delCham(${c.id})">✕</button></td>
+  </tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhum PMOC registrado no período</td></tr>';
+}
 
 // ── BACKUP CLIMA ───────────────────────────────────────────
 function expBkpCli(){const d={versao:'1.0',modulo:'climatizacao',exportado_em:new Date().toISOString(),aparelhos:C.aparelhos,chamados:C.chamados};const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(d,null,2));a.download=`backup_clima_${hj()}.json`;a.click();}
@@ -1338,7 +1506,27 @@ async function impBkpCli(ev){const f=ev.target.files[0];if(!f)return;const tx=aw
 
 // ── RELATÓRIO CLIMA ────────────────────────────────────────
 const MNM=['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-function genRel(){const emp=document.getElementById('rlemp').value||'JS Contadores',mes=parseInt(document.getElementById('rlmes').value),ano=parseInt(document.getElementById('rlano').value);const cl=C.chamados.filter(c=>{const[y,m]=(c.data_chamado||'').split('-');return parseInt(y)===ano&&parseInt(m)===mes;}).sort((a,b)=>(a.data_chamado||'').localeCompare(b.data_chamado||''));const pv=cl.filter(c=>c.tipo==='preventiva').length,cr=cl.filter(c=>c.tipo==='corretiva').length,cn=cl.filter(c=>c.status==='cn'||c.status==='concluido').length;const lns=cl.map(c=>`<tr style="border-bottom:1px solid #e0ddd6"><td style="padding:7px 9px;font-size:12px;white-space:nowrap">${fd(c.data_chamado)}</td><td style="padding:7px 9px;font-size:12px;text-transform:capitalize">${c.tipo}</td><td style="padding:7px 9px;font-size:12px">${c.sala} — ${c.departamento}</td><td style="padding:7px 9px;font-size:12px">${c.marca}${c.modelo?' '+c.modelo:''} ${c.potencia}</td><td style="padding:7px 9px;font-size:12px">${c.problema}${c.obs?' — '+c.obs:''}</td></tr>`).join('');const html=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding-bottom:12px;border-bottom:2px solid #1a1916"><div><div style="font-size:18px;font-weight:600">Relatório de Manutenções – Ar Condicionado</div><div style="font-size:13px;color:#6b6860;margin-top:3px">Empresa: ${emp} | Período: ${MNM[mes]} de ${ano}</div></div><div style="font-size:11px;color:#a8a49e">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div></div><div style="margin-bottom:16px"><div style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:#6b6860;margin-bottom:7px">Resumo das Atividades</div><p style="font-size:13px">Durante ${MNM[mes]} de ${ano}, foram realizadas <strong>${cl.length}</strong> manutenção(ões): <strong>${pv}</strong> preventiva(s) e <strong>${cr}</strong> corretiva(s).</p></div><div style="margin-bottom:16px"><div style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:#6b6860;margin-bottom:7px">Manutenções Realizadas</div>${cl.length?`<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f5f4f0"><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Data</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Tipo</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Sala/Setor</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Equipamento</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Descrição</th></tr></thead><tbody>${lns}</tbody></table>`:'<p style="color:#a8a49e">Nenhuma manutenção no período.</p>'}</div><div style="display:flex;gap:12px"><div style="flex:1;background:#f5f4f0;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600">${cl.length}</div><div style="font-size:10px;color:#6b6860;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Total</div></div><div style="flex:1;background:#eaf5ef;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600;color:#1a7f4e">${pv}</div><div style="font-size:10px;color:#1a7f4e;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Preventivas</div></div><div style="flex:1;background:#fdecea;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600;color:#c0392b">${cr}</div><div style="font-size:10px;color:#c0392b;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Corretivas</div></div><div style="flex:1;background:#eef2fd;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600;color:#2a5bd7">${cn}</div><div style="font-size:10px;color:#2a5bd7;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Concluídos</div></div></div>`;document.getElementById('relcnt').innerHTML=html;document.getElementById('relprv').style.display='block';}
+function genRel(){const emp=document.getElementById('rlemp').value||'JS Contadores',mes=parseInt(document.getElementById('rlmes').value),ano=parseInt(document.getElementById('rlano').value);
+  const mesStr=String(mes).padStart(2,'0');
+  const chave=`${ano}-${mesStr}`;
+  // Separa PMOC dos demais chamados
+  const pmocMes=C.chamados.filter(c=>c.tipo==='pmoc'&&(c.data_chamado||'').startsWith(chave));
+  const cl=C.chamados.filter(c=>c.tipo!=='pmoc'&&(()=>{const[y,m]=(c.data_chamado||'').split('-');return parseInt(y)===ano&&parseInt(m)===mes;})()).sort((a,b)=>(a.data_chamado||'').localeCompare(b.data_chamado||''));
+  const pv=cl.filter(c=>c.tipo==='preventiva').length,cr=cl.filter(c=>c.tipo==='corretiva').length,cn=cl.filter(c=>c.status==='cn'||c.status==='concluido').length;
+  const lns=cl.map(c=>`<tr style="border-bottom:1px solid #e0ddd6"><td style="padding:7px 9px;font-size:12px;white-space:nowrap">${fd(c.data_chamado)}</td><td style="padding:7px 9px;font-size:12px;text-transform:capitalize">${c.tipo}</td><td style="padding:7px 9px;font-size:12px">${c.sala} — ${c.departamento}</td><td style="padding:7px 9px;font-size:12px">${c.marca}${c.modelo?' '+c.modelo:''} ${c.potencia}</td><td style="padding:7px 9px;font-size:12px">${c.problema}${c.obs?' — '+c.obs:''}</td></tr>`).join('');
+  // Seção PMOC no relatório
+  const pmocAps=[...new Set(pmocMes.map(c=>c.aparelho_id))].length;
+  const pmocData=pmocMes.length?pmocMes[0].data_chamado:'';
+  const pmocObs=pmocMes.length?(pmocMes[0].obs||''):'';
+  const pmocSecao=pmocMes.length?`<div style="margin-bottom:20px;padding:14px 18px;background:#eaf5ef;border-radius:10px;border:1px solid #a7d7bb">
+    <div style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:#1a7f4e;margin-bottom:8px">✅ PMOC — Manutenção Preventiva Mensal Realizada</div>
+    <p style="font-size:13px;color:#1a1916;margin-bottom:8px">O PMOC foi executado em <strong>${fd(pmocData)}</strong>, com lavagem e higienização dos filtros de <strong>${pmocAps} aparelho(s)</strong>.</p>
+    ${pmocObs?`<p style="font-size:12px;color:#1a7f4e">${pmocObs}</p>`:''}
+    <div style="margin-top:10px"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#d4edda"><th style="padding:5px 8px;text-align:left;border-bottom:1px solid #a7d7bb">Sala</th><th style="padding:5px 8px;text-align:left;border-bottom:1px solid #a7d7bb">Departamento</th><th style="padding:5px 8px;text-align:left;border-bottom:1px solid #a7d7bb">Equipamento</th></tr></thead><tbody>${[...new Map(pmocMes.map(c=>[c.aparelho_id,c])).values()].map(c=>`<tr style="border-bottom:1px solid #c3e6cb"><td style="padding:5px 8px">${c.sala}</td><td style="padding:5px 8px">${c.departamento}</td><td style="padding:5px 8px">${c.marca}${c.modelo?' '+c.modelo:''} ${c.potencia}</td></tr>`).join('')}</tbody></table></div>
+  </div>`:`<div style="margin-bottom:20px;padding:12px 16px;background:#fdecea;border-radius:10px;border:1px solid #f5c6c3"><strong style="font-size:12px;color:#c0392b">⚠️ PMOC não registrado em ${MNM[mes]} de ${ano}</strong></div>`;
+  const html=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding-bottom:12px;border-bottom:2px solid #1a1916"><div><div style="font-size:18px;font-weight:600">Relatório de Manutenções – Ar Condicionado</div><div style="font-size:13px;color:#6b6860;margin-top:3px">Empresa: ${emp} | Período: ${MNM[mes]} de ${ano}</div></div><div style="font-size:11px;color:#a8a49e">Gerado em ${new Date().toLocaleDateString('pt-BR')}</div></div>${pmocSecao}<div style="margin-bottom:16px"><div style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:#6b6860;margin-bottom:7px">Resumo das Atividades</div><p style="font-size:13px">Durante ${MNM[mes]} de ${ano}, foram realizadas <strong>${cl.length}</strong> manutenção(ões) sob demanda: <strong>${pv}</strong> preventiva(s) e <strong>${cr}</strong> corretiva(s).</p></div><div style="margin-bottom:16px"><div style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:#6b6860;margin-bottom:7px">Manutenções por Chamado</div>${cl.length?`<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f5f4f0"><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Data</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Tipo</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Sala/Setor</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Equipamento</th><th style="padding:7px 9px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#6b6860;border-bottom:2px solid #e0ddd6">Descrição</th></tr></thead><tbody>${lns}</tbody></table>`:'<p style="color:#a8a49e">Nenhuma manutenção por chamado no período.</p>'}</div><div style="display:flex;gap:12px"><div style="flex:1;background:#f5f4f0;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600">${cl.length}</div><div style="font-size:10px;color:#6b6860;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Total Chamados</div></div><div style="flex:1;background:#eaf5ef;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600;color:#1a7f4e">${pv}</div><div style="font-size:10px;color:#1a7f4e;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Preventivas</div></div><div style="flex:1;background:#fdecea;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600;color:#c0392b">${cr}</div><div style="font-size:10px;color:#c0392b;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Corretivas</div></div><div style="flex:1;background:#eef2fd;border-radius:8px;padding:11px 15px;text-align:center"><div style="font-size:22px;font-weight:600;color:#2a5bd7">${pmocMes.length?pmocAps:0}</div><div style="font-size:10px;color:#2a5bd7;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">PMOC Aparelhos</div></div></div>`;
+  document.getElementById('relcnt').innerHTML=html;document.getElementById('relprv').style.display='block';
+}
 function prtRel(){if(document.getElementById('relprv').style.display==='none'){alert('Gere o relatório antes de imprimir.');return;}const cnt=document.getElementById('relcnt').innerHTML;const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'IBM Plex Sans',sans-serif;padding:32px 40px;color:#1a1916;font-size:13px}@page{size:A4;margin:18mm}@media print{body{padding:0}}</style></head><body>${cnt}</body></html>`);w.document.close();setTimeout(()=>w.print(),500);}
 
 // ── DEMANDAS ───────────────────────────────────────────────
@@ -2648,7 +2836,7 @@ async function delConta(id){
 }
 
 // ── MÓDULOS / NAVEGAÇÃO ────────────────────────────────────
-const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:()=>{rSels();rCompras();},saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,apagamentos:()=>{rPagamentos();},fveiculos:()=>{rVeiculos();rAlertasBadge();},fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();},falertas:()=>{rFrotaSels();rAlertas();rAlertasConfig();rKmSegundaBanner();},findicadores:()=>{rIndSels();rIndicadores();rKmSegundaBanner('km-segunda-banner-ind');}};
+const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:()=>{rSels();rCompras();},saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,cpmoc:initPmocPage,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,apagamentos:()=>{rPagamentos();},fveiculos:()=>{rVeiculos();rAlertasBadge();},fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();},falertas:()=>{rFrotaSels();rAlertas();rAlertasConfig();rKmSegundaBanner();},findicadores:()=>{rIndSels();rIndicadores();rKmSegundaBanner('km-segunda-banner-ind');}};
 function sp(n,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));const pg=document.getElementById('page-'+n);if(pg)pg.classList.add('on');if(btn)btn.classList.add('on');RENDERS[n]?.();}
 function tmod(m){const NAVS={est:'ne',cli:'nc',adm:'na',fro:'nf'};const BTNS={est:'bme',cli:'bmc',adm:'bma',fro:'bmf'};const IC={est:'E',cli:'❄',adm:'🗂',fro:'🚗'};const TT={est:'Estoque',cli:'Climatização',adm:'Administrativo',fro:'Frota'};const SB={est:'Material de consumo',cli:'Ar condicionado',adm:'Gestão predial',fro:'Gestão de veículos'};const FP={est:'dashboard',cli:'ccham',adm:'ademdas',fro:'findicadores'};['est','cli','adm','fro'].forEach(x=>{document.getElementById(NAVS[x]).style.display=m===x?'block':'none';document.getElementById(BTNS[x]).classList.toggle('on',m===x);});document.getElementById('mid').textContent=IC[m];document.getElementById('mtit').textContent=TT[m];document.getElementById('msub').textContent=SB[m];document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));document.getElementById('page-'+FP[m]).classList.add('on');const fn=document.querySelector(`#${NAVS[m]} .ni`);if(fn)fn.classList.add('on');RENDERS[FP[m]]?.();}
 
