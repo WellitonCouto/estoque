@@ -393,6 +393,24 @@ async function iniciarBanco() {
     criado_em TIMESTAMP DEFAULT NOW()
   )`);
 
+
+  await pool.query(`CREATE TABLE IF NOT EXISTS gerador_registros (
+    id SERIAL PRIMARY KEY,
+    data TEXT NOT NULL,
+    nivel_pct NUMERIC(5,1),
+    litros_abastecidos NUMERIC(10,2),
+    horimetro NUMERIC(12,1),
+    obs TEXT DEFAULT '',
+    registrado_por TEXT DEFAULT '',
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS gerador_revisoes (
+    id SERIAL PRIMARY KEY,
+    data TEXT NOT NULL,
+    descricao TEXT DEFAULT '',
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+
   console.log('Banco pronto.');
 }
 
@@ -1076,6 +1094,39 @@ const server = http.createServer(async (req, res) => {
           await pool.query('DELETE FROM contas_pagar WHERE id=$1', [parseInt(pth.split('/')[3])]);
           return ok(res, { ok: true });
         }
+
+        // ── GERADOR ───────────────────────────────────────────
+        if (req.method === 'GET' && pth === '/api/gerador-registros') {
+          const r = await pool.query('SELECT * FROM gerador_registros ORDER BY data DESC, criado_em DESC');
+          return ok(res, r.rows);
+        }
+        if (req.method === 'POST' && pth === '/api/gerador-registros') {
+          const r = await pool.query(
+            'INSERT INTO gerador_registros (data,nivel_pct,litros_abastecidos,horimetro,obs,registrado_por) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+            [b.data, b.nivel_pct||null, b.litros_abastecidos||null, b.horimetro||null, b.obs||'', b.registrado_por||'']
+          );
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/gerador-registros/')) {
+          await pool.query('DELETE FROM gerador_registros WHERE id=$1', [parseInt(pth.split('/')[3])]);
+          return ok(res, { ok: true });
+        }
+        if (req.method === 'GET' && pth === '/api/gerador-revisoes') {
+          const r = await pool.query('SELECT * FROM gerador_revisoes ORDER BY data DESC');
+          return ok(res, r.rows);
+        }
+        if (req.method === 'POST' && pth === '/api/gerador-revisoes') {
+          const r = await pool.query(
+            'INSERT INTO gerador_revisoes (data,descricao) VALUES ($1,$2) RETURNING *',
+            [b.data, b.descricao||'']
+          );
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/gerador-revisoes/')) {
+          await pool.query('DELETE FROM gerador_revisoes WHERE id=$1', [parseInt(pth.split('/')[3])]);
+          return ok(res, { ok: true });
+        }
+
         err(res, 404, 'Rota não encontrada');
       } catch (e) {
         console.error(e);
