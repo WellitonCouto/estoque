@@ -791,6 +791,11 @@ const server = http.createServer(async (req, res) => {
           const r = await pool.query('INSERT INTO anotacoes (demanda_id,texto,data,autor) VALUES ($1,$2,$3,$4) RETURNING *', [b.demanda_id, b.texto, b.data, b.autor || '']);
           return ok(res, r.rows[0], 201);
         }
+        if (req.method === 'PUT' && pth.startsWith('/api/anotacoes/')) {
+          const aid = parseInt(pth.split('/')[3]);
+          const r = await pool.query('UPDATE anotacoes SET texto=$1,data=$2 WHERE id=$3 RETURNING *', [b.texto, b.data, aid]);
+          return ok(res, r.rows[0]);
+        }
         if (req.method === 'DELETE' && pth.startsWith('/api/anotacoes/')) {
           await pool.query('DELETE FROM anotacoes WHERE id=$1', [parseInt(pth.split('/')[3])]);
           return ok(res, { ok: true });
