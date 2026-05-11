@@ -437,7 +437,7 @@ tbody tr:hover td{background:var(--bg)}
         <div class="fl" style="margin-bottom:13px">
           <span class="ct" style="margin:0">Demandas</span>
           <div style="display:flex;gap:8px;margin-left:auto">
-            <select id="dmfil" onchange="rDems()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="aberto">Em andamento</option><option value="concluido">Concluídas</option><option value="">Todas</option></select>
+            <select id="dmfil" onchange="rDems()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="aberto">Em andamento</option><option value="aguardo">Aguardando início</option><option value="autpag_pendente">💰 AUTPAG pendente</option><option value="concluido">Concluídas</option><option value="">Todas</option></select>
             <button class="btn sm" onclick="abrRelAdm()">Relatório PDF</button>
             <button class="btn sm e" onclick="abrRelGer()">Relatório Gerencial</button>
           </div>
@@ -1051,7 +1051,8 @@ tbody tr:hover td{background:var(--bg)}
   </div>
   <div class="mft"><button class="btn" onclick="cm('m-editdem')">Cancelar</button><button class="btn p" onclick="saveEditDem()">Salvar alterações</button></div>
 </div></div>
-<div class="mo" id="m-radm"><div class="mbox lg"><div class="mtit">Relatório de demandas administrativas</div><div class="fg c3" style="margin-bottom:13px"><div class="f"><label>Período início</label><input type="date" id="radi"></div><div class="f"><label>Período fim</label><input type="date" id="radf"></div><div class="f"><label>Status das demandas</label><select id="radst"><option value="">Todas</option><option value="aberto">Em andamento</option><option value="concluido">Concluídas</option></select></div></div><div style="display:flex;gap:8px;margin-bottom:14px"><button class="btn p" onclick="genRelAdm()">Gerar</button><button class="btn" onclick="prtRelAdm()">Imprimir / PDF</button><button class="btn" style="margin-left:auto" onclick="cm('m-radm')">Fechar</button></div><div id="radmprev"></div></div></div>
+<div class="mo" id="m-radm"><div class="mbox lg"><div class="mtit">Relatório de demandas administrativas</div><div class="fg c3" style="margin-bottom:13px"><div class="f"><label>Período início</label><input type="date" id="radi"></div><div class="f"><label>Período fim</label><input type="date" id="radf"></div><div class="f"><label>Status das demandas</label><select id="radst"><option value="">Todas</option><option value="aguardo">Aguardando início</option><option value="aberto">Em andamento</option><option value="autpag_pendente">AUTPAG pendente</option><option value="concluido">Concluídas</option></select></div></div><div style="display:flex;gap:8px;margin-bottom:14px"><button class="btn p" onclick="genRelAdm()">Gerar</button><button class="btn" onclick="prtRelAdm()">Imprimir / PDF</button><button class="btn" style="margin-left:auto" onclick="cm('m-radm')">Fechar</button></div><div id="radmprev"></div></div></div>
+<div class="mo" id="m-editanot"><div class="mbox"><div class="mtit">Editar anotação</div><div class="fg c2"><div class="f"><label>Data</label><input id="editanot-data" type="date"></div><div class="f"><label>Autor</label><input id="editanot-autor" readonly style="background:#f0ede8;color:var(--tm)"></div></div><div class="f" style="margin-bottom:14px"><label>Texto</label><textarea id="editanot-texto" rows="4" placeholder="Descrição da anotação..."></textarea></div><div class="mft"><button class="btn" onclick="cm('m-editanot')">Cancelar</button><button class="btn p" onclick="saveEditAnot()">Salvar alterações</button></div></div></div>
 <div class="mo" id="m-efilt"><div class="mbox"><div class="mtit">Editar filtro</div><div class="fg c2"><div class="f"><label>Local</label><input id="efl"></div><div class="f"><label>Descrição</label><input id="efd"></div></div><div class="fg c2"><div class="f"><label>Última troca</label><input id="efdt" type="date"></div><div class="f"><label>Validade (meses)</label><input id="efv" type="number" min="1"></div></div><div class="mft"><button class="btn" onclick="cm('m-efilt')">Cancelar</button><button class="btn p" onclick="saveFilt()">Salvar</button></div></div></div>
 <div class="mo" id="m-eext"><div class="mbox"><div class="mtit">Editar extintor</div><div class="fg c2"><div class="f"><label>Local</label><input id="eel"></div><div class="f"><label>Tipo</label><input id="eet"></div></div><div class="fg c2"><div class="f"><label>Vencimento</label><input id="eed" type="date"></div><div class="f"><label>Nº série</label><input id="ees"></div></div><div class="mft"><button class="btn" onclick="cm('m-eext')">Cancelar</button><button class="btn p" onclick="saveExt()">Salvar</button></div></div></div>
 
@@ -1585,13 +1586,89 @@ const URGORD={urgente:0,alta:1,normal:2,baixa:3};
 const URGBDG={urgente:'<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#fdecea;color:#c0392b">🔴 Urgente</span>',alta:'<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#fef3e8;color:#b85c00">🟠 Alta</span>',normal:'<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#fffbeb;color:#856404">🟡 Normal</span>',baixa:'<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#eaf5ef;color:#1a7f4e">🟢 Baixa</span>'};
 const URGBORD={urgente:'border-left:4px solid #c0392b',alta:'border-left:4px solid #b85c00',normal:'border-left:4px solid var(--ac)',baixa:'border-left:4px solid #a8a49e'};
 function toggleDemandasAnots(anotId){const el=document.getElementById(anotId);if(!el)return;const aberto=el.style.display!=='none';el.style.display=aberto?'none':'block';const btn=document.getElementById(anotId+'-btn');if(btn)btn.textContent=aberto?'\u25b6':'\u25bc';}
-function rDems(){const fil=document.getElementById('dmfil')?.value??'aberto';const l=fil===''?[...C.demandas]:C.demandas.filter(d=>d.status===fil);l.sort((a,b)=>{const ua=URGORD[a.urgencia]??2,ub=URGORD[b.urgencia]??2;return ua!==ub?ua-ub:(a.data_solicitacao||'').localeCompare(b.data_solicitacao||'');});const cont=document.getElementById('ldems');if(!l.length){cont.innerHTML='<div class="empty">Nenhuma demanda encontrada</div>';return;}cont.innerHTML=l.map(d=>{const anots=C.anotacoes.filter(a=>a.demanda_id===d.id).sort((a,b)=>(a.criado_em||'').localeCompare(b.criado_em||''));const cn=d.status==='concluido';let dap='\u2014';if(d.data_sol_orcamento&&d.data_aprov_orcamento){const s=new Date(d.data_sol_orcamento+'T00:00:00'),ap=new Date(d.data_aprov_orcamento+'T00:00:00');dap=Math.round((ap-s)/(864e5))+' dias';}const bord=cn?'border-left:4px solid var(--gn)':(URGBORD[d.urgencia||'normal']);const anotId='dem-anots-'+d.id;const anotSecao=`<div style="margin-top:6px;border-top:1px solid var(--bd);padding-top:6px"><div onclick="toggleDemandasAnots('${anotId}')" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0;user-select:none"><span id="${anotId}-btn" style="font-size:10px;color:var(--tm)">\u25b6</span><span style="font-size:12px;color:var(--tm);font-weight:500">Anota\u00e7\u00f5es (${anots.length})</span></div><div id="${anotId}" style="display:none;padding-top:4px">${anots.length?anots.map(a=>`<div class="anot"><div class="anot-d">${fd(a.data)} \u00b7 ${a.autor||'\u2014'} \u00b7 ${fhora(a.criado_em)}</div><div class="anot-t">${a.texto}</div></div>`).join(''):'<div style="font-size:12px;color:var(--th);padding:4px 0">Nenhuma anota\u00e7\u00e3o ainda.</div>'}</div></div>`;return`<div class="card" style="margin-bottom:11px;${bord}"><div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:9px"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">${URGBDG[d.urgencia||'normal']||''}<span class="bdg ${cn?'cn':'ab'}">${cn?'Conclu\u00edda':'Em andamento'}</span></div><div style="font-weight:600;font-size:15px">${d.titulo}</div><div style="font-size:12px;color:var(--tm);margin-top:2px">Iniciado por <strong>${d.iniciado_por||'\u2014'}</strong> \u00b7 Solicitante: ${d.solicitante||'\u2014'} \u00b7 ${fd(d.data_solicitacao)}${cn?' \u00b7 <span style="color:var(--gn)">\u2713 Conclu\u00eddo em '+fd(d.data_conclusao)+'</span>':''}</div></div><div style="display:flex;gap:5px;flex-shrink:0">${!cn?`<button class="btn sm s" onclick="opCnDem(${d.id})">Concluir</button>`:`<button class="btn sm e" onclick="reverterDem(${d.id})">Reabrir</button>`}<button class="btn sm e" onclick="opEditDem(${d.id})">Editar</button><button class="btn sm e" onclick="opAnots(${d.id})">+ Anota\u00e7\u00e3o</button><button class="btn sm d" onclick="delDem(${d.id})">\u2715</button></div></div>${d.precisa_aprovacao?`<div style="font-size:12px;color:var(--tm);padding:7px 11px;background:var(--acb);border-radius:8px;margin-bottom:7px">\ud83d\udcb0 Valor: ${fm(d.valor_solicitado)} \u00b7 Sol.Or\u00e7.: ${fd(d.data_sol_orcamento)} \u00b7 Aprova\u00e7\u00e3o: ${fd(d.data_aprov_orcamento)} \u00b7 Prazo: ${dap}</div>`:''} ${d.descricao?`<div style="font-size:13px;color:var(--tm);margin-bottom:7px">${d.descricao}</div>`:''}${anotSecao}</div>`;}).join('');}
+function demStatus(d){
+  // Status real: concluido sempre prevalece; aguardo = sem anotações e status não é concluido
+  if(d.status==='concluido')return'concluido';
+  const hasAnots=C.anotacoes.some(a=>a.demanda_id===d.id);
+  if(!hasAnots)return'aguardo';
+  return'aberto';
+}
+function demAutpagPendente(d){
+  return d.precisa_aprovacao && d.data_sol_orcamento && !d.data_aprov_orcamento;
+}
+function rDems(){
+  const fil=document.getElementById('dmfil')?.value??'aberto';
+  let l;
+  if(fil==='autpag_pendente'){
+    l=C.demandas.filter(d=>demAutpagPendente(d)&&d.status!=='concluido');
+  } else if(fil==='aguardo'){
+    l=C.demandas.filter(d=>demStatus(d)==='aguardo');
+  } else if(fil===''){
+    l=[...C.demandas];
+  } else {
+    l=C.demandas.filter(d=>{
+      const st=demStatus(d);
+      return st===fil;
+    });
+  }
+  l.sort((a,b)=>{const ua=URGORD[a.urgencia]??2,ub=URGORD[b.urgencia]??2;return ua!==ub?ua-ub:(a.data_solicitacao||'').localeCompare(b.data_solicitacao||'');});
+  const cont=document.getElementById('ldems');
+  if(!l.length){cont.innerHTML='<div class="empty">Nenhuma demanda encontrada</div>';return;}
+  cont.innerHTML=l.map(d=>{
+    const anots=C.anotacoes.filter(a=>a.demanda_id===d.id).sort((a,b)=>(a.criado_em||'').localeCompare(b.criado_em||''));
+    const st=demStatus(d);
+    const cn=st==='concluido';
+    const ag=st==='aguardo';
+    const autpagPend=demAutpagPendente(d);
+    let dap='\u2014';
+    if(d.data_sol_orcamento&&d.data_aprov_orcamento){const s=new Date(d.data_sol_orcamento+'T00:00:00'),ap=new Date(d.data_aprov_orcamento+'T00:00:00');dap=Math.round((ap-s)/(864e5))+' dias';}
+    // Borda lateral por urgência/status
+    const bord=cn?'border-left:4px solid var(--gn)':ag?'border-left:4px solid var(--th)':(URGBORD[d.urgencia||'normal']);
+    // Badge de status
+    const stBdg=cn?`<span class="bdg cn">Conclu\u00edda</span>`:ag?`<span class="bdg" style="background:#f0ede8;color:var(--tm)">Aguardando in\u00edcio</span>`:`<span class="bdg ab">Em andamento</span>`;
+    // Badge AUTPAG pendente
+    const autpagBdg=autpagPend?`<span title="AUTPAG pendente de aprova\u00e7\u00e3o pela diretoria" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#fff3cd;color:#856404;border:1px solid #ffc107">\ud83d\udcb0 AUTPAG pendente</span>`:'';
+    const anotId='dem-anots-'+d.id;
+    const anotSecao=`<div style="margin-top:6px;border-top:1px solid var(--bd);padding-top:6px"><div onclick="toggleDemandasAnots('${anotId}')" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0;user-select:none"><span id="${anotId}-btn" style="font-size:10px;color:var(--tm)">\u25b6</span><span style="font-size:12px;color:var(--tm);font-weight:500">Anota\u00e7\u00f5es (${anots.length})</span></div><div id="${anotId}" style="display:none;padding-top:4px">${anots.length?anots.map(a=>`<div class="anot"><div style="display:flex;align-items:center;gap:8px"><div class="anot-d">${fd(a.data)} \u00b7 <strong>${a.autor||'\u2014'}</strong> \u00b7 ${fhora(a.criado_em)}</div><div style="margin-left:auto;display:flex;gap:4px"><button class="btn sm e" onclick="opEditAnot(${a.id})" style="padding:2px 7px;font-size:11px">\u270f Editar</button><button class="btn sm d" onclick="delAnot(${a.id})" style="padding:2px 7px;font-size:11px">\u2715</button></div></div><div class="anot-t">${a.texto}</div></div>`).join(''):'<div style="font-size:12px;color:var(--th);padding:4px 0">Nenhuma anota\u00e7\u00e3o ainda.</div>'}</div></div>`;
+    return`<div class="card" style="margin-bottom:11px;${bord}"><div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:9px"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">${URGBDG[d.urgencia||'normal']||''}${stBdg}${autpagBdg}</div><div style="font-weight:600;font-size:15px">${d.titulo}</div><div style="font-size:12px;color:var(--tm);margin-top:2px">Iniciado por <strong>${d.iniciado_por||'\u2014'}</strong> \u00b7 Solicitante: ${d.solicitante||'\u2014'} \u00b7 ${fd(d.data_solicitacao)}${cn?' \u00b7 <span style="color:var(--gn)">\u2713 Conclu\u00eddo em '+fd(d.data_conclusao)+'</span>':''}</div></div><div style="display:flex;gap:5px;flex-shrink:0">${!cn?`<button class="btn sm s" onclick="opCnDem(${d.id})">Concluir</button>`:`<button class="btn sm e" onclick="reverterDem(${d.id})">Reabrir</button>`}<button class="btn sm e" onclick="opEditDem(${d.id})">Editar</button><button class="btn sm e" onclick="opAnots(${d.id})">+ Anota\u00e7\u00e3o</button><button class="btn sm d" onclick="delDem(${d.id})">\u2715</button></div></div>${d.precisa_aprovacao?`<div style="font-size:12px;color:var(--tm);padding:7px 11px;background:${autpagPend?'#fff3cd':'var(--acb)'};border-radius:8px;margin-bottom:7px;border:1px solid ${autpagPend?'#ffc107':'transparent'}">${autpagPend?'\ud83d\udcb0':'\u2713'} Valor: ${fm(d.valor_solicitado)} \u00b7 Sol.Or\u00e7.: ${fd(d.data_sol_orcamento)} \u00b7 Aprova\u00e7\u00e3o: ${d.data_aprov_orcamento?fd(d.data_aprov_orcamento):'<strong style="color:#856404">Pendente</strong>'} \u00b7 Prazo: ${dap}</div>`:''}${d.descricao?`<div style="font-size:13px;color:var(--tm);margin-bottom:7px">${d.descricao}</div>`:''}${anotSecao}</div>`;
+  }).join('');
+}
 const fhora=ts=>{if(!ts)return'—';try{const d=new Date(ts);return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return ts;}};
 let danot=null;
 function opAnots(id){danot=id;const d=C.demandas.find(x=>x.id===id);document.getElementById('m-anot-tit').textContent=`Anotações — ${d?.titulo||''}`;document.getElementById('anotd').value=hj();document.getElementById('anott').value='';rListAnots();document.getElementById('m-anot').classList.add('op');}
-function rListAnots(){const anots=C.anotacoes.filter(a=>a.demanda_id===danot).sort((a,b)=>(a.criado_em||'').localeCompare(b.criado_em||''));document.getElementById('lanots').innerHTML=anots.length?anots.map(a=>`<div class="anot"><div style="display:flex;align-items:center;gap:8px"><div class="anot-d">${fd(a.data)} · <strong>${a.autor||'—'}</strong> · ${fhora(a.criado_em)}</div><button class="btn sm d" onclick="delAnot(${a.id})" style="margin-left:auto;padding:2px 7px;font-size:11px">✕</button></div><div class="anot-t">${a.texto}</div></div>`).join(''):'<div style="font-size:13px;color:var(--th);text-align:center;padding:11px">Nenhuma anotação</div>';}
-async function addAnot(){if(!danot)return;const t=document.getElementById('anott').value.trim(),d=document.getElementById('anotd').value;if(!t){alert('Descreva a anotação.');return;}try{await A('POST','/anotacoes',{demanda_id:danot,texto:t,data:d,autor:U?U.nome:'—'});await loadAdm();rListAnots();rDems();document.getElementById('anott').value='';}catch(e){alert('Erro: '+e.message);}}
+function rListAnots(){const anots=C.anotacoes.filter(a=>a.demanda_id===danot).sort((a,b)=>(a.criado_em||'').localeCompare(b.criado_em||''));document.getElementById('lanots').innerHTML=anots.length?anots.map(a=>`<div class="anot"><div style="display:flex;align-items:center;gap:8px"><div class="anot-d">${fd(a.data)} · <strong>${a.autor||'—'}</strong> · ${fhora(a.criado_em)}</div><div style="margin-left:auto;display:flex;gap:4px"><button class="btn sm e" onclick="opEditAnot(${a.id})" style="padding:2px 7px;font-size:11px">✏ Editar</button><button class="btn sm d" onclick="delAnot(${a.id})" style="padding:2px 7px;font-size:11px">✕</button></div></div><div class="anot-t">${a.texto}</div></div>`).join(''):'<div style="font-size:13px;color:var(--th);text-align:center;padding:11px">Nenhuma anotação</div>';}
+async function addAnot(){if(!danot)return;const t=document.getElementById('anott').value.trim(),d=document.getElementById('anotd').value;if(!t){alert('Descreva a anotação.');return;}try{await A('POST','/anotacoes',{demanda_id:danot,texto:t,data:d,autor:U?U.nome:'—'});
+  // Se for a primeira anotação, garante que o status da demanda está como 'aberto'
+  const demanda=C.demandas.find(x=>x.id===danot);
+  if(demanda&&demanda.status!=='concluido'){
+    const jaHavia=C.anotacoes.filter(a=>a.demanda_id===danot).length>0;
+    if(!jaHavia){await A('PUT',`/demandas/${danot}`,{...demanda,status:'aberto'});}
+  }
+  await loadAdm();rListAnots();rDems();document.getElementById('anott').value='';}catch(e){alert('Erro: '+e.message);}}
 async function delAnot(id){if(!confirm('Remover esta anotação?'))return;try{await A('DELETE',`/anotacoes/${id}`);await loadAdm();rListAnots();rDems();}catch(e){alert('Erro: '+e.message);}}
+let editAnotId=null;
+function opEditAnot(id){
+  const a=C.anotacoes.find(x=>x.id===id);
+  if(!a)return;
+  editAnotId=id;
+  document.getElementById('editanot-data').value=a.data||hj();
+  document.getElementById('editanot-autor').value=a.autor||'—';
+  document.getElementById('editanot-texto').value=a.texto||'';
+  document.getElementById('m-editanot').classList.add('op');
+}
+async function saveEditAnot(){
+  if(!editAnotId)return;
+  const data=document.getElementById('editanot-data').value;
+  const texto=document.getElementById('editanot-texto').value.trim();
+  if(!texto){alert('O texto não pode ficar vazio.');return;}
+  try{
+    await A('PUT',`/anotacoes/${editAnotId}`,{data,texto});
+    await loadAdm();
+    cm('m-editanot');
+    rListAnots();
+    rDems();
+  }catch(e){alert('Erro: '+e.message);}
+}
 let dcnid=null;
 let deditid=null;
 function opEditDem(id){const d=C.demandas.find(x=>x.id===id);if(!d)return;deditid=id;document.getElementById('edm-titulo').value=d.titulo;document.getElementById('edm-sol').value=d.solicitante||'';document.getElementById('edm-data').value=d.data_solicitacao||'';document.getElementById('edm-desc').value=d.descricao||'';document.getElementById('edm-urg').value=d.urgencia||'normal';document.getElementById('edm-ca').checked=d.precisa_aprovacao||false;document.getElementById('edm-val').value=d.valor_solicitado||'';document.getElementById('edm-dso').value=d.data_sol_orcamento||'';document.getElementById('edm-dap').value=d.data_aprov_orcamento||'';document.getElementById('edm-apblk').style.display=(d.precisa_aprovacao)?'block':'none';document.getElementById('m-editdem').classList.add('op');}
@@ -1604,7 +1681,39 @@ async function delDem(id){if(!confirm('Remover demanda e todas as anotações?')
 
 // ── RELATÓRIO ADM ──────────────────────────────────────────
 function abrRelAdm(){const h=new Date();document.getElementById('radi').value=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}-01`;document.getElementById('radf').value=hj();document.getElementById('radmprev').innerHTML='';document.getElementById('m-radm').classList.add('op');}
-function genRelAdm(){const ini=document.getElementById('radi').value,fim=document.getElementById('radf').value,st=document.getElementById('radst').value;const stLabel={'':'Todas','aberto':'Em andamento','concluido':'Concluídas'};const l=C.demandas.filter(d=>{const dt=d.data_solicitacao||'';return(!ini||dt>=ini)&&(!fim||dt<=fim)&&(!st||d.status===st);}).sort((a,b)=>(a.data_solicitacao||'').localeCompare(b.data_solicitacao||''));const periodoDesc=ini||fim?`Período: ${fd(ini)} a ${fd(fim)} · `:'';let html=`<div style="border-bottom:2px solid #1a1916;margin-bottom:16px;padding-bottom:11px"><div style="font-size:17px;font-weight:600">Relatório de Demandas Administrativas</div><div style="font-size:12px;color:#6b6860;margin-top:3px">${periodoDesc}Status: ${stLabel[st]||'Todas'}</div></div>`;if(!l.length){html+='<p style="color:#a8a49e;font-size:13px">Nenhuma demanda encontrada com os filtros selecionados.</p>';}else{html+=`<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#f5f4f0"><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Demanda</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Urgência</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Iniciado por</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Solicitante</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Status</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Solicitação</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Conclusão</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Aprovação</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Valor</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Prazo Aprov.</th></tr></thead><tbody>`;html+=l.map(d=>{let dap='—';if(d.data_sol_orcamento&&d.data_aprov_orcamento){const s=new Date(d.data_sol_orcamento+'T00:00:00'),a=new Date(d.data_aprov_orcamento+'T00:00:00');dap=Math.round((a-s)/(864e5))+' dias';}const urgLabel={urgente:'🔴 Urgente',alta:'🟠 Alta',normal:'🟡 Normal',baixa:'🟢 Baixa'};return`<tr style="border-bottom:1px solid #e0ddd6"><td style="padding:6px 8px;font-weight:500">${d.titulo}</td><td style="padding:6px 8px">${urgLabel[d.urgencia||'normal']||'🟡 Normal'}</td><td style="padding:6px 8px">${d.iniciado_por||'—'}</td><td style="padding:6px 8px">${d.solicitante||'—'}</td><td style="padding:6px 8px">${d.status==='concluido'?'✅ Concluída':'🔄 Em andamento'}</td><td style="padding:6px 8px">${fd(d.data_solicitacao)}</td><td style="padding:6px 8px">${fd(d.data_conclusao)}</td><td style="padding:6px 8px">${d.precisa_aprovacao?'Sim':'Não'}</td><td style="padding:6px 8px">${fm(d.valor_solicitado)}</td><td style="padding:6px 8px">${dap}</td></tr>`;}).join('');html+=`</tbody></table><div style="margin-top:12px;font-size:11px;color:#6b6860">Total: ${l.length} demanda(s)</div>`;}document.getElementById('radmprev').innerHTML=html;}
+function genRelAdm(){
+  const ini=document.getElementById('radi').value,fim=document.getElementById('radf').value,st=document.getElementById('radst').value;
+  const stLabel={'':'Todas','aguardo':'Aguardando início','aberto':'Em andamento','autpag_pendente':'AUTPAG pendente','concluido':'Concluídas'};
+  let l;
+  if(st==='autpag_pendente'){
+    l=C.demandas.filter(d=>demAutpagPendente(d)&&d.status!=='concluido');
+  } else if(st==='aguardo'){
+    l=C.demandas.filter(d=>demStatus(d)==='aguardo');
+  } else if(st===''){
+    l=[...C.demandas];
+  } else {
+    l=C.demandas.filter(d=>demStatus(d)===st);
+  }
+  l=l.filter(d=>{const dt=d.data_solicitacao||'';return(!ini||dt>=ini)&&(!fim||dt<=fim);});
+  l.sort((a,b)=>(a.data_solicitacao||'').localeCompare(b.data_solicitacao||''));
+  const periodoDesc=ini||fim?`Período: ${fd(ini)} a ${fd(fim)} · `:'';
+  let html=`<div style="border-bottom:2px solid #1a1916;margin-bottom:16px;padding-bottom:11px"><div style="font-size:17px;font-weight:600">Relatório de Demandas Administrativas</div><div style="font-size:12px;color:#6b6860;margin-top:3px">${periodoDesc}Status: ${stLabel[st]||'Todas'}</div></div>`;
+  if(!l.length){html+='<p style="color:#a8a49e;font-size:13px">Nenhuma demanda encontrada com os filtros selecionados.</p>';}
+  else{
+    html+=`<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#f5f4f0"><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Demanda</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Urgência</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Iniciado por</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Solicitante</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Status</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">AUTPAG</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Solicitação</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Conclusão</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Data aprov.</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Valor</th><th style="padding:6px 8px;text-align:left;border-bottom:2px solid #e0ddd6">Prazo aprov.</th></tr></thead><tbody>`;
+    const urgLabel={urgente:'🔴 Urgente',alta:'🟠 Alta',normal:'🟡 Normal',baixa:'🟢 Baixa'};
+    html+=l.map(d=>{
+      let dap='—';
+      if(d.data_sol_orcamento&&d.data_aprov_orcamento){const s=new Date(d.data_sol_orcamento+'T00:00:00'),a=new Date(d.data_aprov_orcamento+'T00:00:00');dap=Math.round((a-s)/(864e5))+' dias';}
+      const st2=demStatus(d);
+      const stTxt=st2==='concluido'?'✅ Concluída':st2==='aguardo'?'⏳ Aguardando':' 🔄 Em andamento';
+      const autpagTxt=d.precisa_aprovacao?(demAutpagPendente(d)?'💰 Pendente':'✅ Aprovado'):'—';
+      return`<tr style="border-bottom:1px solid #e0ddd6"><td style="padding:6px 8px;font-weight:500">${d.titulo}</td><td style="padding:6px 8px">${urgLabel[d.urgencia||'normal']||'🟡 Normal'}</td><td style="padding:6px 8px">${d.iniciado_por||'—'}</td><td style="padding:6px 8px">${d.solicitante||'—'}</td><td style="padding:6px 8px">${stTxt}</td><td style="padding:6px 8px">${autpagTxt}</td><td style="padding:6px 8px">${fd(d.data_solicitacao)}</td><td style="padding:6px 8px">${fd(d.data_conclusao)}</td><td style="padding:6px 8px">${fd(d.data_aprov_orcamento)}</td><td style="padding:6px 8px">${fm(d.valor_solicitado)}</td><td style="padding:6px 8px">${dap}</td></tr>`;
+    }).join('');
+    html+=`</tbody></table><div style="margin-top:12px;font-size:11px;color:#6b6860">Total: ${l.length} demanda(s) · AUTPAG pendentes: ${l.filter(d=>demAutpagPendente(d)).length}</div>`;
+  }
+  document.getElementById('radmprev').innerHTML=html;
+}
 function prtRelAdm(){const cnt=document.getElementById('radmprev').innerHTML;if(!cnt){alert('Gere o relatório antes.');return;}const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'IBM Plex Sans',sans-serif;padding:32px;color:#1a1916}@page{size:A4;margin:18mm}@media print{body{padding:0}}</style></head><body>${cnt}</body></html>`);w.document.close();setTimeout(()=>w.print(),500);}
 
 // ── ANOTAÇÕES DE CHAMADOS ──────────────────────────────────
@@ -2420,13 +2529,13 @@ function rgFiltrar(){
     return true;
   }).sort((a,b)=>(a.data_solicitacao||'').localeCompare(b.data_solicitacao||''));
   const urgL={urgente:'🔴 Urgente',alta:'🟠 Alta',normal:'🟡 Normal',baixa:'🟢 Baixa'};
-  const stL={aberto:'Em andamento',concluido:'Concluída'};
+  const stL={aguardo:'Aguardando início',aberto:'Em andamento',autpag_pendente:'AUTPAG pendente',concluido:'Concluída'};
   document.getElementById('rg-lista').innerHTML=lista.length?lista.map(d=>`
     <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bd);cursor:pointer" onclick="rgToggle(${d.id},this)">
       <input type="checkbox" id="rgck-${d.id}" ${rgDemsSel.has(d.id)?'checked':''} onclick="event.stopPropagation();rgToggle(${d.id},this.closest('div'))" style="margin-top:2px;width:15px;height:15px;accent-color:var(--ac);cursor:pointer;flex-shrink:0">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:500">${d.titulo}</div>
-        <div style="font-size:11px;color:var(--tm);margin-top:2px">${urgL[d.urgencia||'normal']} · ${stL[d.status]||d.status} · Solicitado por <strong>${d.solicitante||'—'}</strong> em ${fd(d.data_solicitacao)}</div>
+        <div style="font-size:11px;color:var(--tm);margin-top:2px">${urgL[d.urgencia||'normal']} · ${stL[demStatus(d)]||d.status} · Solicitado por <strong>${d.solicitante||'—'}</strong> em ${fd(d.data_solicitacao)}</div>
         ${d.descricao?`<div style="font-size:11px;color:var(--th);margin-top:2px">${d.descricao}</div>`:''}
       </div>
     </div>`).join(''):'<div class="empty">Nenhuma demanda encontrada com esses filtros</div>';
