@@ -2665,11 +2665,18 @@ async function rPagamentos(){
   rPagHist();
 }
 
+function diasAteVenc(vencimento){
+  // Usa partes da string para evitar qualquer problema de fuso
+  const [y,m,d]=vencimento.split('-').map(Number);
+  const hoje=new Date();
+  const hojeMs=Date.UTC(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
+  const vencMs=Date.UTC(y,m-1,d);
+  return Math.round((vencMs-hojeMs)/(864e5));
+}
 function rPagAlertas(){
-  const hoje=new Date();hoje.setHours(0,0,0,0);
   const urgentes=PAG.contas.filter(c=>{
     if(c.status!=='pendente'||!c.vencimento)return false;
-    const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
+    const dias=diasAteVenc(c.vencimento);
     if(c.nf_recebida){return dias<=0;}
     else{return dias<=7 && dias>0;}
   });
@@ -2688,7 +2695,7 @@ function rPagAlertas(){
   let html='';
   Object.values(nfGrupos).forEach(g=>{
     const forn=PAG.fornecedores.find(f=>f.id===g.fornecedor_id);
-    const dias=Math.round((new Date(g.vencimento+'T00:00:00')-hoje)/(864e5));
+    const dias=diasAteVenc(g.vencimento);
     const total=g.itens.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
     if(g.itens.length===1){
       const c=g.itens[0];
@@ -2697,11 +2704,24 @@ function rPagAlertas(){
       html+=`<div class="ab2 or" style="margin-bottom:6px">📄 <strong>${forn?.nome||'?'}</strong> — ${g.itens.length} contas (${fm(total)}) — <strong>Solicite a nota fiscal (vence em ${dias} dia${dias===1?'':'s'})</strong></div>`;
     }
   });
+  // Agrupar vencidas por fornecedor + vencimento
+  const vencGrupos={};
   vencidas.forEach(c=>{
-    const forn=PAG.fornecedores.find(f=>f.id===c.fornecedor_id);
-    const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
+    const chave=c.fornecedor_id+'|'+c.vencimento;
+    if(!vencGrupos[chave])vencGrupos[chave]={fornecedor_id:c.fornecedor_id,vencimento:c.vencimento,itens:[]};
+    vencGrupos[chave].itens.push(c);
+  });
+  Object.values(vencGrupos).forEach(g=>{
+    const forn=PAG.fornecedores.find(f=>f.id===g.fornecedor_id);
+    const dias=diasAteVenc(g.vencimento);
     const msg=dias<0?`Vencido há ${Math.abs(dias)} dia(s)`:'Vence hoje!';
-    html+=`<div class="ab2 rd" style="margin-bottom:6px">💳 <strong>${forn?.nome||'?'}</strong> — ${fm(c.valor)} — <strong>${msg}</strong></div>`;
+    const total=g.itens.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+    if(g.itens.length===1){
+      const c=g.itens[0];
+      html+=`<div class="ab2 rd" style="margin-bottom:6px">💳 <strong>${forn?.nome||'?'}</strong> — ${c.descricao} — ${fm(c.valor)} — <strong>${msg}</strong></div>`;
+    } else {
+      html+=`<div class="ab2 rd" style="margin-bottom:6px">💳 <strong>${forn?.nome||'?'}</strong> — ${g.itens.length} contas (${fm(total)}) — <strong>${msg}</strong></div>`;
+    }
   });
   el.innerHTML=html;
 }
