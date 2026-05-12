@@ -521,9 +521,18 @@ tbody tr:hover td{background:var(--bg)}
       <div class="card">
         <div class="fl" style="margin-bottom:13px">
           <span class="ct" style="margin:0">Histórico de pagamentos</span>
-          <select id="pag-fil-hist" onchange="rPagamentos()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos os fornecedores</option></select>
+          <select id="pag-fil-hist" onchange="rPagHist()" style="margin-left:auto;padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="">Todos os fornecedores</option></select>
         </div>
-        <div class="tw"><table><thead><tr><th>Data pagto.</th><th>Fornecedor</th><th>Descrição</th><th>Tipo</th><th>Vencimento</th><th>Valor pago</th></tr></thead><tbody id="td-pag-hist"></tbody></table></div>
+        <div id="pag-hist-datas" style="display:none;margin-bottom:10px">
+          <div class="fg c3">
+            <div class="f"><label>Data inicial</label><input type="date" id="pag-hist-di" oninput="rPagHist()"></div>
+            <div class="f"><label>Data final</label><input type="date" id="pag-hist-df" oninput="rPagHist()"></div>
+            <div class="f" style="display:flex;align-items:flex-end;padding-bottom:2px">
+              <span id="pag-hist-total" style="font-size:13px;font-family:var(--mn);font-weight:600;color:var(--gn)"></span>
+            </div>
+          </div>
+        </div>
+        <div id="pag-hist-wrap"></div>
       </div>
     </div>
 
@@ -2641,6 +2650,10 @@ function rPagSels(){
     s.innerHTML=opts;
     if(cur)s.value=cur;
   });
+  // Mostrar filtros de data quando fornecedor selecionado
+  const filHist=document.getElementById('pag-fil-hist');
+  const datasBlk=document.getElementById('pag-hist-datas');
+  if(filHist&&datasBlk)datasBlk.style.display=filHist.value?'block':'none';
 }
 
 async function rPagamentos(){
@@ -2655,7 +2668,7 @@ async function rPagamentos(){
 function rPagAlertas(){
   const hoje=new Date();hoje.setHours(0,0,0,0);
   const urgentes=PAG.contas.filter(c=>{
-    if(c.status!=='pendente'||!c.vencimento)return false; // sem vencimento = aguardando entrega, sem alerta
+    if(c.status!=='pendente'||!c.vencimento)return false;
     const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
     if(c.nf_recebida){return dias<=0;}
     else{return dias<=7 && dias>0;}
@@ -2663,19 +2676,34 @@ function rPagAlertas(){
   const el=document.getElementById('pag-alertas');
   if(!el)return;
   if(!urgentes.length){el.innerHTML='';return;}
-  el.innerHTML=urgentes.map(c=>{
-    const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
-    const forn=PAG.fornecedores.find(f=>f.id===c.fornecedor_id);
-    if(c.nf_recebida){
-      // No vencimento ou vencido
-      const cls=dias<0?'rd':'rd';
-      const msg=dias<0?`Vencido há ${Math.abs(dias)} dia(s)`:'Vence hoje!';
-      return`<div class="ab2 ${cls}" style="margin-bottom:6px">💳 <strong>${forn?.nome||'?'}</strong> — ${fm(c.valor)} — <strong>${msg}</strong></div>`;
+  // Agrupar avisos "solicite NF" por fornecedor quando mesmo vencimento
+  const nfPendentes=urgentes.filter(c=>!c.nf_recebida);
+  const vencidas=urgentes.filter(c=>c.nf_recebida);
+  const nfGrupos={};
+  nfPendentes.forEach(c=>{
+    const chave=c.fornecedor_id+'|'+c.vencimento;
+    if(!nfGrupos[chave])nfGrupos[chave]={fornecedor_id:c.fornecedor_id,vencimento:c.vencimento,itens:[]};
+    nfGrupos[chave].itens.push(c);
+  });
+  let html='';
+  Object.values(nfGrupos).forEach(g=>{
+    const forn=PAG.fornecedores.find(f=>f.id===g.fornecedor_id);
+    const dias=Math.round((new Date(g.vencimento+'T00:00:00')-hoje)/(864e5));
+    const total=g.itens.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+    if(g.itens.length===1){
+      const c=g.itens[0];
+      html+=`<div class="ab2 or" style="margin-bottom:6px">📄 <strong>${forn?.nome||'?'}</strong> — ${c.descricao} — ${fm(c.valor)} — <strong>Solicite a nota fiscal (vence em ${dias} dia${dias===1?'':'s'})</strong></div>`;
     } else {
-      // Aviso de 7 dias: solicitar nota fiscal
-      return`<div class="ab2 or" style="margin-bottom:6px">📄 <strong>${forn?.nome||'?'}</strong> — ${c.descricao} — ${fm(c.valor)} — <strong>Solicite a nota fiscal (vence em ${dias} dia${dias===1?'':'s'})</strong></div>`;
+      html+=`<div class="ab2 or" style="margin-bottom:6px">📄 <strong>${forn?.nome||'?'}</strong> — ${g.itens.length} contas (${fm(total)}) — <strong>Solicite a nota fiscal (vence em ${dias} dia${dias===1?'':'s'})</strong></div>`;
     }
-  }).join('');
+  });
+  vencidas.forEach(c=>{
+    const forn=PAG.fornecedores.find(f=>f.id===c.fornecedor_id);
+    const dias=Math.round((new Date(c.vencimento+'T00:00:00')-hoje)/(864e5));
+    const msg=dias<0?`Vencido há ${Math.abs(dias)} dia(s)`:'Vence hoje!';
+    html+=`<div class="ab2 rd" style="margin-bottom:6px">💳 <strong>${forn?.nome||'?'}</strong> — ${fm(c.valor)} — <strong>${msg}</strong></div>`;
+  });
+  el.innerHTML=html;
 }
 
 function rFornecedores(){
@@ -2704,6 +2732,41 @@ function rFornecedores(){
   if(wrap)wrap.style.maxHeight=comSaldo.length>15?'630px':'';
 }
 
+// IDs selecionados por fornecedor: { fornId: Set<contaId> }
+const PAG_SEL={};
+function pagTogSel(fornId,contaId,checked){
+  if(!PAG_SEL[fornId])PAG_SEL[fornId]=new Set();
+  if(checked)PAG_SEL[fornId].add(contaId);
+  else PAG_SEL[fornId].delete(contaId);
+  // Atualizar botão e total selecionado
+  const contasForn=PAG.contas.filter(c=>c.fornecedor_id===fornId&&c.status==='pendente');
+  const selSet=PAG_SEL[fornId]||new Set();
+  const selContas=contasForn.filter(c=>selSet.has(c.id));
+  const totalSel=selContas.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+  const btnSel=document.getElementById('btn-pag-sel-'+fornId);
+  const infoSel=document.getElementById('info-sel-'+fornId);
+  if(btnSel){btnSel.style.display=selSet.size>0?'inline-flex':'none';}
+  if(infoSel){infoSel.textContent=selSet.size>0?selSet.size+' selecionada(s) — '+fm(totalSel):'';}
+  // Atualizar checkbox "selecionar todas"
+  const chkAll=document.getElementById('chk-all-'+fornId);
+  if(chkAll)chkAll.checked=contasForn.length>0&&contasForn.every(c=>selSet.has(c.id));
+}
+function pagTogSelAll(fornId,checked){
+  if(!PAG_SEL[fornId])PAG_SEL[fornId]=new Set();
+  const contasForn=PAG.contas.filter(c=>c.fornecedor_id===fornId&&c.status==='pendente');
+  contasForn.forEach(c=>{
+    const chk=document.getElementById('chk-conta-'+c.id);
+    if(chk)chk.checked=checked;
+    if(checked)PAG_SEL[fornId].add(c.id);
+    else PAG_SEL[fornId].delete(c.id);
+  });
+  const totalSel=checked?contasForn.reduce((s,c)=>s+(parseFloat(c.valor)||0),0):0;
+  const btnSel=document.getElementById('btn-pag-sel-'+fornId);
+  const infoSel=document.getElementById('info-sel-'+fornId);
+  if(btnSel)btnSel.style.display=checked?'inline-flex':'none';
+  if(infoSel)infoSel.textContent=checked?contasForn.length+' selecionada(s) — '+fm(totalSel):'';
+}
+
 function rContasPendentes(){
   const fil=document.getElementById('pag-fil-forn')?.value||'';
   const el=document.getElementById('pag-pendentes');if(!el)return;
@@ -2727,18 +2790,27 @@ function rContasPendentes(){
     const diasProx=proxVenc?Math.round((new Date(proxVenc+'T00:00:00')-hoje)/(864e5)):null;
     const vencTag=semEntrega?'<span style="font-size:11px;color:var(--tm);font-style:italic">Aguardando entrega</span>':(diasProx==null?'<span style="font-size:11px;color:var(--gn);font-weight:500">Entrega recebida</span>':(diasProx<0?`<span style="font-size:11px;color:var(--rd);font-weight:600">Vencido!</span>`:diasProx===0?`<span style="font-size:11px;color:var(--rd);font-weight:600">Vence hoje!</span>`:`<span style="font-size:11px;color:var(--tm)">vence ${fd(proxVenc)}</span>`));
     const uid='cp-'+fid;
+    const selSet=PAG_SEL[fid]||new Set();
+    const selQtd=selSet.size;
+    const selTotal=contas.filter(c=>selSet.has(c.id)).reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
     html+=`<div style="border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;overflow:hidden">
       <div style="display:flex;align-items:center;padding:10px 14px;background:var(--bg);gap:10px;cursor:pointer" onclick="document.getElementById('${uid}').style.display=document.getElementById('${uid}').style.display==='none'?'block':'none'">
         <span style="font-size:14px">${nfIcone}</span>
         <strong style="font-size:13px">${forn?.nome||'Fornecedor desconhecido'}</strong>
         ${vencTag}
         <span style="margin-left:auto;font-family:var(--mn);font-size:14px;font-weight:600;color:var(--or)">${fm(total)}</span>
-        <button class="btn sm p" onclick="event.stopPropagation();pagarTudo(${fid})" style="margin-left:6px">Pagar tudo</button>
+        <button class="btn sm p" id="btn-pag-sel-${fid}" onclick="event.stopPropagation();pagarSelecionadas(${fid})" style="display:${selQtd>0?'inline-flex':'none'};margin-left:4px;background:var(--gn);border-color:var(--gn)">Pagar selecionadas</button>
+        <button class="btn sm p" onclick="event.stopPropagation();pagarTudo(${fid})" style="margin-left:${selQtd>0?'4px':'6px'}">Pagar tudo</button>
         <span style="font-size:11px;color:var(--tm);user-select:none">&#9662;</span>
       </div>
       <div id="${uid}" style="display:none">
         <table style="width:100%;border-collapse:collapse">
           <thead><tr style="background:var(--bg)">
+            <th style="padding:7px 14px;text-align:center;border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">
+              <label title="Selecionar todas" style="cursor:pointer">
+                <input type="checkbox" id="chk-all-${fid}" ${contas.every(c=>selSet.has(c.id))&&contas.length>0?'checked':''} onchange="pagTogSelAll(${fid},this.checked)" style="accent-color:var(--ac);width:14px;height:14px">
+              </label>
+            </th>
             <th style="padding:7px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Descricao</th>
             <th style="padding:7px 14px;text-align:center;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">Entrega</th>
             <th style="padding:7px 14px;text-align:center;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-bottom:1px solid var(--bd);border-top:1px solid var(--bd)">NF</th>
@@ -2753,7 +2825,11 @@ function rContasPendentes(){
             const vencCls=dias==null?'':(dias<0?'color:var(--rd);font-weight:600':dias===0?'color:var(--rd)':dias<=3?'color:var(--or)':'');
             const entregaOk=!!(c.vencimento||c.entrega_recebida);
             const entregaTxt=entregaOk?'Recebida':'Pendente';
-            return`<tr>
+            const isSel=selSet.has(c.id);
+            return`<tr style="${isSel?'background:var(--acb)':''}">
+              <td style="padding:8px 14px;text-align:center;border-bottom:1px solid var(--bd)">
+                <input type="checkbox" id="chk-conta-${c.id}" ${isSel?'checked':''} onchange="pagTogSel(${fid},${c.id},this.checked)" style="accent-color:var(--ac);width:14px;height:14px;cursor:pointer">
+              </td>
               <td style="padding:8px 14px;font-size:13px;border-bottom:1px solid var(--bd)">${c.descricao}${c.obs?'<br><span style="font-size:11px;color:var(--tm)">'+c.obs+'</span>':''}</td>
               <td style="padding:8px 14px;text-align:center;border-bottom:1px solid var(--bd)">
                 ${c.vencimento?'<span style="font-size:11px;font-weight:500;color:var(--gn)">Recebida</span>':`<label title="${entregaOk?'Entrega recebida':'Aguardando entrega'}" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px">
@@ -2777,6 +2853,10 @@ function rContasPendentes(){
           }).join('')}
           </tbody>
         </table>
+        <div style="padding:8px 14px;background:var(--bg);border-top:1px solid var(--bd);display:flex;align-items:center;gap:10px;min-height:36px">
+          <span id="info-sel-${fid}" style="font-size:12px;color:var(--ac);font-weight:500">${selQtd>0?selQtd+' selecionada(s) — '+fm(selTotal):''}</span>
+          ${selQtd>0?`<button class="btn sm" style="background:var(--gn);border-color:var(--gn);color:#fff" onclick="pagarSelecionadas(${fid})">Pagar selecionadas (${fm(selTotal)})</button>`:''}
+        </div>
       </div>
     </div>`;
   });
@@ -2808,22 +2888,68 @@ async function toggleEntregaRecebida(id,recebida){
 
 function rPagHist(){
   const fil=document.getElementById('pag-fil-hist')?.value||'';
-  const tb=document.getElementById('td-pag-hist');if(!tb)return;
+  const di=document.getElementById('pag-hist-di')?.value||'';
+  const df=document.getElementById('pag-hist-df')?.value||'';
+  const datasBlk=document.getElementById('pag-hist-datas');
+  if(datasBlk)datasBlk.style.display=fil?'block':'none';
+  const wrap=document.getElementById('pag-hist-wrap');if(!wrap)return;
   const tipoL={nota_fiscal:'Nota Fiscal',vencimento:'Venc. Fixo'};
-  const hist=PAG.contas.filter(c=>c.status==='pago'&&(!fil||String(c.fornecedor_id)===fil))
-    .sort((a,b)=>(b.data_pagamento||'').localeCompare(a.data_pagamento||''));
-  tb.innerHTML=hist.length?hist.map(c=>{
-    const forn=PAG.fornecedores.find(f=>f.id===c.fornecedor_id);
-    const tipoForn=forn?.tipo||c.tipo||'nota_fiscal';
-    return`<tr>
-      <td class="mn">${fd(c.data_pagamento)}</td>
-      <td><strong>${forn?.nome||'—'}</strong></td>
-      <td>${c.descricao}${c.obs?'<br><span style="font-size:11px;color:var(--tm)">'+c.obs+'</span>':''}</td>
-      <td style="font-size:11px;color:var(--tm)">${tipoL[tipoForn]||tipoForn}</td>
-      <td class="mn">${fd(c.vencimento)}</td>
-      <td class="mn" style="font-weight:600">${fm(c.valor_pago||c.valor)}</td>
-    </tr>`;
-  }).join(''):'<tr><td colspan="6" class="empty">Nenhum pagamento realizado</td></tr>';
+  let hist=PAG.contas.filter(c=>{
+    if(c.status!=='pago')return false;
+    if(fil&&String(c.fornecedor_id)!==fil)return false;
+    if(di&&(c.data_pagamento||'')<di)return false;
+    if(df&&(c.data_pagamento||'')>df)return false;
+    return true;
+  }).sort((a,b)=>(b.data_pagamento||'').localeCompare(a.data_pagamento||''));
+  if(!hist.length){wrap.innerHTML='<div class="empty">Nenhum pagamento realizado</div>';document.getElementById('pag-hist-total').textContent='';return;}
+  // Atualizar total quando filtro ativo
+  if(fil){
+    const total=hist.reduce((s,c)=>s+(parseFloat(c.valor_pago||c.valor)||0),0);
+    document.getElementById('pag-hist-total').textContent='Total: '+fm(total);
+  } else {
+    document.getElementById('pag-hist-total').textContent='';
+  }
+  // Agrupar por data_pagamento + fornecedor_id
+  const grupos=[];
+  const mapa={};
+  hist.forEach(c=>{
+    const chave=(c.data_pagamento||'')+'|'+c.fornecedor_id;
+    if(!mapa[chave]){mapa[chave]={data:c.data_pagamento,fornecedor_id:c.fornecedor_id,itens:[],total:0};grupos.push(mapa[chave]);}
+    mapa[chave].itens.push(c);
+    mapa[chave].total+=parseFloat(c.valor_pago||c.valor)||0;
+  });
+  let html='';
+  grupos.forEach((g,gi)=>{
+    const forn=PAG.fornecedores.find(f=>f.id===g.fornecedor_id);
+    const uid='phg-'+gi;
+    const single=g.itens.length===1;
+    html+=`<div style="border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;overflow:hidden">
+      <div style="display:flex;align-items:center;padding:9px 14px;background:var(--bg);gap:10px;cursor:${single?'default':'pointer'}" ${single?'':` onclick="const el=document.getElementById('${uid}');el.style.display=el.style.display==='none'?'table':'none'"`}>
+        <span class="mn" style="font-size:12px;color:var(--tm)">${fd(g.data)}</span>
+        <strong style="font-size:13px">${forn?.nome||'—'}</strong>
+        ${!single?`<span style="font-size:11px;color:var(--tm)">${g.itens.length} itens</span>`:'<span style="font-size:11px;color:var(--tm)">'+g.itens[0].descricao+'</span>'}
+        <span style="margin-left:auto;font-family:var(--mn);font-size:13px;font-weight:600;color:var(--gn)">${fm(g.total)}</span>
+        ${!single?`<span style="font-size:11px;color:var(--tm);user-select:none">&#9662;</span>`:''}
+      </div>
+      ${!single?`<table id="${uid}" style="width:100%;border-collapse:collapse;display:none">
+        <thead><tr style="background:var(--bg)">
+          <th style="padding:6px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-top:1px solid var(--bd)">Descrição</th>
+          <th style="padding:6px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-top:1px solid var(--bd)">Tipo</th>
+          <th style="padding:6px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-top:1px solid var(--bd)">Vencimento</th>
+          <th style="padding:6px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);border-top:1px solid var(--bd)">Valor pago</th>
+        </tr></thead>
+        <tbody>
+          ${g.itens.map(c=>{const tipoForn=forn?.tipo||c.tipo||'nota_fiscal';return`<tr>
+            <td style="padding:7px 14px;font-size:13px;border-bottom:1px solid var(--bd)">${c.descricao}${c.obs?'<br><span style="font-size:11px;color:var(--tm)">'+c.obs+'</span>':''}</td>
+            <td style="padding:7px 14px;font-size:11px;color:var(--tm);border-bottom:1px solid var(--bd)">${tipoL[tipoForn]||tipoForn}</td>
+            <td style="padding:7px 14px;font-size:12px;font-family:var(--mn);border-bottom:1px solid var(--bd)">${fd(c.vencimento)}</td>
+            <td style="padding:7px 14px;font-family:var(--mn);font-weight:600;text-align:right;border-bottom:1px solid var(--bd)">${fm(c.valor_pago||c.valor)}</td>
+          </tr>`;}).join('')}
+        </tbody>
+      </table>`:''}
+    </div>`;
+  });
+  wrap.innerHTML=html;
 }
 
 async function addFornecedor(){
@@ -2903,6 +3029,34 @@ Pagamento referente a:
 Segue anexo nota fiscal, qualquer dúvida estou à disposição.`;
 }
 let pagarTudoFornId=null;
+function pagarSelecionadas(fornId){
+  const selSet=PAG_SEL[fornId]||new Set();
+  if(!selSet.size){alert('Selecione ao menos uma conta.');return;}
+  const selContas=PAG.contas.filter(c=>selSet.has(c.id)&&c.status==='pendente');
+  if(!selContas.length)return;
+  const total=selContas.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+  const forn=PAG.fornecedores.find(f=>f.id===fornId);
+  pagarTudoFornId=fornId;
+  document.getElementById('m-pt-info').innerHTML=`<strong>${forn?.nome||'—'}</strong> — <strong>${selContas.length}</strong> conta(s) selecionada(s): <strong style="color:var(--gn)">${fm(total)}</strong>`;
+  // Mesmo comportamento do pagarTudo: pré-marcar e-mail se todas as selecionadas já têm email_enviado
+  const todasEmailEnviado=selContas.length>0&&selContas.every(c=>c.email_enviado);
+  document.getElementById('pt-email-chk').checked=todasEmailEnviado;
+  document.getElementById('pt-email-blk').style.display=todasEmailEnviado?'block':'none';
+  const emailLabel=document.querySelector('label[for="pt-email-chk"]');
+  if(emailLabel){emailLabel.textContent=todasEmailEnviado?'✅ E-mail enviado ao financeiro':'✉️ E-mail enviado ao financeiro';emailLabel.style.color=todasEmailEnviado?'var(--gn)':'var(--tx)';}
+  document.getElementById('pt-pago-chk').checked=false;
+  document.getElementById('pt-pago-blk').style.display='none';
+  const concluirBtn=document.getElementById('pt-concluir-btn');
+  if(concluirBtn)concluirBtn.style.display='none';
+  document.getElementById('pt-dt-pag').value=hj();
+  const hora=new Date().getHours();
+  const saudacao=hora<12?'bom dia':hora<18?'boa tarde':'boa noite';
+  document.getElementById('pt-email-txt').value=montarTextoEmailPagamento(forn,total,saudacao);
+  // Marcar modal como "selecionadas" para o confirmar usar os IDs corretos
+  document.getElementById('m-pagar-tudo').dataset.modo='selecionadas';
+  document.getElementById('m-pagar-tudo').dataset.ids=JSON.stringify([...selSet]);
+  document.getElementById('m-pagar-tudo').classList.add('op');
+}
 function pagarTudo(fornId){
   const contas=PAG.contas.filter(c=>c.fornecedor_id===fornId&&c.status==='pendente');
   if(!contas.length)return;
@@ -2924,23 +3078,30 @@ function pagarTudo(fornId){
   document.getElementById('pt-dt-pag').value=hj();
   const hora=new Date().getHours();
   const saudacao=hora<12?'bom dia':hora<18?'boa tarde':'boa noite';
-  const emailTxt=`Prezada Regina, ${saudacao}.\n\nVenho por meio deste solicitar o pagamento para ${forn?.nome||'[empresa]'}.\n\nValor: ${fm(total)}\nPIX: \n\nSegue anexo nota fiscal, qualquer dúvida estou à disposição.`;
   document.getElementById('pt-email-txt').value=montarTextoEmailPagamento(forn,total,saudacao);
+  document.getElementById('m-pagar-tudo').dataset.modo='tudo';
+  document.getElementById('m-pagar-tudo').dataset.ids='';
   document.getElementById('m-pagar-tudo').classList.add('op');
 }
 async function ptTogEmail(){
   const chk=document.getElementById('pt-email-chk').checked;
   document.getElementById('pt-email-blk').style.display=chk?'block':'none';
   if(!pagarTudoFornId)return;
-  // Salva email_enviado em todas as contas pendentes desse fornecedor
-  const contas=PAG.contas.filter(c=>c.fornecedor_id===pagarTudoFornId&&c.status==='pendente');
+  // Em modo "selecionadas", salva apenas nas contas selecionadas; caso contrário, em todas as pendentes
+  const modal=document.getElementById('m-pagar-tudo');
+  const modo=modal?.dataset.modo||'tudo';
+  let contas;
+  if(modo==='selecionadas'){
+    const ids=JSON.parse(modal.dataset.ids||'[]');
+    contas=PAG.contas.filter(c=>ids.includes(c.id)&&c.status==='pendente');
+  } else {
+    contas=PAG.contas.filter(c=>c.fornecedor_id===pagarTudoFornId&&c.status==='pendente');
+  }
   await Promise.all(contas.map(c=>fetch(`/api/contas-pagar/${c.id}`,{method:'PUT',headers:pagHdrs(),body:JSON.stringify({email_enviado:chk})})));
-  // Atualiza estado local sem fechar o modal
   contas.forEach(c=>c.email_enviado=chk);
   rPagAlertas();
   rContasPendentes();
   rFornecedores();
-  // Feedback visual no label
   const label=document.querySelector('label[for="pt-email-chk"]');
   if(label){
     label.style.color=chk?'var(--gn)':'var(--tx)';
@@ -2968,7 +3129,17 @@ async function ptConfirmarPagamento(){
   const pago=document.getElementById('pt-pago-chk').checked;
   if(!pago)return;
   const dt=document.getElementById('pt-dt-pag').value||hj();
-  await fetch(`/api/contas-pagar/${pagarTudoFornId}/pagar-lote`,{method:'POST',headers:pagHdrs(),body:JSON.stringify({data_pagamento:dt})});
+  const modal=document.getElementById('m-pagar-tudo');
+  const modo=modal.dataset.modo||'tudo';
+  if(modo==='selecionadas'){
+    const ids=JSON.parse(modal.dataset.ids||'[]');
+    if(!ids.length)return;
+    await fetch('/api/contas-pagar/pagar-selecionadas',{method:'POST',headers:pagHdrs(),body:JSON.stringify({ids,data_pagamento:dt})});
+    // Limpar seleção
+    if(PAG_SEL[pagarTudoFornId])PAG_SEL[pagarTudoFornId].clear();
+  } else {
+    await fetch(`/api/contas-pagar/${pagarTudoFornId}/pagar-lote`,{method:'POST',headers:pagHdrs(),body:JSON.stringify({data_pagamento:dt})});
+  }
   cm('m-pagar-tudo');
   await rPagamentos();
 }
