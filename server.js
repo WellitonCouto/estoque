@@ -1095,6 +1095,17 @@ const server = http.createServer(async (req, res) => {
             ['pago', dt, 'Pago em lote via PIX', fid, 'pendente']);
           return ok(res, { ok: true });
         }
+        if (req.method === 'POST' && pth === '/api/contas-pagar/pagar-selecionadas') {
+          // b.ids: array de IDs, b.fornecedor_id: number, b.data_pagamento: string
+          const ids = Array.isArray(b.ids) ? b.ids.map(Number).filter(Boolean) : [];
+          if (!ids.length) return err(res, 400, 'Nenhum ID informado');
+          const dt = b.data_pagamento || new Date().toISOString().slice(0,10);
+          const placeholders = ids.map((_,i) => `$${i+4}`).join(',');
+          await pool.query(
+            `UPDATE contas_pagar SET status=$1,data_pagamento=$2,valor_pago=valor,obs_pagamento=$3 WHERE id IN (${placeholders}) AND status='pendente'`,
+            ['pago', dt, 'Pago em lote via PIX', ...ids]);
+          return ok(res, { ok: true });
+        }
         if (req.method === 'DELETE' && pth.startsWith('/api/contas-pagar/')) {
           await pool.query('DELETE FROM contas_pagar WHERE id=$1', [parseInt(pth.split('/')[3])]);
           return ok(res, { ok: true });
