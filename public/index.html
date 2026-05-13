@@ -186,7 +186,7 @@ tbody tr:hover td{background:var(--bg)}
     </nav>
     <nav id="na" style="display:none">
       <button class="ni" onclick="sp('ademdas',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path stroke-width="1.5" d="M9 12h6M9 16h4"/></svg>Demandas</button>
-      <button class="ni" onclick="sp('avencs',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Vencimentos</button>
+      <button class="ni" id="nav-vencs" onclick="sp('avencs',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Extintores/Filtros<span id="nav-vencs-badge" style="display:none;margin-left:auto;background:var(--rd);color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;font-weight:700">!</span></button>
       <button class="ni" onclick="sp('apagamentos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Pagamentos</button>
       <button class="ni" id="nav-gerador" onclick="sp('agerador',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="7" width="20" height="13" rx="2" stroke-width="1.5"/><path stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><path stroke-width="1.5" d="M12 12v3M9 13.5l3-1.5 3 1.5"/></svg>Gerador<span id="nav-gerador-badge" style="display:none;margin-left:auto;background:var(--rd);color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;font-weight:700">!</span></button>
     </nav>
@@ -204,6 +204,7 @@ tbody tr:hover td{background:var(--bg)}
     <div class="sft"><p>Servidor ativo</p><span class="sipbadge" id="sip">—</span></div>
     <div class="slogout-bar" style="display:flex;flex-direction:column;gap:6px">
       <button class="blogout-bar" id="btn-backup-completo" onclick="fazerBackupCompleto()" title="Baixar backup completo do banco de dados" style="color:rgba(255,255,255,.6)">⬇ Backup completo</button>
+      <label class="blogout-bar" style="cursor:pointer;color:rgba(255,255,255,.6)" title="Importar backup completo">⬆ Importar backup<input type="file" accept=".json" style="display:none" onchange="importarBackupCompleto(event)"></label>
       <button class="blogout-bar" onclick="logout()" title="Sair">⏻ Sair</button>
     </div>
   </aside>
@@ -939,6 +940,21 @@ tbody tr:hover td{background:var(--bg)}
   <div class="mft"><button class="btn" onclick="cm('m-pagar')">Cancelar</button><button class="btn p" onclick="confirmarPagamento()">Confirmar pagamento</button></div>
 </div></div>
 
+<!-- MODAL: EDITAR CONTA PENDENTE -->
+<div class="mo" id="m-edit-conta"><div class="mbox">
+  <div class="mtit">Editar conta pendente</div>
+  <div class="fg c2">
+    <div class="f"><label>Fornecedor *</label><select id="ec-forn"></select></div>
+    <div class="f"><label>Descrição *</label><input id="ec-desc" placeholder="Ex: NF 1234 — Resmas de papel"></div>
+  </div>
+  <div class="fg c3">
+    <div class="f"><label>Valor (R$) *</label><input id="ec-valor" type="number" step="0.01" placeholder="0,00"></div>
+    <div class="f"><label>Vencimento</label><input id="ec-venc" type="date"></div>
+    <div class="f"><label>Observação</label><input id="ec-obs" placeholder="Opcional"></div>
+  </div>
+  <div class="mft"><button class="btn" onclick="cm('m-edit-conta')">Cancelar</button><button class="btn p" onclick="salvarEditConta()">Salvar alterações</button></div>
+</div></div>
+
 <!-- MODAL: PAGAR TUDO (com controle de e-mail e confirmação) -->
 <div class="mo" id="m-pagar-tudo"><div class="mbox">
   <div class="mtit">💳 Pagar tudo</div>
@@ -1163,12 +1179,12 @@ async function redefinirSenha(){const s=document.getElementById('redef-senha').v
 function verificarTokenNaURL(){const params=new URLSearchParams(window.location.search);const token=params.get('token');if(token){document.getElementById('lform').style.display='none';document.getElementById('rform').style.display='none';document.getElementById('redef-form').style.display='block';}}
 function logout(){U=null;sessionStorage.removeItem('U');sessionStorage.removeItem('token');document.getElementById('app').classList.remove('vis');document.getElementById('login-screen').style.display='flex';document.getElementById('ls').value='';}
 
-async function startApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').classList.add('vis');document.getElementById('sip').textContent=window.location.host;document.getElementById('unome').textContent=U.nome;document.getElementById('uemail').textContent=U.email;document.getElementById('uav').textContent=U.nome.charAt(0).toUpperCase();document.getElementById('nubtn').style.display=U.is_admin?'flex':'none';document.getElementById('cadd').style.display=U.is_admin?'block':'none';const sn=document.getElementById('saida-resp-nome');if(sn)sn.textContent=U.nome;await load();await loadCli();await loadAdm();await loadFrota();rDash();setTimeout(rGerNavBadgeInit,500);}
+async function startApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').classList.add('vis');document.getElementById('sip').textContent=window.location.host;document.getElementById('unome').textContent=U.nome;document.getElementById('uemail').textContent=U.email;document.getElementById('uav').textContent=U.nome.charAt(0).toUpperCase();document.getElementById('nubtn').style.display=U.is_admin?'flex':'none';document.getElementById('cadd').style.display=U.is_admin?'block':'none';const sn=document.getElementById('saida-resp-nome');if(sn)sn.textContent=U.nome;await load();await loadCli();await loadAdm();await loadFrota();rDash();setTimeout(rGerNavBadgeInit,500);setTimeout(rVencsNavBadge,600);}
 
 // ── LOAD ───────────────────────────────────────────────────
 async function load(){const d=await A('GET','/dados');C.itens=d.itens||[];C.movimentos=d.movimentos||[];C.pedidos=d.pedidos||[];C.usuarios=d.usuarios||[];C.compras_online=d.compras_online||[];MF=C.movimentos;}
 async function loadCli(){const d=await A('GET','/clima');C.aparelhos=d.aparelhos||[];C.chamados=d.chamados||[];}
-async function loadAdm(){const d=await A('GET','/admin');C.demandas=d.demandas||[];C.anotacoes=d.anotacoes||[];C.filtros=d.filtros||[];C.extintores=d.extintores||[];C.anotacoes_chamado=d.anotacoes_chamado||[];}
+async function loadAdm(){const d=await A('GET','/admin');C.demandas=d.demandas||[];C.anotacoes=d.anotacoes||[];C.filtros=d.filtros||[];C.extintores=d.extintores||[];C.anotacoes_chamado=d.anotacoes_chamado||[];rVencsNavBadge();}
 async function loadFrota(){const d=await A('GET','/frota');C.veiculos=d.veiculos||[];C.motoristas=d.motoristas||[];C.abastecimentos=d.abastecimentos||[];C.manutencoes=d.manutencoes||[];C.licenciamentos=d.licenciamentos||[];C.registros_km=d.registros_km||[];C.custos=d.custos||[];C.alertas_config=d.alertas_config||[];}
 
 // ── PAINEL ─────────────────────────────────────────────────
@@ -1736,7 +1752,8 @@ async function addAnotCham(){if(!dchamAnot)return;const t=document.getElementByI
 async function delAnotCham(id){if(!confirm('Remover esta anotação?'))return;try{await A('DELETE',`/anotacoes-chamado/${id}`);await loadAdm();rListAnotsCham();rChams();}catch(e){alert('Erro: '+e.message);}}
 function stFilt(f){const prox=new Date(f.data_troca+'T00:00:00');prox.setMonth(prox.getMonth()+parseInt(f.meses_validade));const dias=Math.round((prox-new Date())/(864e5));if(dias<0)return{s:'al',l:'Vencido'};if(dias<=7)return{s:'al',l:`Vence em ${dias}d`};if(dias<=21)return{s:'av',l:`Vence em ${dias}d`};return{s:'ok',l:`OK — ${dias}d`};}
 function stExt(e){const dias=da(e.data_vencimento);if(dias<0)return{s:'al',l:'Vencido'};if(dias<=30)return{s:'al',l:`Vence em ${dias}d`};if(dias<=60)return{s:'av',l:`Vence em ${dias}d`};return{s:'ok',l:`OK — ${dias}d`};}
-function rVencs(){const al=document.getElementById('valerts');const fa=C.filtros.filter(f=>stFilt(f).s==='al'),ea=C.extintores.filter(e=>stExt(e).s==='al');let h='';if(fa.length)h+=`<div class="ab2 rd" style="margin-bottom:8px">⚠️ ${fa.length} filtro(s) de água vencido(s) ou próximo do vencimento — solicitar troca!</div>`;if(ea.length)h+=`<div class="ab2 rd" style="margin-bottom:8px">🧯 ${ea.length} extintor(es) vencido(s) ou vencendo em até 30 dias — solicitar recarga!</div>`;al.innerHTML=h;const tbf=document.getElementById('td-filt');tbf.innerHTML=C.filtros.length?C.filtros.map(f=>{const prox=new Date(f.data_troca+'T00:00:00');prox.setMonth(prox.getMonth()+parseInt(f.meses_validade));const ps=prox.toISOString().split('T')[0];const st=stFilt(f);return`<tr><td><strong>${f.local}</strong></td><td>${f.descricao||'—'}</td><td class="mn">${fd(f.data_troca)}</td><td class="mn">${f.meses_validade} meses</td><td class="mn">${fd(ps)}</td><td><span class="bdg ${st.s}">${st.l}</span></td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opFilt(${f.id})">Editar</button><button class="btn sm d" onclick="delFilt(${f.id})">Remover</button></td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">Nenhum filtro cadastrado</td></tr>';const tbe=document.getElementById('td-ext');tbe.innerHTML=C.extintores.length?C.extintores.map(e=>{const st=stExt(e);return`<tr><td><strong>${e.local}</strong></td><td>${e.tipo||'—'}</td><td class="mn">${e.numero_serie||'—'}</td><td class="mn">${fd(e.data_vencimento)}</td><td><span class="bdg ${st.s}">${st.l}</span></td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opExt(${e.id})">Editar</button><button class="btn sm d" onclick="delExt(${e.id})">Remover</button></td></tr>`;}).join(''):'<tr><td colspan="6" class="empty">Nenhum extintor cadastrado</td></tr>';}
+function rVencsNavBadge(){const badge=document.getElementById('nav-vencs-badge');if(!badge)return;const temAlerta=C.filtros.some(f=>stFilt(f).s==='al')||C.extintores.some(e=>stExt(e).s==='al');badge.style.display=temAlerta?'inline':'none';}
+function rVencs(){rVencsNavBadge();const al=document.getElementById('valerts');const fa=C.filtros.filter(f=>stFilt(f).s==='al'),ea=C.extintores.filter(e=>stExt(e).s==='al');let h='';if(fa.length)h+=`<div class="ab2 rd" style="margin-bottom:8px">⚠️ ${fa.length} filtro(s) de água vencido(s) ou próximo do vencimento — solicitar troca!</div>`;if(ea.length)h+=`<div class="ab2 rd" style="margin-bottom:8px">🧯 ${ea.length} extintor(es) vencido(s) ou vencendo em até 30 dias — solicitar recarga!</div>`;al.innerHTML=h;const tbf=document.getElementById('td-filt');tbf.innerHTML=C.filtros.length?C.filtros.map(f=>{const prox=new Date(f.data_troca+'T00:00:00');prox.setMonth(prox.getMonth()+parseInt(f.meses_validade));const ps=prox.toISOString().split('T')[0];const st=stFilt(f);return`<tr><td><strong>${f.local}</strong></td><td>${f.descricao||'—'}</td><td class="mn">${fd(f.data_troca)}</td><td class="mn">${f.meses_validade} meses</td><td class="mn">${fd(ps)}</td><td><span class="bdg ${st.s}">${st.l}</span></td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opFilt(${f.id})">Editar</button><button class="btn sm d" onclick="delFilt(${f.id})">Remover</button></td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">Nenhum filtro cadastrado</td></tr>';const tbe=document.getElementById('td-ext');tbe.innerHTML=C.extintores.length?C.extintores.map(e=>{const st=stExt(e);return`<tr><td><strong>${e.local}</strong></td><td>${e.tipo||'—'}</td><td class="mn">${e.numero_serie||'—'}</td><td class="mn">${fd(e.data_vencimento)}</td><td><span class="bdg ${st.s}">${st.l}</span></td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opExt(${e.id})">Editar</button><button class="btn sm d" onclick="delExt(${e.id})">Remover</button></td></tr>`;}).join(''):'<tr><td colspan="6" class="empty">Nenhum extintor cadastrado</td></tr>';}
 async function addFilt(){const l=document.getElementById('ftl').value.trim(),d=document.getElementById('ftd').value.trim(),dt=document.getElementById('ftdt').value,v=parseInt(document.getElementById('ftv').value)||6;if(!l||!dt){alert('Local e data são obrigatórios.');return;}try{await A('POST','/filtros',{local:l,descricao:d,data_troca:dt,meses_validade:v});await loadAdm();rVencs();['ftl','ftd','ftdt'].forEach(id=>document.getElementById(id).value='');document.getElementById('ftv').value='6';}catch(e){alert('Erro: '+e.message);}}
 async function addExt(){const l=document.getElementById('exl').value.trim(),t=document.getElementById('ext').value.trim(),d=document.getElementById('exd').value,s=document.getElementById('exs').value.trim();if(!l||!d){alert('Local e data de vencimento são obrigatórios.');return;}try{await A('POST','/extintores',{local:l,tipo:t,data_vencimento:d,numero_serie:s});await loadAdm();rVencs();['exl','ext','exd','exs'].forEach(id=>document.getElementById(id).value='');}catch(e){alert('Erro: '+e.message);}}
 let efid=null,eeid=null;
@@ -1902,6 +1919,14 @@ async function delLicenciamento(id){if(!confirm('Remover licenciamento?'))return
 async function addRegistroKm(){
   const vid=parseInt(document.getElementById('fkm-vei').value),km=document.getElementById('fkm-km').value,dt=document.getElementById('fkm-data').value;
   if(!vid){alert('Selecione o veículo.');return;}if(!km){alert('Informe o KM atual.');return;}
+  // Valida que o KM é maior que o último registrado para este veículo
+  const kmsVei=C.registros_km.filter(r=>r.veiculo_id===vid);
+  if(kmsVei.length){
+    const ultimoKm=Math.max(...kmsVei.map(r=>Number(r.km_atual)||0));
+    if(Math.round(parseFloat(km))<=ultimoKm){
+      alert(`KM inválido! O último registro deste veículo é ${ultimoKm.toLocaleString('pt-BR')} km.\nInforme um valor maior.`);return;
+    }
+  }
   try{
     await A('POST','/registros-km',{veiculo_id:vid,data:dt||null,km_atual:Math.round(parseFloat(km))});
     resolverKmLembrete();
@@ -2871,7 +2896,7 @@ function rContasPendentes(){
               </td>
               <td style="padding:8px 14px;font-size:12px;font-family:var(--mn);border-bottom:1px solid var(--bd);${vencCls}">${c.vencimento?fd(c.vencimento):(entregaOk?'<span style="color:var(--gn);font-weight:500">Entrega recebida</span>':'<span style="color:var(--tm);font-style:italic">Ag. entrega</span>')}${dias!=null?`<br><span style="font-size:10px">${dias<0?'Vencido ha '+Math.abs(dias)+'d':dias===0?'Hoje!':'Em '+dias+'d'}</span>`:''}</td>
               <td style="padding:8px 14px;font-family:var(--mn);font-weight:600;text-align:right;border-bottom:1px solid var(--bd)">${fm(c.valor)}</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn sm s" onclick="abrPagar(${c.id})">Pagar</button><button class="btn sm d" onclick="delConta(${c.id})">x</button></div></td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--bd)"><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn sm s" onclick="abrPagar(${c.id})">Pagar</button><button class="btn sm e" onclick="abrEditConta(${c.id})">Editar</button><button class="btn sm d" onclick="delConta(${c.id})">x</button></div></td>
             </tr>`;
           }).join('')}
           </tbody>
@@ -3400,6 +3425,59 @@ async function fazerBackupCompleto() {
     btn.textContent = orig;
     btn.disabled = false;
   }
+}
+
+// ── EDITAR CONTA PENDENTE ──────────────────────────────────
+let ecEditId = null;
+function abrEditConta(id) {
+  const c = PAG.contas.find(x => x.id === id);
+  if (!c) return;
+  ecEditId = id;
+  const fornOpts = PAG.fornecedores.map(f => `<option value="${f.id}"${f.id===c.fornecedor_id?' selected':''}>${f.nome}</option>`).join('');
+  document.getElementById('ec-forn').innerHTML = fornOpts;
+  document.getElementById('ec-desc').value = c.descricao || '';
+  document.getElementById('ec-valor').value = c.valor || '';
+  document.getElementById('ec-venc').value = c.vencimento || '';
+  document.getElementById('ec-obs').value = c.obs || '';
+  document.getElementById('m-edit-conta').classList.add('op');
+}
+async function salvarEditConta() {
+  if (!ecEditId) return;
+  const fid = parseInt(document.getElementById('ec-forn').value);
+  const desc = document.getElementById('ec-desc').value.trim();
+  const valor = parseFloat(document.getElementById('ec-valor').value);
+  const venc = document.getElementById('ec-venc').value || null;
+  const obs = document.getElementById('ec-obs').value.trim();
+  if (!fid || !desc || isNaN(valor)) { alert('Preencha fornecedor, descrição e valor.'); return; }
+  try {
+    await fetch(`/api/contas-pagar/${ecEditId}`, { method: 'PUT', headers: pagHdrs(), body: JSON.stringify({ fornecedor_id: fid, descricao: desc, valor, vencimento: venc, obs }) });
+    const abertos = getPaneisAbertos();
+    await pagLoad();
+    rPagAlertas();
+    rContasPendentes();
+    restaurarPaineis(abertos);
+    rFornecedores();
+    cm('m-edit-conta');
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+// ── IMPORTAR BACKUP COMPLETO ────────────────────────────────
+async function importarBackupCompleto(ev) {
+  const f = ev.target.files[0]; if (!f) return;
+  let d; try { d = JSON.parse(await f.text()); } catch(e) { alert('Arquivo inválido.'); ev.target.value=''; return; }
+  if (!d.tabelas) { alert('Formato de backup inválido. Use um arquivo gerado pelo "Backup completo".'); ev.target.value=''; return; }
+  const tabelas = Object.keys(d.tabelas).filter(t => !Array.isArray(d.tabelas[t]) || d.tabelas[t].length > 0);
+  const total = tabelas.reduce((s,t) => s + (Array.isArray(d.tabelas[t]) ? d.tabelas[t].length : 0), 0);
+  if (!confirm(`Importar backup gerado em ${d.gerado_em ? new Date(d.gerado_em).toLocaleString('pt-BR') : '?'}?\n\nTabelas com dados: ${tabelas.join(', ')}\nTotal de registros: ${total}\n\n⚠️ Os dados existentes NÃO serão apagados. Registros duplicados podem ocorrer.`)) { ev.target.value=''; return; }
+  const token = sessionStorage.getItem('token') || '';
+  const hdrs = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+  const r = await fetch('/api/backup-importar', { method: 'POST', headers: hdrs, body: JSON.stringify(d) });
+  if (!r.ok) { alert('Erro ao importar backup: ' + r.status); ev.target.value=''; return; }
+  const res = await r.json();
+  ev.target.value='';
+  alert(`✓ Backup importado!\n${res.mensagem || ''}`);
+  await load(); await loadCli(); await loadAdm(); await loadFrota();
+  rDash();
 }
 
 // ── INIT ───────────────────────────────────────────────────
