@@ -562,6 +562,47 @@ const server = http.createServer(async (req, res) => {
           return res.end(JSON.stringify(backup, null, 2));
         }
 
+        // ── IMPORTAR BACKUP ───────────────────────────────────
+        if (req.method === 'POST' && pth === '/api/backup-importar') {
+          if (!authAdmin) return err(res, 403, 'Acesso restrito ao administrador');
+          const { tabelas } = b;
+          if (!tabelas) return err(res, 400, 'Backup inválido');
+          // Tabelas permitidas para importação (exclui sessoes e tokens)
+          const permitidas = [
+            'itens', 'movimentos', 'pedidos', 'aparelhos', 'chamados',
+            'anotacoes_chamado', 'demandas', 'anotacoes', 'filtros_agua', 'extintores',
+            'veiculos', 'motoristas', 'abastecimentos', 'manutencoes', 'licenciamentos',
+            'registros_km', 'custos_frota', 'alertas_config', 'fornecedores_pag',
+            'contas_pagar', 'gerador_registros', 'gerador_revisoes', 'compras_online'
+          ];
+          let importados = 0, erros = 0;
+          const client = await pool.connect();
+          try {
+            await client.query('BEGIN');
+            for (const tabela of permitidas) {
+              const rows = tabelas[tabela];
+              if (!Array.isArray(rows) || rows.length === 0) continue;
+              for (const row of rows) {
+                try {
+                  const cols = Object.keys(row).filter(k => k !== 'id');
+                  const vals = cols.map(k => row[k]);
+                  const ph = cols.map((_,i) => `$${i+1}`).join(',');
+                  await client.query(
+                    `INSERT INTO ${tabela} (${cols.join(',')}) VALUES (${ph}) ON CONFLICT DO NOTHING`,
+                    vals
+                  );
+                  importados++;
+                } catch(e) { erros++; }
+              }
+            }
+            await client.query('COMMIT');
+          } catch(e) {
+            await client.query('ROLLBACK');
+            return err(res, 500, 'Erro na importação: ' + e.message);
+          } finally { client.release(); }
+          return ok(res, { mensagem: `${importados} registros importados.${erros ? ' ' + erros + ' ignorados (conflito/erro).' : ''}` });
+        }
+
         // ── DADOS GERAIS ──────────────────────────────────────
         if (req.method === 'GET' && pth === '/api/dados') {
           const [itens, movs, pedidos, usuarios] = await Promise.all([
