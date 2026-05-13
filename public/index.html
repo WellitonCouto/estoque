@@ -202,7 +202,10 @@ tbody tr:hover td{background:var(--bg)}
       <button class="ni" onclick="sp('fcustos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Custos</button>
     </nav>
     <div class="sft"><p>Servidor ativo</p><span class="sipbadge" id="sip">—</span></div>
-    <div class="slogout-bar"><button class="blogout-bar" onclick="logout()" title="Sair">⏻ Sair</button></div>
+    <div class="slogout-bar" style="display:flex;flex-direction:column;gap:6px">
+      <button class="blogout-bar" id="btn-backup-completo" onclick="fazerBackupCompleto()" title="Baixar backup completo do banco de dados" style="color:rgba(255,255,255,.6)">⬇ Backup completo</button>
+      <button class="blogout-bar" onclick="logout()" title="Sair">⏻ Sair</button>
+    </div>
   </aside>
 
   <main class="main">
@@ -3374,6 +3377,30 @@ async function rGerNavBadgeInit() {
 const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:()=>{rSels();rCompras();},saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,cpmoc:initPmocPage,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,apagamentos:()=>{rPagamentos();},agerador:()=>{rGerador();document.getElementById('ger-data').value=hj();},fveiculos:()=>{rVeiculos();rAlertasBadge();},fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();},falertas:()=>{rFrotaSels();rAlertas();rAlertasConfig();rKmSegundaBanner();},findicadores:()=>{rIndSels();rIndicadores();rKmSegundaBanner('km-segunda-banner-ind');}};
 function sp(n,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));const pg=document.getElementById('page-'+n);if(pg)pg.classList.add('on');if(btn)btn.classList.add('on');RENDERS[n]?.();}
 function tmod(m){const NAVS={est:'ne',cli:'nc',adm:'na',fro:'nf'};const BTNS={est:'bme',cli:'bmc',adm:'bma',fro:'bmf'};const IC={est:'E',cli:'❄',adm:'🗂',fro:'🚗'};const TT={est:'Estoque',cli:'Climatização',adm:'Administrativo',fro:'Frota'};const SB={est:'Material de consumo',cli:'Ar condicionado',adm:'Gestão predial',fro:'Gestão de veículos'};const FP={est:'dashboard',cli:'ccham',adm:'ademdas',fro:'findicadores'};['est','cli','adm','fro'].forEach(x=>{document.getElementById(NAVS[x]).style.display=m===x?'block':'none';document.getElementById(BTNS[x]).classList.toggle('on',m===x);});document.getElementById('mid').textContent=IC[m];document.getElementById('mtit').textContent=TT[m];document.getElementById('msub').textContent=SB[m];document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));document.getElementById('page-'+FP[m]).classList.add('on');const fn=document.querySelector(`#${NAVS[m]} .ni`);if(fn)fn.classList.add('on');RENDERS[FP[m]]?.();}
+
+// ── BACKUP COMPLETO ────────────────────────────────────────
+async function fazerBackupCompleto() {
+  const btn = document.getElementById('btn-backup-completo');
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Gerando...';
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/backup-completo', { headers: { 'Authorization': 'Bearer ' + (sessionStorage.getItem('token') || '') } });
+    if (!r.ok) { alert('Erro ao gerar backup: ' + r.status); return; }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'backup-completo-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    alert('Erro ao gerar backup: ' + e.message);
+  } finally {
+    btn.textContent = orig;
+    btn.disabled = false;
+  }
+}
 
 // ── INIT ───────────────────────────────────────────────────
 document.getElementById('sip').textContent=window.location.host;
