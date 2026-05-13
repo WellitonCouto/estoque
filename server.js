@@ -535,6 +535,33 @@ const server = http.createServer(async (req, res) => {
           return ok(res, { ok: true });
         }
 
+        // ── BACKUP COMPLETO ───────────────────────────────────
+        if (req.method === 'GET' && pth === '/api/backup-completo') {
+          if (!authAdmin) return err(res, 403, 'Acesso restrito ao administrador');
+          const tabelas = [
+            'usuarios', 'itens', 'movimentos', 'pedidos', 'aparelhos', 'chamados',
+            'anotacoes_chamado', 'demandas', 'anotacoes', 'filtros_agua', 'extintores',
+            'veiculos', 'motoristas', 'abastecimentos', 'manutencoes', 'licenciamentos',
+            'registros_km', 'custos_frota', 'alertas_config', 'fornecedores_pag',
+            'contas_pagar', 'gerador_registros', 'gerador_revisoes', 'compras_online',
+            'sessoes', 'tokens_recuperacao'
+          ];
+          const backup = { gerado_em: new Date().toISOString(), tabelas: {} };
+          for (const tabela of tabelas) {
+            try {
+              const r = await pool.query(`SELECT * FROM ${tabela} ORDER BY id`);
+              backup.tabelas[tabela] = r.rows;
+            } catch (e) {
+              backup.tabelas[tabela] = { erro: e.message };
+            }
+          }
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Content-Disposition': `attachment; filename="backup-completo-${new Date().toISOString().slice(0,10)}.json"`
+          });
+          return res.end(JSON.stringify(backup, null, 2));
+        }
+
         // ── DADOS GERAIS ──────────────────────────────────────
         if (req.method === 'GET' && pth === '/api/dados') {
           const [itens, movs, pedidos, usuarios] = await Promise.all([
