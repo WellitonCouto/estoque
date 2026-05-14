@@ -1171,7 +1171,7 @@ let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],de
 let MF=[];
 
 // ── UTILS ─────────────────────────────────────────────────
-async function A(m,p,b){const o={method:m,headers:{'Content-Type':'application/json'}};const token=sessionStorage.getItem('token');if(token)o.headers['Authorization']='Bearer '+token;if(b)o.body=JSON.stringify(b);const r=await fetch('/api'+p,o);if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.erro||'Erro');}return r.json();}
+async function A(m,p,b){const o={method:m,headers:{'Content-Type':'application/json'}};const token=sessionStorage.getItem('token');if(token)o.headers['Authorization']='Bearer '+token;if(b)o.body=JSON.stringify(b);const r=await fetch('/api'+p,o);if(r.status===401){sessionStorage.removeItem('U');sessionStorage.removeItem('token');U=null;document.getElementById('app').classList.remove('vis');document.getElementById('login-screen').style.display='flex';throw new Error('Sessão expirada. Faça login novamente.');}if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.erro||'Erro');}return r.json();}
 const fd=d=>{if(!d)return'—';const[y,mo,di]=d.split('-');return`${di}/${mo}/${y}`;};
 const fm=v=>{if(!v&&v!==0)return'—';return'R$ '+parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2});};
 const hj=()=>new Date().toISOString().split('T')[0];
