@@ -389,9 +389,11 @@ async function iniciarBanco() {
     obs TEXT DEFAULT '',
     status TEXT DEFAULT 'pendente',
     recebido_em TEXT,
+    recebido_por TEXT DEFAULT '',
     criado_por TEXT DEFAULT '',
     criado_em TIMESTAMP DEFAULT NOW()
   )`);
+  await pool.query(`ALTER TABLE compras_online ADD COLUMN IF NOT EXISTS recebido_por TEXT DEFAULT ''`);
 
 
   await pool.query(`CREATE TABLE IF NOT EXISTS gerador_registros (
@@ -777,8 +779,8 @@ const server = http.createServer(async (req, res) => {
               );
             }
             await client.query(
-              "UPDATE compras_online SET status='recebido', recebido_em=$1 WHERE id=$2",
-              [dt, id]
+              "UPDATE compras_online SET status='recebido', recebido_em=$1, recebido_por=$2 WHERE id=$3",
+              [dt, resp, id]
             );
             await client.query('COMMIT');
             client.release();
