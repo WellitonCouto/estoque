@@ -510,7 +510,7 @@ tbody tr:hover td{background:var(--bg)}
         <div class="fg c3">
           <div class="f"><label>PIX</label><input id="pag-fpix" placeholder="Chave PIX do fornecedor"></div>
           <div class="f"><label>Favorecido</label><input id="pag-ffavorecido" placeholder="Nome do favorecido"></div>
-          <div class="f"><label>InstituiÃ§Ã£o</label><input id="pag-finstituicao" placeholder="Banco ou instituiÃ§Ã£o"></div>
+          <div class="f"><label>Instituição</label><input id="pag-finstituicao" placeholder="Banco ou instituição"></div>
         </div>
         <button class="btn p" onclick="addFornecedor()">Cadastrar fornecedor</button>
       </div>
@@ -777,6 +777,15 @@ tbody tr:hover td{background:var(--bg)}
       <div class="ph"><h2>Alertas da Frota</h2><p>Monitoramento de vencimentos e intervalos</p></div>
       <div id="km-segunda-banner"></div>
       <div id="falerts-summary" class="mets" style="grid-template-columns:repeat(3,1fr)"></div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="ct">⚙️ Padrão geral — Alinhamento/Balanceamento</div>
+        <p style="font-size:12px;color:var(--tm);margin-bottom:12px">Intervalo padrão aplicado automaticamente a todos os veículos que não possuem alerta individual configurado.</p>
+        <div class="fg c2" style="align-items:flex-end">
+          <div class="f"><label>Intervalo padrão (km)</label><input id="alib-padrao-km" type="number" step="100" placeholder="Ex: 10000" style="max-width:200px"></div>
+          <button class="btn p" onclick="salvarPadraoAlinhamento()" style="height:38px">Salvar padrão</button>
+        </div>
+        <p id="alib-padrao-info" style="font-size:12px;color:var(--tm);margin-top:8px"></p>
+      </div>
       <div class="card">
         <div class="fl" style="margin-bottom:13px">
           <span class="ct" style="margin:0">Status dos alertas</span>
@@ -1012,7 +1021,7 @@ tbody tr:hover td{background:var(--bg)}
   <div class="fg c3">
     <div class="f"><label>PIX</label><input id="eforn-pix"></div>
     <div class="f"><label>Favorecido</label><input id="eforn-favorecido"></div>
-    <div class="f"><label>InstituiÃ§Ã£o</label><input id="eforn-instituicao"></div>
+    <div class="f"><label>Instituição</label><input id="eforn-instituicao"></div>
   </div>
   <div class="mft"><button class="btn" onclick="cm('m-eforn')">Cancelar</button><button class="btn p" onclick="saveFornecedor()">Salvar</button></div>
 </div></div>
@@ -1133,6 +1142,7 @@ tbody tr:hover td{background:var(--bg)}
       <option value="revisao">Revisão</option>
       <option value="licenciamento">Licenciamento</option>
       <option value="seguro">Seguro</option>
+      <option value="alinhamento">Alinhamento/Balanceamento</option>
     </select></div>
   </div>
   <div id="cfa-intervalo-blk">
@@ -1400,9 +1410,10 @@ async function delCompra(id) {
 function rCompras() {
   const el = document.getElementById('compras-lista');
   if (!el) return;
-  const lista = C.compras_online;
-  if (!lista.length) { el.innerHTML = '<div class="empty">Nenhuma compra registrada</div>'; return; }
-  el.innerHTML = lista.map(c => {
+  const pendentes = C.compras_online.filter(c => c.status !== 'recebido');
+  const recebidas = C.compras_online.filter(c => c.status === 'recebido');
+
+  function cardCompra(c, mostrarBotaoReceber) {
     const recebido = c.status === 'recebido';
     const diasRestantes = c.previsao ? da(c.previsao) : null;
     let prazoHtml = '';
@@ -1417,29 +1428,58 @@ function rCompras() {
         prazoHtml = `<span style="color:var(--tm);font-size:11px">Previsão: ${fd(c.previsao)} (em ${diasRestantes}d)</span>`;
       }
     }
-    const criadoPor = c.criado_por ? `<span style="font-size:11px;color:var(--th)">por ${c.criado_por}</span>` : '';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:10px;border:1px solid var(--bd);margin-bottom:7px;background:${recebido ? 'var(--gnb)' : 'var(--sf)'}${recebido ? ';opacity:.75' : ''}">
+    const autorInfo = recebido
+      ? (c.recebido_por ? `<span style="font-size:11px;color:var(--th)">recebido por ${c.recebido_por}</span>` : '')
+      : (c.criado_por ? `<span style="font-size:11px;color:var(--th)">por ${c.criado_por}</span>` : '');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:10px;border:1px solid var(--bd);margin-bottom:7px;background:${recebido?'var(--gnb)':'var(--sf)'}">
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px">
           <strong style="font-size:13px">${c.item_nome}</strong>
           <span class="mn" style="font-size:12px;color:var(--tm)">${c.qtd} un.</span>
           <span style="font-size:12px;padding:1px 8px;border-radius:5px;background:var(--acb);color:var(--ac)">${c.site}</span>
           ${c.valor ? `<span class="mn" style="font-size:12px;color:var(--gn)">${fm(c.valor)}</span>` : ''}
-          ${recebido ? '<span class="bdg ok">Recebido</span>' : '<span class="bdg lw">Aguardando</span>'}
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
           ${prazoHtml}
           ${c.obs ? `<span style="font-size:11px;color:var(--th)">${c.obs}</span>` : ''}
-          ${criadoPor}
+          ${autorInfo}
         </div>
       </div>
       <div style="display:flex;gap:5px;flex-shrink:0">
-        ${!recebido ? `<button class="btn sm s" onclick="abrReceberCompra(${c.id})">✓ Recebido</button>` : ''}
+        ${mostrarBotaoReceber ? `<button class="btn sm s" onclick="abrReceberCompra(${c.id})">✓ Recebido</button>` : ''}
         <button class="btn sm e" onclick="abrEditCompra(${c.id})">Editar</button>
         <button class="btn sm d" onclick="delCompra(${c.id})">✕</button>
       </div>
     </div>`;
-  }).join('');
+  }
+
+  // Painel: em andamento
+  const htmlPendentes = pendentes.length
+    ? pendentes.map(c => cardCompra(c, true)).join('')
+    : '<div class="empty">Nenhuma compra em andamento</div>';
+
+  // Painel: recebidas (colapsável)
+  const htmlRecebidas = recebidas.length
+    ? recebidas.map(c => cardCompra(c, false)).join('')
+    : '<div class="empty">Nenhuma compra recebida</div>';
+
+  el.innerHTML = htmlPendentes + `
+    <div style="margin-top:18px">
+      <div onclick="togComprasRecebidas()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;user-select:none">
+        <span style="font-size:13px;font-weight:600;color:var(--tx)">📦 Compras Online Recebidas</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--tm)">${recebidas.length} registro(s)</span>
+        <span id="ico-compras-recebidas" style="font-size:12px;color:var(--tm)">▼</span>
+      </div>
+      <div id="painel-compras-recebidas" style="display:none;margin-top:8px">${htmlRecebidas}</div>
+    </div>`;
+}
+function togComprasRecebidas(){
+  const p=document.getElementById('painel-compras-recebidas');
+  const ic=document.getElementById('ico-compras-recebidas');
+  if(!p)return;
+  const aberto=p.style.display!=='none';
+  p.style.display=aberto?'none':'block';
+  if(ic)ic.textContent=aberto?'▼':'▲';
 }
 
 // Quantidade em compra por item (pendentes)
@@ -1986,9 +2026,62 @@ async function saveCusto(){if(!ecsid)return;
 async function delCusto(id){if(!confirm('Remover custo?'))return;try{await A('DELETE',`/custos/${id}`);await loadFrota();rCustos();}catch(e){alert('Erro: '+e.message);}}
 
 
+// ── ALINHAMENTO: PADRÃO GERAL ─────────────────────────────
+function carregarPadraoAlinhamento(){
+  const km = localStorage.getItem('alib_padrao_km');
+  const inp = document.getElementById('alib-padrao-km');
+  const inf = document.getElementById('alib-padrao-info');
+  if(inp) inp.value = km || '';
+  if(inf) inf.textContent = km ? `Padrão atual: a cada ${parseInt(km).toLocaleString('pt-BR')} km` : 'Nenhum padrão configurado.';
+}
+function salvarPadraoAlinhamento(){
+  const km = document.getElementById('alib-padrao-km').value;
+  if(km && parseInt(km) > 0){
+    localStorage.setItem('alib_padrao_km', parseInt(km));
+    document.getElementById('alib-padrao-info').textContent = `✓ Padrão salvo: a cada ${parseInt(km).toLocaleString('pt-BR')} km`;
+  } else {
+    localStorage.removeItem('alib_padrao_km');
+    document.getElementById('alib-padrao-info').textContent = 'Padrão removido.';
+  }
+  rAlertas(); rAlertasBadge();
+}
+function getAlertasAlinhamentoPadrao(){
+  const km = parseInt(localStorage.getItem('alib_padrao_km'));
+  if(!km) return [];
+  // Veículos que já têm alerta individual de alinhamento configurado
+  const veisComConfig = new Set(C.alertas_config.filter(c=>c.tipo_alerta==='alinhamento').map(c=>c.veiculo_id));
+  const alertas = [];
+  C.veiculos.forEach(vei => {
+    if(veisComConfig.has(vei.id)) return; // já tem config individual
+    const vLabel = `${vei.placa}${vei.modelo?' — '+vei.modelo:''}`;
+    const kms = C.registros_km.filter(r=>r.veiculo_id===vei.id||r.veiculo_id===parseInt(vei.id)).sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+    const kmAtual = kms[0] ? Math.round(parseFloat(kms[0].km_atual)) : null;
+    // Busca último alinhamento em manutenções
+    const mans = C.manutencoes.filter(m=>(m.veiculo_id===vei.id||m.veiculo_id===parseInt(vei.id))
+      &&['alinhamento','balanceamento'].some(k=>m.tipo.toLowerCase().includes(k)||(m.descricao||'').toLowerCase().includes(k)))
+      .sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+    const ultima = mans[0]||null;
+    const ultKm = ultima&&ultima.km ? Math.round(parseFloat(ultima.km)) : null;
+    let status = 'ok', detalhes = '', sub = '';
+    if(ultKm && kmAtual){
+      const restante = (ultKm + km) - kmAtual;
+      if(restante <= 0){ status='vencido'; detalhes=`Vencido há ${Math.abs(restante).toLocaleString('pt-BR')} km`; }
+      else if(restante <= km*0.15){ status='proximo'; detalhes=`Faltam ${restante.toLocaleString('pt-BR')} km`; }
+      else { status='ok'; detalhes=`Faltam ${restante.toLocaleString('pt-BR')} km`; }
+      sub = `Último: ${ultima.data?ultima.data.split('-').reverse().join('/'):'?'} — ${ultKm.toLocaleString('pt-BR')} km`;
+    } else if(kmAtual){
+      status='proximo'; detalhes='Sem registro anterior de alinhamento'; sub='Registre o próximo alinhamento';
+    } else {
+      status='proximo'; detalhes='Sem KM registrado'; sub='Registre o KM do veículo';
+    }
+    alertas.push({id:`padrao_alib_${vei.id}`,cfg:{tipo_alerta:'alinhamento',intervalo_km:km,veiculo_id:vei.id},vei,vLabel,status,titulo:'Alinhamento/Balanceamento',icon:'⚙️',descricao:detalhes,sub,padrao:true});
+  });
+  return alertas;
+}
+
 // ── FROTA: ALERTAS ────────────────────────────────────────
-const ALERTA_TIPO_LABEL={oleo:'Troca de óleo',revisao:'Revisão',licenciamento:'Licenciamento',seguro:'Seguro'};
-const ALERTA_TIPO_ICON={oleo:'🛢',revisao:'🔧',licenciamento:'📋',seguro:'🛡'};
+const ALERTA_TIPO_LABEL={oleo:'Troca de óleo',revisao:'Revisão',licenciamento:'Licenciamento',seguro:'Seguro',alinhamento:'Alinhamento/Balanceamento'};
+const ALERTA_TIPO_ICON={oleo:'🛢',revisao:'🔧',licenciamento:'📋',seguro:'🛡',alinhamento:'⚙️'};
 
 // Calcula todos os alertas a partir dos dados em C
 function calcularAlertas(){
@@ -2001,7 +2094,7 @@ function calcularAlertas(){
     const vLabel=`${vei.placa}${vei.modelo?' — '+vei.modelo:''}`;
     const ant=parseInt(cfg.antecedencia_dias)||30;
 
-    if(cfg.tipo_alerta==='oleo'||cfg.tipo_alerta==='revisao'){
+    if(cfg.tipo_alerta==='oleo'||cfg.tipo_alerta==='revisao'||cfg.tipo_alerta==='alinhamento'){
       // Use manual reference first; fallback to searching manutencoes
       let ultKm=cfg.km_referencia?Math.round(parseFloat(cfg.km_referencia)):null;
       let ultData=cfg.data_referencia?new Date(cfg.data_referencia+'T00:00:00'):null;
@@ -2010,7 +2103,7 @@ function calcularAlertas(){
       if(!ultKm&&!ultData){
         // Fallback: search manutencoes
         refSource='auto';
-        const tipoKey=cfg.tipo_alerta==='oleo'?['óleo','oleo','oil']:['revisão','revisao','revisao'];
+        const tipoKey=cfg.tipo_alerta==='oleo'?['óleo','oleo','oil']:cfg.tipo_alerta==='alinhamento'?['alinhamento','balanceamento']:['revisão','revisao','revisao'];
         const mans=C.manutencoes
           .filter(m=>(m.veiculo_id===cfg.veiculo_id||m.veiculo_id===parseInt(cfg.veiculo_id))
             && tipoKey.some(k=>m.tipo.toLowerCase().includes(k)||m.descricao.toLowerCase().includes(k)))
@@ -2120,7 +2213,8 @@ function calcularAlertas(){
     }
   });
 
-  return alertas;
+  // Adiciona alertas do padrão geral de alinhamento
+  return alertas.concat(getAlertasAlinhamentoPadrao());
 }
 
 function stAlertaClass(s){return s==='vencido'?'al':s==='proximo'?'av':'ok';}
@@ -3399,7 +3493,7 @@ async function rGerNavBadgeInit() {
 }
 
 // ── MÓDULOS / NAVEGAÇÃO ────────────────────────────────────
-const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:()=>{rSels();rCompras();},saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,cpmoc:initPmocPage,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,apagamentos:()=>{rPagamentos();},agerador:()=>{rGerador();document.getElementById('ger-data').value=hj();},fveiculos:()=>{rVeiculos();rAlertasBadge();},fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();},falertas:()=>{rFrotaSels();rAlertas();rAlertasConfig();rKmSegundaBanner();},findicadores:()=>{rIndSels();rIndicadores();rKmSegundaBanner('km-segunda-banner-ind');}};
+const RENDERS={dashboard:rDash,estoque:rEstoque,entrada:()=>{rSels();rCompras();},saida:rSels,hist:()=>{rSels();apFilt();},pedidos:()=>{rSels();rPeds();},usuarios:rUsrs,ccham:()=>{rAps();rChams();document.getElementById('chdc').value=hj();},capar:rAps,cpmoc:initPmocPage,crel:()=>{const h=new Date();document.getElementById('rlmes').value=h.getMonth()+1;document.getElementById('rlano').value=h.getFullYear();},ademdas:()=>{rDems();document.getElementById('dmd').value=hj();},avencs:rVencs,apagamentos:()=>{rPagamentos();},agerador:()=>{rGerador();document.getElementById('ger-data').value=hj();},fveiculos:()=>{rVeiculos();rAlertasBadge();},fmotoristas:rMotoristas,fabastecimentos:()=>{rFrotaSels();rAbastecimentos();document.getElementById('fab-data').value=hj();},fmanutencoes:()=>{rFrotaSels();rManutencoes();document.getElementById('fman-data').value=hj();},flicenciamentos:()=>{rFrotaSels();rLicenciamentos();document.getElementById('flic-ano').value=new Date().getFullYear();},fkm:()=>{rFrotaSels();rRegistrosKm();document.getElementById('fkm-data').value=hj();},fcustos:()=>{rFrotaSels();rCustos();document.getElementById('fcs-data').value=hj();},falertas:()=>{rFrotaSels();rAlertas();rAlertasConfig();rKmSegundaBanner();carregarPadraoAlinhamento();},findicadores:()=>{rIndSels();rIndicadores();rKmSegundaBanner('km-segunda-banner-ind');}};
 function sp(n,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));const pg=document.getElementById('page-'+n);if(pg)pg.classList.add('on');if(btn)btn.classList.add('on');RENDERS[n]?.();}
 function tmod(m){const NAVS={est:'ne',cli:'nc',adm:'na',fro:'nf'};const BTNS={est:'bme',cli:'bmc',adm:'bma',fro:'bmf'};const IC={est:'E',cli:'❄',adm:'🗂',fro:'🚗'};const TT={est:'Estoque',cli:'Climatização',adm:'Administrativo',fro:'Frota'};const SB={est:'Material de consumo',cli:'Ar condicionado',adm:'Gestão predial',fro:'Gestão de veículos'};const FP={est:'dashboard',cli:'ccham',adm:'ademdas',fro:'findicadores'};['est','cli','adm','fro'].forEach(x=>{document.getElementById(NAVS[x]).style.display=m===x?'block':'none';document.getElementById(BTNS[x]).classList.toggle('on',m===x);});document.getElementById('mid').textContent=IC[m];document.getElementById('mtit').textContent=TT[m];document.getElementById('msub').textContent=SB[m];document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#ne .ni,#nc .ni,#na .ni,#nf .ni').forEach(b=>b.classList.remove('on'));document.getElementById('page-'+FP[m]).classList.add('on');const fn=document.querySelector(`#${NAVS[m]} .ni`);if(fn)fn.classList.add('on');RENDERS[FP[m]]?.();}
 
