@@ -229,7 +229,6 @@ tbody tr:hover td{background:var(--bg)}
     <div class="ubadge">
       <div class="uav" id="uav">?</div>
       <div class="uinfo"><p id="unome">—</p><span id="uemail">—</span></div>
-      <button class="blogout" onclick="irParaBemVindo()" title="Tela inicial">🏠</button>
     </div>
     <div class="modsw">
       <button class="mbtn on" id="bme" onclick="tmod('est')"><span class="mi">📦</span>Estoque</button>
@@ -271,6 +270,7 @@ tbody tr:hover td{background:var(--bg)}
     </nav>
     <div class="sft"><p>Servidor ativo</p><span class="sipbadge" id="sip">—</span></div>
     <div class="slogout-bar" style="display:flex;flex-direction:column;gap:6px">
+      <button class="blogout-bar" onclick="irParaBemVindo()" title="Voltar à tela inicial" style="color:rgba(255,255,255,.6)">🏠 Tela inicial</button>
       <button class="blogout-bar" id="btn-backup-completo" onclick="fazerBackupCompleto()" title="Baixar backup completo do banco de dados" style="color:rgba(255,255,255,.6)">⬇ Backup completo</button>
       <label class="blogout-bar" style="cursor:pointer;color:rgba(255,255,255,.6)" title="Importar backup completo">⬆ Importar backup<input type="file" accept=".json" style="display:none" onchange="importarBackupCompleto(event)"></label>
       <button class="blogout-bar" onclick="logout()" title="Sair">⏻ Sair</button>
