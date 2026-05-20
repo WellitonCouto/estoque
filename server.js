@@ -384,6 +384,10 @@ async function iniciarBanco() {
     qtd INTEGER NOT NULL DEFAULT 1,
     site TEXT NOT NULL,
     valor NUMERIC(12,2),
+    frete NUMERIC(12,2),
+    valor_unitario NUMERIC(12,2),
+    tipo_compra TEXT DEFAULT 'estoque',
+    categoria TEXT DEFAULT '',
     data TEXT,
     previsao TEXT,
     obs TEXT DEFAULT '',
@@ -394,6 +398,10 @@ async function iniciarBanco() {
     criado_em TIMESTAMP DEFAULT NOW()
   )`);
   await pool.query(`ALTER TABLE compras_online ADD COLUMN IF NOT EXISTS recebido_por TEXT DEFAULT ''`);
+  await pool.query(`ALTER TABLE compras_online ADD COLUMN IF NOT EXISTS frete NUMERIC(12,2)`);
+  await pool.query(`ALTER TABLE compras_online ADD COLUMN IF NOT EXISTS valor_unitario NUMERIC(12,2)`);
+  await pool.query(`ALTER TABLE compras_online ADD COLUMN IF NOT EXISTS tipo_compra TEXT DEFAULT 'estoque'`);
+  await pool.query(`ALTER TABLE compras_online ADD COLUMN IF NOT EXISTS categoria TEXT DEFAULT ''`);
 
 
   await pool.query(`CREATE TABLE IF NOT EXISTS gerador_registros (
@@ -744,16 +752,16 @@ const server = http.createServer(async (req, res) => {
         }
         if (req.method === 'POST' && pth === '/api/compras-online') {
           const r = await pool.query(
-            'INSERT INTO compras_online (item_id,item_nome,qtd,site,valor,data,previsao,obs,status,criado_por) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *',
-            [b.item_id||null, b.item_nome||'', b.qtd||1, b.site||'', b.valor||null, b.data||null, b.previsao||null, b.obs||'', b.status||'pendente', b.criado_por||'']
+            'INSERT INTO compras_online (item_id,item_nome,qtd,site,valor,frete,valor_unitario,tipo_compra,categoria,data,previsao,obs,status,criado_por) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *',
+            [b.item_id||null, b.item_nome||'', b.qtd||1, b.site||'', b.valor||null, b.frete||null, b.valor_unitario||null, b.tipo_compra||'estoque', b.categoria||'', b.data||null, b.previsao||null, b.obs||'', b.status||'pendente', b.criado_por||'']
           );
           return ok(res, r.rows[0], 201);
         }
         if (req.method === 'PUT' && pth.startsWith('/api/compras-online/') && !pth.endsWith('/receber')) {
           const id = parseInt(pth.split('/')[3]);
           const r = await pool.query(
-            'UPDATE compras_online SET item_id=$1,item_nome=$2,qtd=$3,site=$4,valor=$5,data=$6,previsao=$7,obs=$8 WHERE id=$9 RETURNING *',
-            [b.item_id||null, b.item_nome||'', b.qtd||1, b.site||'', b.valor||null, b.data||null, b.previsao||null, b.obs||'', id]
+            'UPDATE compras_online SET item_id=$1,item_nome=$2,qtd=$3,site=$4,valor=$5,frete=$6,valor_unitario=$7,tipo_compra=$8,categoria=$9,data=$10,previsao=$11,obs=$12 WHERE id=$13 RETURNING *',
+            [b.item_id||null, b.item_nome||'', b.qtd||1, b.site||'', b.valor||null, b.frete||null, b.valor_unitario||null, b.tipo_compra||'estoque', b.categoria||'', b.data||null, b.previsao||null, b.obs||'', id]
           );
           return ok(res, r.rows[0]);
         }
@@ -770,8 +778,8 @@ const server = http.createServer(async (req, res) => {
             const dt = b.data || new Date().toISOString().split('T')[0];
             const obs = b.obs || `Compra online — ${compra.site}`;
             const resp = b.resp || '—';
-            // Dar entrada no estoque
-            if (compra.item_id) {
+            // Dar entrada no estoque apenas se for compra de estoque
+            if (compra.item_id && (compra.tipo_compra || 'estoque') === 'estoque') {
               await client.query('UPDATE itens SET qtd = qtd + $1 WHERE id=$2', [qtd, compra.item_id]);
               await client.query(
                 'INSERT INTO movimentos (tipo,item_id,item_nome,qtd,data,resp,obs) VALUES ($1,$2,$3,$4,$5,$6,$7)',
