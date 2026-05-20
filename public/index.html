@@ -1133,14 +1133,50 @@ tbody tr:hover td:first-child{border-left:2px solid var(--ac)}
 <!-- MODAL: NOVA COMPRA ONLINE -->
 <div class="mo" id="m-compra"><div class="mbox">
   <div class="mtit" id="m-compra-tit">Registrar compra online</div>
-  <div class="fg c2">
-    <div class="f"><label>Item comprado *</label><select id="co-item"></select></div>
-    <div class="f"><label>Quantidade *</label><input id="co-qtd" type="number" min="1" value="1"></div>
+
+  <!-- Tipo de compra: estoque ou avulsa -->
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <button id="co-tipo-estoque" onclick="coSetTipo('estoque')" class="btn p" style="flex:1;justify-content:center;font-size:13px">📦 Para o estoque</button>
+    <button id="co-tipo-avulso" onclick="coSetTipo('avulso')" class="btn" style="flex:1;justify-content:center;font-size:13px">🛒 Compra avulsa</button>
   </div>
-  <div class="fg c2">
+
+  <!-- Item estoque (visível apenas quando tipo=estoque) -->
+  <div id="co-bloco-item" class="fg c2" style="margin-bottom:0">
+    <div class="f"><label>Item do estoque *</label><select id="co-item"></select></div>
+    <div class="f"><label>Quantidade *</label><input id="co-qtd" type="number" min="1" value="1" oninput="coCalcUnitario()"></div>
+  </div>
+
+  <!-- Descrição avulsa (visível apenas quando tipo=avulso) -->
+  <div id="co-bloco-avulso" style="display:none;margin-bottom:0">
+    <div class="fg c2">
+      <div class="f" style="grid-column:1/-1"><label>Descrição do item *</label><input id="co-desc-avulso" placeholder="Ex: Mop de limpeza, papel higiênico..."></div>
+    </div>
+    <div class="fg c2">
+      <div class="f"><label>Categoria</label><input id="co-cat-avulso" placeholder="Ex: Limpeza, Escritório..."></div>
+      <div class="f"><label>Quantidade</label><input id="co-qtd-avulso" type="number" min="1" value="1" oninput="coCalcUnitario()"></div>
+    </div>
+  </div>
+
+  <div class="fg c2" style="margin-top:12px">
     <div class="f"><label>Site / Fornecedor *</label><input id="co-site" placeholder="Ex: Amazon, Mercado Livre..."></div>
-    <div class="f"><label>Valor pago (R$)</label><input id="co-valor" type="number" step="0.01" placeholder="0,00"></div>
+    <div class="f"><label>Valor total pago (R$)</label><input id="co-valor" type="number" step="0.01" placeholder="0,00" oninput="coCalcUnitario()"></div>
   </div>
+
+  <!-- Frete e valor unitário -->
+  <div style="margin-bottom:12px">
+    <div id="co-frete-toggle" onclick="coTogFrete()" style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px;color:var(--ac);font-weight:500;padding:4px 0;user-select:none">
+      <span style="font-size:13px">+</span> Informar valor de frete
+    </div>
+    <div id="co-frete-blk" style="display:none;margin-top:8px">
+      <div class="fg c2">
+        <div class="f"><label>Frete (R$)</label><input id="co-frete" type="number" step="0.01" placeholder="0,00" oninput="coCalcUnitario()"></div>
+        <div class="f"><label>Valor unitário (calculado)</label><input id="co-unitario" type="number" step="0.01" placeholder="—" style="background:#f0f2f7;color:var(--tm)" oninput="coUnitarioManual()"></div>
+      </div>
+    </div>
+    <!-- resumo quando frete oculto -->
+    <div id="co-unitario-resumo" style="display:none;margin-top:6px;font-size:12.5px;color:var(--tm)"></div>
+  </div>
+
   <div class="fg c2">
     <div class="f"><label>Data da compra</label><input id="co-data" type="date"></div>
     <div class="f"><label>Previsão de entrega</label><input id="co-previsao" type="date"></div>
@@ -1431,51 +1467,163 @@ async function saveEditPed() {
 let coEditId = null;
 let coReceberCompraId = null;
 
-function abrNovaCompra() {
+let coTipoAtual = 'estoque'; // 'estoque' ou 'avulso'
+
+function coSetTipo(tipo) {
+  coTipoAtual = tipo;
+  document.getElementById('co-bloco-item').style.display = tipo === 'estoque' ? '' : 'none';
+  document.getElementById('co-bloco-avulso').style.display = tipo === 'avulso' ? '' : 'none';
+  document.getElementById('co-tipo-estoque').className = tipo === 'estoque' ? 'btn p' : 'btn';
+  document.getElementById('co-tipo-avulso').className = tipo === 'avulso' ? 'btn p' : 'btn';
+  // Previsão de entrega disponível para todos os tipos
+  document.getElementById('co-previsao').closest('.f').style.display = '';
+  coCalcUnitario();
+}
+
+function coTogFrete() {
+  const blk = document.getElementById('co-frete-blk');
+  const tog = document.getElementById('co-frete-toggle');
+  const visible = blk.style.display !== 'none';
+  blk.style.display = visible ? 'none' : '';
+  tog.querySelector('span').textContent = visible ? '+' : '−';
+  tog.childNodes[1].textContent = visible ? ' Informar valor de frete' : ' Ocultar frete';
+  if (visible) {
+    document.getElementById('co-frete').value = '';
+    coCalcUnitario();
+  }
+}
+
+function coGetQtd() {
+  if (coTipoAtual === 'avulso') {
+    return parseFloat(document.getElementById('co-qtd-avulso').value) || 1;
+  }
+  return parseFloat(document.getElementById('co-qtd').value) || 1;
+}
+
+function coCalcUnitario() {
+  const valorTotal = parseFloat(document.getElementById('co-valor').value) || 0;
+  const frete = parseFloat(document.getElementById('co-frete').value) || 0;
+  const qtd = coGetQtd();
+  const resumo = document.getElementById('co-unitario-resumo');
+  const unitEl = document.getElementById('co-unitario');
+  if (valorTotal > 0 && qtd > 0) {
+    const unitario = (valorTotal - frete) / qtd;
+    unitEl.value = unitario > 0 ? unitario.toFixed(2) : '';
+    const freteBlkVisible = document.getElementById('co-frete-blk').style.display !== 'none';
+    if (!freteBlkVisible && valorTotal > 0) {
+      resumo.style.display = '';
+      resumo.innerHTML = `Valor unitário: <strong style="color:var(--gn)">R$ ${unitario.toFixed(2).replace('.',',')}</strong> (${qtd} un. × R$ ${unitario.toFixed(2).replace('.',',')})`;
+    } else {
+      resumo.style.display = 'none';
+    }
+  } else {
+    unitEl.value = '';
+    resumo.style.display = 'none';
+  }
+}
+
+function coUnitarioManual() {
+  // permite sobrescrever o cálculo automático
+}
+
+function coResetModal() {
   coEditId = null;
-  document.getElementById('m-compra-tit').textContent = 'Registrar compra online';
-  document.getElementById('co-salvar-btn').textContent = 'Registrar compra';
-  const itOpts = C.itens.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
-  document.getElementById('co-item').innerHTML = itOpts;
+  coTipoAtual = 'estoque';
+  coSetTipo('estoque');
+  document.getElementById('co-item').innerHTML = C.itens.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
   document.getElementById('co-qtd').value = '1';
+  document.getElementById('co-qtd-avulso').value = '1';
+  document.getElementById('co-desc-avulso').value = '';
+  document.getElementById('co-cat-avulso').value = '';
   document.getElementById('co-site').value = '';
   document.getElementById('co-valor').value = '';
+  document.getElementById('co-frete').value = '';
+  document.getElementById('co-unitario').value = '';
   document.getElementById('co-data').value = hj();
   document.getElementById('co-previsao').value = '';
   document.getElementById('co-obs').value = '';
+  // reset frete toggle
+  const blk = document.getElementById('co-frete-blk');
+  blk.style.display = 'none';
+  const tog = document.getElementById('co-frete-toggle');
+  tog.querySelector('span').textContent = '+';
+  tog.childNodes[1].textContent = ' Informar valor de frete';
+  document.getElementById('co-unitario-resumo').style.display = 'none';
+}
+
+function abrNovaCompra() {
+  coResetModal();
+  document.getElementById('m-compra-tit').textContent = 'Registrar compra online';
+  document.getElementById('co-salvar-btn').textContent = 'Registrar compra';
   document.getElementById('m-compra').classList.add('op');
 }
 
 function abrEditCompra(id) {
   const c = C.compras_online.find(x => x.id === id);
   if (!c) return;
+  coResetModal();
   coEditId = id;
   document.getElementById('m-compra-tit').textContent = 'Editar compra';
   document.getElementById('co-salvar-btn').textContent = 'Salvar alterações';
-  const itOpts = C.itens.map(i => `<option value="${i.id}"${parseInt(i.id)===parseInt(c.item_id)?' selected':''}>${i.nome}</option>`).join('');
-  document.getElementById('co-item').innerHTML = itOpts;
-  document.getElementById('co-qtd').value = c.qtd;
+  const tipo = c.tipo_compra || 'estoque';
+  coSetTipo(tipo);
+  if (tipo === 'estoque') {
+    const itOpts = C.itens.map(i => `<option value="${i.id}"${parseInt(i.id)===parseInt(c.item_id)?' selected':''}>${i.nome}</option>`).join('');
+    document.getElementById('co-item').innerHTML = itOpts;
+    document.getElementById('co-qtd').value = c.qtd;
+  } else {
+    document.getElementById('co-desc-avulso').value = c.item_nome || '';
+    document.getElementById('co-cat-avulso').value = c.categoria || '';
+    document.getElementById('co-qtd-avulso').value = c.qtd || 1;
+  }
   document.getElementById('co-site').value = c.site || '';
   document.getElementById('co-valor').value = c.valor || '';
   document.getElementById('co-data').value = c.data || hj();
   document.getElementById('co-previsao').value = c.previsao || '';
   document.getElementById('co-obs').value = c.obs || '';
+  if (c.frete) {
+    document.getElementById('co-frete').value = c.frete;
+    // abrir bloco frete
+    document.getElementById('co-frete-blk').style.display = '';
+    const tog = document.getElementById('co-frete-toggle');
+    tog.querySelector('span').textContent = '−';
+    tog.childNodes[1].textContent = ' Ocultar frete';
+  }
+  if (c.valor_unitario) document.getElementById('co-unitario').value = c.valor_unitario;
+  coCalcUnitario();
   document.getElementById('m-compra').classList.add('op');
 }
 
 async function salvarCompra() {
-  const iid = parseInt(document.getElementById('co-item').value);
-  const q = parseInt(document.getElementById('co-qtd').value) || 1;
+  const tipo = coTipoAtual;
   const site = document.getElementById('co-site').value.trim();
-  if (!iid) { alert('Selecione o item.'); return; }
   if (!site) { alert('Informe o site/fornecedor.'); return; }
-  const it = C.itens.find(i => i.id === iid);
+  let iid = null, item_nome = '', q = 1, categoria = '';
+  if (tipo === 'estoque') {
+    iid = parseInt(document.getElementById('co-item').value);
+    if (!iid) { alert('Selecione o item.'); return; }
+    q = parseInt(document.getElementById('co-qtd').value) || 1;
+    const it = C.itens.find(i => i.id === iid);
+    item_nome = it ? it.nome : '?';
+  } else {
+    item_nome = document.getElementById('co-desc-avulso').value.trim();
+    if (!item_nome) { alert('Informe a descrição do item.'); return; }
+    categoria = document.getElementById('co-cat-avulso').value.trim();
+    q = parseInt(document.getElementById('co-qtd-avulso').value) || 1;
+  }
+  const valorTotal = parseFloat(document.getElementById('co-valor').value) || null;
+  const frete = parseFloat(document.getElementById('co-frete').value) || null;
+  const valorUnitario = parseFloat(document.getElementById('co-unitario').value) || null;
   const body = {
+    tipo_compra: tipo,
     item_id: iid,
-    item_nome: it ? it.nome : '?',
+    item_nome,
+    categoria,
     qtd: q,
     site,
-    valor: parseFloat(document.getElementById('co-valor').value) || null,
+    valor: valorTotal,
+    frete: frete,
+    valor_unitario: valorUnitario,
     data: document.getElementById('co-data').value,
     previsao: document.getElementById('co-previsao').value || null,
     obs: document.getElementById('co-obs').value.trim(),
@@ -1544,11 +1692,12 @@ function rCompras() {
 
   function cardCompra(c, mostrarBotaoReceber) {
     const recebido = c.status === 'recebido';
+    const isAvulso = (c.tipo_compra || 'estoque') === 'avulso';
     const diasRestantes = c.previsao ? da(c.previsao) : null;
     let prazoHtml = '';
     if (c.previsao) {
       if (recebido) {
-        prazoHtml = `<span style="color:var(--gn);font-size:11px">Recebido em ${fd(c.recebido_em||c.previsao)}</span>`;
+        prazoHtml = `<span style="color:var(--gn);font-size:11px">${isAvulso ? 'Entregue' : 'Recebido'} em ${fd(c.recebido_em||c.previsao||c.data)}</span>`;
       } else if (diasRestantes < 0) {
         prazoHtml = `<span style="color:var(--rd);font-size:11px">⚠ Atrasado ${Math.abs(diasRestantes)}d (prev. ${fd(c.previsao)})</span>`;
       } else if (diasRestantes === 0) {
@@ -1560,13 +1709,32 @@ function rCompras() {
     const autorInfo = recebido
       ? (c.recebido_por ? `<span style="font-size:11px;color:var(--th)">recebido por ${c.recebido_por}</span>` : '')
       : (c.criado_por ? `<span style="font-size:11px;color:var(--th)">por ${c.criado_por}</span>` : '');
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:10px;border:1px solid var(--bd);margin-bottom:7px;background:${recebido?'var(--gnb)':'var(--sf)'}">
+    // Badge tipo
+    const tipoBadge = isAvulso
+      ? `<span style="font-size:11px;padding:1px 7px;border-radius:5px;background:var(--orb);color:var(--or);font-weight:600">Avulsa</span>`
+      : `<span style="font-size:11px;padding:1px 7px;border-radius:5px;background:var(--gnb);color:var(--gn);font-weight:600">Estoque</span>`;
+    // Categoria (avulso)
+    const catBadge = (isAvulso && c.categoria) ? `<span style="font-size:11px;color:var(--tm);padding:1px 6px;border-radius:5px;background:var(--bg);border:1px solid var(--bd)">${c.categoria}</span>` : '';
+    // Valor unitário
+    let valorHtml = '';
+    if (c.valor) {
+      valorHtml = `<span class="mn" style="font-size:12px;color:var(--gn)" title="Valor total">${fm(c.valor)}</span>`;
+      if (c.valor_unitario && c.qtd > 1) {
+        valorHtml += `<span class="mn" style="font-size:11px;color:var(--tm)" title="Valor unitário">· ${fm(c.valor_unitario)}/un.</span>`;
+      }
+      if (c.frete) {
+        valorHtml += `<span class="mn" style="font-size:11px;color:var(--or)" title="Frete incluso">+ frete ${fm(c.frete)}</span>`;
+      }
+    }
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:10px;border:1px solid var(--bd);margin-bottom:7px;background:${recebido?'var(--gnb)':isAvulso?'#fffbf5':'var(--sf)'}">
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px">
+          ${tipoBadge}
           <strong style="font-size:13px">${c.item_nome}</strong>
           <span class="mn" style="font-size:12px;color:var(--tm)">${c.qtd} un.</span>
           <span style="font-size:12px;padding:1px 8px;border-radius:5px;background:var(--acb);color:var(--ac)">${c.site}</span>
-          ${c.valor ? `<span class="mn" style="font-size:12px;color:var(--gn)">${fm(c.valor)}</span>` : ''}
+          ${catBadge}
+          ${valorHtml}
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
           ${prazoHtml}
@@ -1575,24 +1743,41 @@ function rCompras() {
         </div>
       </div>
       <div style="display:flex;gap:5px;flex-shrink:0">
-        ${mostrarBotaoReceber ? `<button class="btn sm s" onclick="abrReceberCompra(${c.id})">✓ Recebido</button>` : ''}
+        ${mostrarBotaoReceber ? `<button class="btn sm s" onclick="abrReceberCompra(${c.id})">${isAvulso ? '✓ Entregue' : '✓ Recebido'}</button>` : ''}
         <button class="btn sm e" onclick="abrEditCompra(${c.id})">Editar</button>
         <button class="btn sm d" onclick="delCompra(${c.id})">✕</button>
       </div>
     </div>`;
   }
 
-  // Painel: em andamento
-  const htmlPendentes = pendentes.length
-    ? pendentes.map(c => cardCompra(c, true)).join('')
-    : '<div class="empty">Nenhuma compra em andamento</div>';
+  // Painel: em andamento (estoque)
+  const pendentesEstoque = pendentes.filter(c => (c.tipo_compra || 'estoque') === 'estoque');
+  const pendentesAvulso = pendentes.filter(c => (c.tipo_compra || 'estoque') === 'avulso');
+
+  const htmlPendentesEstoque = pendentesEstoque.length
+    ? pendentesEstoque.map(c => cardCompra(c, true)).join('')
+    : '<div class="empty">Nenhuma compra de estoque em andamento</div>';
+
+  const htmlPendentesAvulso = pendentesAvulso.length
+    ? pendentesAvulso.map(c => cardCompra(c, true)).join('')
+    : null;
 
   // Painel: recebidas (colapsável)
   const htmlRecebidas = recebidas.length
     ? recebidas.map(c => cardCompra(c, false)).join('')
     : '<div class="empty">Nenhuma compra recebida</div>';
 
-  el.innerHTML = htmlPendentes + `
+  const avulsoSection = htmlPendentesAvulso !== null ? `
+    <div style="margin-top:14px">
+      <div onclick="togComprasAvulso()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;user-select:none">
+        <span style="font-size:13px;font-weight:600;color:var(--tx)">🛒 Compras Avulsas</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--tm)">${pendentesAvulso.length} registro(s)</span>
+        <span id="ico-compras-avulso" style="font-size:12px;color:var(--tm)">▼</span>
+      </div>
+      <div id="painel-compras-avulso" style="display:none;margin-top:8px">${htmlPendentesAvulso}</div>
+    </div>` : '';
+
+  el.innerHTML = htmlPendentesEstoque + avulsoSection + `
     <div style="margin-top:18px">
       <div onclick="togComprasRecebidas()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;user-select:none">
         <span style="font-size:13px;font-weight:600;color:var(--tx)">📦 Compras Online Recebidas</span>
@@ -1605,6 +1790,14 @@ function rCompras() {
 function togComprasRecebidas(){
   const p=document.getElementById('painel-compras-recebidas');
   const ic=document.getElementById('ico-compras-recebidas');
+  if(!p)return;
+  const aberto=p.style.display!=='none';
+  p.style.display=aberto?'none':'block';
+  if(ic)ic.textContent=aberto?'▼':'▲';
+}
+function togComprasAvulso(){
+  const p=document.getElementById('painel-compras-avulso');
+  const ic=document.getElementById('ico-compras-avulso');
   if(!p)return;
   const aberto=p.style.display!=='none';
   p.style.display=aberto?'none':'block';
