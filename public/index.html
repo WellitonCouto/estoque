@@ -1684,13 +1684,7 @@ async function delCompra(id) {
   } catch(e) { alert('Erro: ' + e.message); }
 }
 
-function rCompras() {
-  const el = document.getElementById('compras-lista');
-  if (!el) return;
-  const pendentes = C.compras_online.filter(c => c.status !== 'recebido');
-  const recebidas = C.compras_online.filter(c => c.status === 'recebido');
-
-  function cardCompra(c, mostrarBotaoReceber) {
+function cardCompra(c, mostrarBotaoReceber) {
     const recebido = c.status === 'recebido';
     const isAvulso = (c.tipo_compra || 'estoque') === 'avulso';
     const diasRestantes = c.previsao ? da(c.previsao) : null;
@@ -1709,13 +1703,10 @@ function rCompras() {
     const autorInfo = recebido
       ? (c.recebido_por ? `<span style="font-size:11px;color:var(--th)">recebido por ${c.recebido_por}</span>` : '')
       : (c.criado_por ? `<span style="font-size:11px;color:var(--th)">por ${c.criado_por}</span>` : '');
-    // Badge tipo
     const tipoBadge = isAvulso
       ? `<span style="font-size:11px;padding:1px 7px;border-radius:5px;background:var(--orb);color:var(--or);font-weight:600">Avulsa</span>`
       : `<span style="font-size:11px;padding:1px 7px;border-radius:5px;background:var(--gnb);color:var(--gn);font-weight:600">Estoque</span>`;
-    // Categoria (avulso)
     const catBadge = (isAvulso && c.categoria) ? `<span style="font-size:11px;color:var(--tm);padding:1px 6px;border-radius:5px;background:var(--bg);border:1px solid var(--bd)">${c.categoria}</span>` : '';
-    // Valor unitário
     let valorHtml = '';
     if (c.valor) {
       valorHtml = `<span class="mn" style="font-size:12px;color:var(--gn)" title="Valor total">${fm(c.valor)}</span>`;
@@ -1750,7 +1741,11 @@ function rCompras() {
     </div>`;
   }
 
-  // Painel: em andamento (estoque)
+function rCompras() {
+  const el = document.getElementById('compras-lista');
+  if (!el) return;
+  const pendentes = C.compras_online.filter(c => c.status !== 'recebido');
+  const recebidas = C.compras_online.filter(c => c.status === 'recebido');
   const pendentesEstoque = pendentes.filter(c => (c.tipo_compra || 'estoque') === 'estoque');
   const pendentesAvulso = pendentes.filter(c => (c.tipo_compra || 'estoque') === 'avulso');
 
