@@ -1762,29 +1762,35 @@ function rCompras() {
     ? pendentesAvulso.map(c => cardCompra(c, true)).join('')
     : null;
 
-  // Painel: recebidas (colapsável)
-  const htmlRecebidas = recebidas.length
-    ? recebidas.map(c => cardCompra(c, false)).join('')
-    : '<div class="empty">Nenhuma compra recebida</div>';
+  // Painel: recebidas (colapsável) - será filtrado via JS
+  const todasRecebidas = recebidas;
 
   const avulsoSection = htmlPendentesAvulso !== null ? `
     <div style="margin-top:14px">
-      <div onclick="togComprasAvulso()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;user-select:none">
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--sf);border:1px solid var(--bd);border-radius:10px">
         <span style="font-size:13px;font-weight:600;color:var(--tx)">🛒 Compras Avulsas</span>
-        <span style="margin-left:auto;font-size:12px;color:var(--tm)">${pendentesAvulso.length} registro(s)</span>
-        <span id="ico-compras-avulso" style="font-size:12px;color:var(--tm)">▼</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--tm)">${pendentesAvulso.length} pendente(s)</span>
       </div>
-      <div id="painel-compras-avulso" style="display:none;margin-top:8px">${htmlPendentesAvulso}</div>
+      <div style="margin-top:8px">${htmlPendentesAvulso}</div>
     </div>` : '';
 
   el.innerHTML = htmlPendentesEstoque + avulsoSection + `
     <div style="margin-top:18px">
       <div onclick="togComprasRecebidas()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;user-select:none">
-        <span style="font-size:13px;font-weight:600;color:var(--tx)">📦 Compras Online Recebidas</span>
-        <span style="margin-left:auto;font-size:12px;color:var(--tm)">${recebidas.length} registro(s)</span>
+        <span style="font-size:13px;font-weight:600;color:var(--tx)">📦 Compras Recebidas / Entregues</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--tm)">${todasRecebidas.length} registro(s)</span>
         <span id="ico-compras-recebidas" style="font-size:12px;color:var(--tm)">▼</span>
       </div>
-      <div id="painel-compras-recebidas" style="display:none;margin-top:8px">${htmlRecebidas}</div>
+      <div id="painel-compras-recebidas" style="display:none;margin-top:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--tm);white-space:nowrap">Filtrar por período:</span>
+          <input type="date" id="cr-de" style="font-size:12px;padding:4px 8px;border:1px solid var(--bd);border-radius:7px;background:var(--sf);color:var(--tx)" oninput="filtrarComprasRecebidas()">
+          <span style="font-size:12px;color:var(--tm)">até</span>
+          <input type="date" id="cr-ate" style="font-size:12px;padding:4px 8px;border:1px solid var(--bd);border-radius:7px;background:var(--sf);color:var(--tx)" oninput="filtrarComprasRecebidas()">
+          <button onclick="limparFiltroRecebidas()" class="btn sm" style="font-size:11px">Limpar</button>
+        </div>
+        <div id="cr-lista">${todasRecebidas.length ? todasRecebidas.map(c => cardCompra(c, false)).join('') : '<div class="empty">Nenhuma compra recebida</div>'}</div>
+      </div>
     </div>`;
 }
 function togComprasRecebidas(){
@@ -1795,13 +1801,24 @@ function togComprasRecebidas(){
   p.style.display=aberto?'none':'block';
   if(ic)ic.textContent=aberto?'▼':'▲';
 }
-function togComprasAvulso(){
-  const p=document.getElementById('painel-compras-avulso');
-  const ic=document.getElementById('ico-compras-avulso');
-  if(!p)return;
-  const aberto=p.style.display!=='none';
-  p.style.display=aberto?'none':'block';
-  if(ic)ic.textContent=aberto?'▼':'▲';
+function filtrarComprasRecebidas(){
+  const de = document.getElementById('cr-de')?.value || '';
+  const ate = document.getElementById('cr-ate')?.value || '';
+  const lista = document.getElementById('cr-lista');
+  if (!lista) return;
+  let itens = (C.compras_online || []).filter(c => c.status === 'recebido');
+  if (de) itens = itens.filter(c => (c.recebido_em || c.data || '') >= de);
+  if (ate) itens = itens.filter(c => (c.recebido_em || c.data || '') <= ate);
+  lista.innerHTML = itens.length
+    ? itens.map(c => cardCompra(c, false)).join('')
+    : '<div class="empty">Nenhuma compra no período informado</div>';
+}
+function limparFiltroRecebidas(){
+  const de = document.getElementById('cr-de');
+  const ate = document.getElementById('cr-ate');
+  if(de) de.value='';
+  if(ate) ate.value='';
+  filtrarComprasRecebidas();
 }
 
 // Quantidade em compra por item (pendentes)
