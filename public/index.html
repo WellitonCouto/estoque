@@ -185,6 +185,16 @@ tbody tr:hover td:first-child{border-left:2px solid var(--ac)}
 .anot{border-left:3px solid var(--ac);padding:8px 12px;margin-bottom:8px;background:var(--acb);border-radius:0 var(--r-sm) var(--r-sm) 0}
 .anot-d{font-size:11px;color:var(--tm);font-family:var(--mn);margin-bottom:2px;font-weight:600}
 .anot-t{font-size:13.5px}
+/* ── CARD AGUARDANDO INÍCIO ── */
+.aguardo-peek{background:var(--sf);border:1px solid var(--bds);border-radius:var(--r);margin-bottom:14px;box-shadow:var(--sh);overflow:hidden}
+.aguardo-peek-header{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;user-select:none;transition:background .15s}
+.aguardo-peek-header:hover{background:var(--bg)}
+.aguardo-peek-arrow{font-size:10px;color:var(--tm);transition:transform .22s cubic-bezier(.4,0,.2,1);flex-shrink:0;display:inline-block}
+.aguardo-peek-arrow.open{transform:rotate(90deg)}
+.aguardo-peek-title{font-size:13px;font-weight:600;color:var(--tm);flex:1}
+.aguardo-peek-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 7px;background:#f0ede8;color:#7a6550;border-radius:999px;font-size:11px;font-weight:700;font-family:var(--mn)}
+.aguardo-peek-body{display:none;padding:0 14px 14px;border-top:1px solid var(--bd)}
+.aguardo-peek-body.open{display:block;animation:fadeIn .2s ease}
 .ro{background:#f3f4f6!important;color:var(--tm)!important}
 .fl{display:flex;align-items:center;gap:8px}
 .mla{margin-left:auto}
@@ -545,7 +555,7 @@ tbody tr:hover td:first-child{border-left:2px solid var(--ac)}
         <div class="fl" style="margin-bottom:13px">
           <span class="ct" style="margin:0">Demandas</span>
           <div style="display:flex;gap:8px;margin-left:auto">
-            <select id="dmfil" onchange="rDems()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="aberto">Em andamento</option><option value="aguardo">Aguardando início</option><option value="autpag_pendente">💰 AUTPAG pendente</option><option value="concluido">Concluídas</option><option value="">Todas</option></select>
+            <select id="dmfil" onchange="rDems()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="aberto">Em andamento</option><option value="autpag_pendente">💰 AUTPAG pendente</option><option value="concluido">Concluídas</option><option value="">Todas</option></select>
             <button class="btn sm" onclick="abrRelAdm()">Relatório PDF</button>
             <button class="btn sm e" onclick="abrRelGer()">Relatório Gerencial</button>
           </div>
@@ -2015,8 +2025,34 @@ function rDems(){
   }
   l.sort((a,b)=>{const ua=URGORD[a.urgencia]??2,ub=URGORD[b.urgencia]??2;return ua!==ub?ua-ub:(a.data_solicitacao||'').localeCompare(b.data_solicitacao||'');});
   const cont=document.getElementById('ldems');
-  if(!l.length){cont.innerHTML='<div class="empty">Nenhuma demanda encontrada</div>';return;}
-  cont.innerHTML=l.map(d=>{
+
+  // --- Card colapsível: aguardando início (só quando filtro não é já "aguardo") ---
+  let peekHtml = '';
+  if(fil !== 'aguardo'){
+    const aguardando = C.demandas.filter(d => demStatus(d) === 'aguardo');
+    aguardando.sort((a,b)=>{const ua=URGORD[a.urgencia]??2,ub=URGORD[b.urgencia]??2;return ua!==ub?ua-ub:(a.data_solicitacao||'').localeCompare(b.data_solicitacao||'');});
+    if(aguardando.length > 0){
+      const peekItems = aguardando.map(d => {
+        const autpagPend = demAutpagPendente(d);
+        const autpagBdg = autpagPend?`<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#fff3cd;color:#856404;border:1px solid #ffc107">💰 AUTPAG pendente</span>`:'';
+        const anots = C.anotacoes.filter(a=>a.demanda_id===d.id);
+        const anotId = 'peek-anots-'+d.id;
+        const anotSecao = `<div style="margin-top:6px;border-top:1px solid var(--bd);padding-top:6px"><div onclick="toggleDemandasAnots('${anotId}')" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0;user-select:none"><span id="${anotId}-btn" style="font-size:10px;color:var(--tm)">▶</span><span style="font-size:12px;color:var(--tm);font-weight:500">Anotações (${anots.length})</span></div><div id="${anotId}" style="display:none;padding-top:4px">${anots.length?anots.map(a=>`<div class="anot"><div style="display:flex;align-items:center;gap:8px"><div class="anot-d">${fd(a.data)} · <strong>${a.autor||'—'}</strong> · ${fhora(a.criado_em)}</div><div style="margin-left:auto;display:flex;gap:4px"><button class="btn sm e" onclick="opEditAnot(${a.id})" style="padding:2px 7px;font-size:11px">✏ Editar</button><button class="btn sm d" onclick="delAnot(${a.id})" style="padding:2px 7px;font-size:11px">✕</button></div></div><div class="anot-t">${a.texto}</div></div>`).join(''):'<div style="font-size:12px;color:var(--th);padding:4px 0">Nenhuma anotação ainda.</div>'}</div></div>`;
+        return `<div class="card" style="margin-bottom:9px;margin-top:4px;border-left:4px solid var(--th)"><div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:9px"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">${URGBDG[d.urgencia||'normal']||''}<span class="bdg" style="background:#f0ede8;color:var(--tm)">Aguardando início</span>${autpagBdg}</div><div style="font-weight:600;font-size:15px">${d.titulo}</div><div style="font-size:12px;color:var(--tm);margin-top:2px">Iniciado por <strong>${d.iniciado_por||'—'}</strong> · Solicitante: ${d.solicitante||'—'} · ${fd(d.data_solicitacao)}</div></div><div style="display:flex;gap:5px;flex-shrink:0"><button class="btn sm s" onclick="opCnDem(${d.id})">Concluir</button><button class="btn sm e" onclick="opEditDem(${d.id})">Editar</button><button class="btn sm e" onclick="opAnots(${d.id})">+ Anotação</button><button class="btn sm d" onclick="delDem(${d.id})">✕</button></div></div>${d.descricao?`<div style="font-size:13px;color:var(--tm);margin-bottom:7px">${d.descricao}</div>`:''}${anotSecao}</div>`;
+      }).join('');
+      peekHtml = `<div class="aguardo-peek" id="aguardo-peek-wrap">
+        <div class="aguardo-peek-header" onclick="toggleAguardoPeek()">
+          <span class="aguardo-peek-arrow" id="aguardo-peek-arrow">▶</span>
+          <span class="aguardo-peek-title">⏳ Aguardando início</span>
+          <span class="aguardo-peek-count">${aguardando.length}</span>
+        </div>
+        <div class="aguardo-peek-body" id="aguardo-peek-body">${peekItems}</div>
+      </div>`;
+    }
+  }
+
+  if(!l.length){cont.innerHTML=peekHtml+'<div class="empty">Nenhuma demanda encontrada</div>';return;}
+  cont.innerHTML=peekHtml+l.map(d=>{
     const anots=C.anotacoes.filter(a=>a.demanda_id===d.id).sort((a,b)=>(a.criado_em||'').localeCompare(b.criado_em||''));
     const st=demStatus(d);
     const cn=st==='concluido';
@@ -2034,6 +2070,13 @@ function rDems(){
     const anotSecao=`<div style="margin-top:6px;border-top:1px solid var(--bd);padding-top:6px"><div onclick="toggleDemandasAnots('${anotId}')" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0;user-select:none"><span id="${anotId}-btn" style="font-size:10px;color:var(--tm)">\u25b6</span><span style="font-size:12px;color:var(--tm);font-weight:500">Anota\u00e7\u00f5es (${anots.length})</span></div><div id="${anotId}" style="display:none;padding-top:4px">${anots.length?anots.map(a=>`<div class="anot"><div style="display:flex;align-items:center;gap:8px"><div class="anot-d">${fd(a.data)} \u00b7 <strong>${a.autor||'\u2014'}</strong> \u00b7 ${fhora(a.criado_em)}</div><div style="margin-left:auto;display:flex;gap:4px"><button class="btn sm e" onclick="opEditAnot(${a.id})" style="padding:2px 7px;font-size:11px">\u270f Editar</button><button class="btn sm d" onclick="delAnot(${a.id})" style="padding:2px 7px;font-size:11px">\u2715</button></div></div><div class="anot-t">${a.texto}</div></div>`).join(''):'<div style="font-size:12px;color:var(--th);padding:4px 0">Nenhuma anota\u00e7\u00e3o ainda.</div>'}</div></div>`;
     return`<div class="card" style="margin-bottom:11px;${bord}"><div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:9px"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">${URGBDG[d.urgencia||'normal']||''}${stBdg}${autpagBdg}</div><div style="font-weight:600;font-size:15px">${d.titulo}</div><div style="font-size:12px;color:var(--tm);margin-top:2px">Iniciado por <strong>${d.iniciado_por||'\u2014'}</strong> \u00b7 Solicitante: ${d.solicitante||'\u2014'} \u00b7 ${fd(d.data_solicitacao)}${cn?' \u00b7 <span style="color:var(--gn)">\u2713 Conclu\u00eddo em '+fd(d.data_conclusao)+'</span>':''}</div></div><div style="display:flex;gap:5px;flex-shrink:0">${!cn?`<button class="btn sm s" onclick="opCnDem(${d.id})">Concluir</button>`:`<button class="btn sm e" onclick="reverterDem(${d.id})">Reabrir</button>`}<button class="btn sm e" onclick="opEditDem(${d.id})">Editar</button><button class="btn sm e" onclick="opAnots(${d.id})">+ Anota\u00e7\u00e3o</button><button class="btn sm d" onclick="delDem(${d.id})">\u2715</button></div></div>${d.precisa_aprovacao?`<div style="font-size:12px;color:var(--tm);padding:7px 11px;background:${autpagPend?'#fff3cd':'var(--acb)'};border-radius:8px;margin-bottom:7px;border:1px solid ${autpagPend?'#ffc107':'transparent'}">${autpagPend?'\ud83d\udcb0':'\u2713'} Valor: ${fm(d.valor_solicitado)} \u00b7 Sol.Or\u00e7.: ${fd(d.data_sol_orcamento)} \u00b7 Aprova\u00e7\u00e3o: ${d.data_aprov_orcamento?fd(d.data_aprov_orcamento):'<strong style="color:#856404">Pendente</strong>'} \u00b7 Prazo: ${dap}</div>`:''}${d.descricao?`<div style="font-size:13px;color:var(--tm);margin-bottom:7px">${d.descricao}</div>`:''}${anotSecao}</div>`;
   }).join('');
+}
+function toggleAguardoPeek(){
+  const body=document.getElementById('aguardo-peek-body');
+  const arrow=document.getElementById('aguardo-peek-arrow');
+  if(!body)return;
+  const open=body.classList.toggle('open');
+  if(arrow) arrow.classList.toggle('open',open);
 }
 const fhora=ts=>{if(!ts)return'—';try{const d=new Date(ts);return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return ts;}};
 let danot=null;
