@@ -1151,7 +1151,7 @@ const server = http.createServer(async (req, res) => {
             const r = await pool.query('UPDATE contas_pagar SET email_enviado=$1 WHERE id=$2 RETURNING *', [b.email_enviado, id]);
             return ok(res, r.rows[0]);
           }
-          // AtualizaÃ§Ã£o parcial: entrega_recebida apenas
+          // Atualização parcial: entrega_recebida apenas
           if (typeof b.entrega_recebida !== 'undefined' && !b.status) {
             const r = await pool.query('UPDATE contas_pagar SET entrega_recebida=$1 WHERE id=$2 RETURNING *', [b.entrega_recebida, id]);
             return ok(res, r.rows[0]);
