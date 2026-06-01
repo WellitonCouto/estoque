@@ -31,15 +31,23 @@ body{font-family:var(--sn);background:var(--bg);color:var(--tx);font-size:15px;l
 ::-webkit-scrollbar-thumb:hover{background:var(--tm)}
 
 /* ── LOGIN ── */
-#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);background-image:radial-gradient(ellipse 70% 50% at 60% 20%,rgba(59,110,248,.08) 0%,transparent 60%)}
-.lbox{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r-xl);padding:44px;width:100%;max-width:400px;box-shadow:var(--sh-md);animation:pageIn .4s ease forwards}
-.llogo{display:flex;align-items:center;gap:13px;margin-bottom:30px}
-.llogo-ico{width:44px;height:44px;background:linear-gradient(135deg,var(--ac),var(--ac2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--mn);font-size:19px;font-weight:500;color:#fff;box-shadow:0 4px 12px rgba(59,110,248,.35)}
-.llogo h1{font-size:18px;font-weight:700;letter-spacing:-.03em;color:var(--tx)}
-.llogo p{font-size:12px;color:var(--tm);margin-top:1px}
-.lerr{background:var(--rdb);color:var(--rd);border:1px solid #f5c6c3;border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
-.llink{font-size:13px;color:var(--ac);cursor:pointer;text-decoration:none;margin-top:14px;display:block;text-align:center;transition:color .15s}
-.llink:hover{color:var(--ac2);text-decoration:underline}
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#0a0d14}
+#login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -5%,rgba(59,110,248,.38) 0%,transparent 62%),radial-gradient(ellipse 50% 45% at 85% 105%,rgba(13,122,72,.2) 0%,transparent 55%),radial-gradient(ellipse 35% 35% at 8% 92%,rgba(109,40,217,.18) 0%,transparent 55%);pointer-events:none}
+#login-screen::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.035) 1px,transparent 1px);background-size:36px 36px;pointer-events:none}
+.lbox{position:relative;z-index:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:44px 40px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.05);backdrop-filter:blur(20px);animation:pageIn .5s cubic-bezier(.4,0,.2,1) forwards}
+.llogo{display:flex;align-items:center;gap:13px;margin-bottom:32px}
+.llogo-ico{width:46px;height:46px;background:linear-gradient(135deg,var(--ac),var(--ac2));border-radius:13px;display:flex;align-items:center;justify-content:center;font-family:var(--mn);font-size:19px;font-weight:500;color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 8px 28px rgba(59,110,248,.55);flex-shrink:0}
+.llogo h1{font-size:17px;font-weight:700;letter-spacing:-.03em;color:#fff}
+.llogo p{font-size:12px;color:rgba(255,255,255,.4);margin-top:1px;font-family:var(--mn)}
+.lbox .f label{color:rgba(255,255,255,.55);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.lbox .f input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:10px;font-size:14px;padding:10px 14px}
+.lbox .f input::placeholder{color:rgba(255,255,255,.25)}
+.lbox .f input:focus{outline:none;border-color:rgba(59,110,248,.65);background:rgba(255,255,255,.1);box-shadow:0 0 0 3px rgba(59,110,248,.2)}
+.lbox .btn.p{background:linear-gradient(135deg,var(--ac),var(--ac2));border:none;color:#fff;font-weight:600;letter-spacing:.01em;box-shadow:0 4px 18px rgba(59,110,248,.45);transition:var(--tr)}
+.lbox .btn.p:hover{box-shadow:0 6px 24px rgba(59,110,248,.6);transform:translateY(-1px)}
+.lerr{background:rgba(192,48,42,.2);color:#f87171;border:1px solid rgba(192,48,42,.4);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
+.llink{font-size:13px;color:rgba(123,167,251,.85);cursor:pointer;text-decoration:none;margin-top:14px;display:block;text-align:center;transition:color .15s}
+.llink:hover{color:#fff;text-decoration:underline}
 
 /* ── WELCOME ── */
 #welcome-screen{display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;position:relative;overflow:hidden;background:#0a0d14}
@@ -185,16 +193,6 @@ tbody tr:hover td:first-child{border-left:2px solid var(--ac)}
 .anot{border-left:3px solid var(--ac);padding:8px 12px;margin-bottom:8px;background:var(--acb);border-radius:0 var(--r-sm) var(--r-sm) 0}
 .anot-d{font-size:11px;color:var(--tm);font-family:var(--mn);margin-bottom:2px;font-weight:600}
 .anot-t{font-size:13.5px}
-/* ── CARD AGUARDANDO INÍCIO ── */
-.aguardo-peek{background:var(--sf);border:1px solid var(--bds);border-radius:var(--r);margin-bottom:14px;box-shadow:var(--sh);overflow:hidden}
-.aguardo-peek-header{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;user-select:none;transition:background .15s}
-.aguardo-peek-header:hover{background:var(--bg)}
-.aguardo-peek-arrow{font-size:10px;color:var(--tm);transition:transform .22s cubic-bezier(.4,0,.2,1);flex-shrink:0;display:inline-block}
-.aguardo-peek-arrow.open{transform:rotate(90deg)}
-.aguardo-peek-title{font-size:13px;font-weight:600;color:var(--tm);flex:1}
-.aguardo-peek-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 7px;background:#f0ede8;color:#7a6550;border-radius:999px;font-size:11px;font-weight:700;font-family:var(--mn)}
-.aguardo-peek-body{display:none;padding:0 14px 14px;border-top:1px solid var(--bd)}
-.aguardo-peek-body.open{display:block;animation:fadeIn .2s ease}
 .ro{background:#f3f4f6!important;color:var(--tm)!important}
 .fl{display:flex;align-items:center;gap:8px}
 .mla{margin-left:auto}
@@ -299,7 +297,7 @@ tbody tr:hover td:first-child{border-left:2px solid var(--ac)}
     </nav>
     <nav id="na" style="display:none">
       <button class="ni" onclick="sp('ademdas',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path stroke-width="1.5" d="M9 12h6M9 16h4"/></svg>Demandas</button>
-      <button class="ni" id="nav-vencs" onclick="sp('avencs',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Extintores/Filtros<span id="nav-vencs-badge" style="display:none;margin-left:auto;background:var(--rd);color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;font-weight:700">!</span></button>
+      <button class="ni" id="nav-vencs" onclick="sp('avencs',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Vencimentos<span id="nav-vencs-badge" style="display:none;margin-left:auto;background:var(--rd);color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;font-weight:700">!</span></button>
       <button class="ni" onclick="sp('apagamentos',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Pagamentos</button>
       <button class="ni" id="nav-gerador" onclick="sp('agerador',this)"><svg class="nico" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="7" width="20" height="13" rx="2" stroke-width="1.5"/><path stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><path stroke-width="1.5" d="M12 12v3M9 13.5l3-1.5 3 1.5"/></svg>Gerador<span id="nav-gerador-badge" style="display:none;margin-left:auto;background:var(--rd);color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;font-weight:700">!</span></button>
     </nav>
@@ -555,7 +553,7 @@ tbody tr:hover td:first-child{border-left:2px solid var(--ac)}
         <div class="fl" style="margin-bottom:13px">
           <span class="ct" style="margin:0">Demandas</span>
           <div style="display:flex;gap:8px;margin-left:auto">
-            <select id="dmfil" onchange="rDems()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="aberto">Em andamento</option><option value="autpag_pendente">💰 AUTPAG pendente</option><option value="concluido">Concluídas</option><option value="">Todas</option></select>
+            <select id="dmfil" onchange="rDems()" style="padding:5px 9px;border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--sn);background:var(--bg)"><option value="aberto">Em andamento</option><option value="aguardo">Aguardando início</option><option value="autpag_pendente">💰 AUTPAG pendente</option><option value="concluido">Concluídas</option><option value="">Todas</option></select>
             <button class="btn sm" onclick="abrRelAdm()">Relatório PDF</button>
             <button class="btn sm e" onclick="abrRelGer()">Relatório Gerencial</button>
           </div>
@@ -566,7 +564,7 @@ tbody tr:hover td:first-child{border-left:2px solid var(--ac)}
 
     <!-- ADM: VENCIMENTOS -->
     <div id="page-avencs" class="page">
-      <div class="ph"><h2>Controle de vencimentos</h2><p>Filtros de água e extintores de incêndio</p></div>
+      <div class="ph"><h2>Vencimentos</h2><p>Filtros de água, extintores de incêndio e fossa séptica</p></div>
       <div id="valerts"></div>
       <div class="card"><div class="ct">Filtros de água — cadastrar</div>
         <div class="fg c4"><div class="f"><label>Local / Identificação</label><input id="ftl" placeholder="Ex: Cozinha"></div><div class="f"><label>Descrição</label><input id="ftd" placeholder="Ex: Filtro 3M"></div><div class="f"><label>Data da última troca</label><input id="ftdt" type="date"></div><div class="f"><label>Validade (meses)</label><input id="ftv" type="number" value="6" min="1"></div></div>
@@ -578,6 +576,17 @@ tbody tr:hover td:first-child{border-left:2px solid var(--ac)}
         <button class="btn p" onclick="addExt()">Cadastrar extintor</button>
       </div>
       <div class="card"><div class="ct">Extintores cadastrados</div><div class="tw"><table><thead><tr><th>Local</th><th>Tipo</th><th>Nº série</th><th>Vencimento</th><th>Status</th><th></th></tr></thead><tbody id="td-ext"></tbody></table></div></div>
+
+      <!-- FOSSA SÉPTICA -->
+      <div class="card">
+        <div class="ct">🪣 Fossa séptica</div>
+        <div id="fossa-status-box" style="margin-bottom:14px"></div>
+        <button class="btn p" onclick="opRegistrarFossa()">Registrar limpeza</button>
+      </div>
+      <div class="card">
+        <div class="ct">Histórico de limpezas — fossa séptica</div>
+        <div class="tw"><table><thead><tr><th>Data</th><th>Responsável</th><th>Custo</th><th>Observação</th><th>Registrado por</th><th></th></tr></thead><tbody id="td-fossa-hist"></tbody></table></div>
+      </div>
     </div>
 
 
@@ -1243,6 +1252,13 @@ tbody tr:hover td:first-child{border-left:2px solid var(--ac)}
 <div class="mo" id="m-efilt"><div class="mbox"><div class="mtit">Editar filtro</div><div class="fg c2"><div class="f"><label>Local</label><input id="efl"></div><div class="f"><label>Descrição</label><input id="efd"></div></div><div class="fg c2"><div class="f"><label>Última troca</label><input id="efdt" type="date"></div><div class="f"><label>Validade (meses)</label><input id="efv" type="number" min="1"></div></div><div class="mft"><button class="btn" onclick="cm('m-efilt')">Cancelar</button><button class="btn p" onclick="saveFilt()">Salvar</button></div></div></div>
 <div class="mo" id="m-eext"><div class="mbox"><div class="mtit">Editar extintor</div><div class="fg c2"><div class="f"><label>Local</label><input id="eel"></div><div class="f"><label>Tipo</label><input id="eet"></div></div><div class="fg c2"><div class="f"><label>Vencimento</label><input id="eed" type="date"></div><div class="f"><label>Nº série</label><input id="ees"></div></div><div class="mft"><button class="btn" onclick="cm('m-eext')">Cancelar</button><button class="btn p" onclick="saveExt()">Salvar</button></div></div></div>
 
+<div class="mo" id="m-fossa"><div class="mbox"><div class="mtit">🪣 Registrar limpeza da fossa séptica</div>
+  <div class="fg c2"><div class="f"><label>Data da limpeza *</label><input id="fossa-data" type="date"></div><div class="f"><label>Responsável / Empresa</label><input id="fossa-resp" placeholder="Ex: Hidro Serviços Ltda"></div></div>
+  <div class="fg c2"><div class="f"><label>Custo (R$)</label><input id="fossa-custo" type="number" step="0.01" min="0" placeholder="0,00"></div><div class="f"><label>Registrado por</label><input id="fossa-regpor" placeholder="Seu nome"></div></div>
+  <div class="f" style="margin-bottom:14px"><label>Observação</label><textarea id="fossa-obs" rows="3" placeholder="Detalhes sobre o serviço..."></textarea></div>
+  <div class="mft"><button class="btn" onclick="cm('m-fossa')">Cancelar</button><button class="btn p" onclick="salvarFossa()">Registrar limpeza</button></div>
+</div></div>
+
 <div class="mo" id="m-eusr"><div class="mbox"><div class="mtit">Editar usuário</div><p style="font-size:12px;color:var(--tm);margin-bottom:14px">E-mail: <strong><span id="eu-email-info"></span></strong> (não pode ser alterado)</p><div class="fg c2"><div class="f"><label>Nome completo</label><input id="eu-nome"></div><div class="f"><label>Setor</label><input id="eu-setor"></div></div><div class="f" style="margin-bottom:14px"><label>Nova senha (deixe em branco para não alterar)</label><input id="eu-senha" type="password" placeholder="Mínimo 6 caracteres"></div><div class="mft"><button class="btn" onclick="cm('m-eusr')">Cancelar</button><button class="btn p" onclick="saveUsr()">Salvar alterações</button></div></div></div>
 <div class="mo" id="m-anot-cham"><div class="mbox"><div class="mtit" id="m-anot-cham-tit">Anotações do chamado</div><div id="lanotsc" style="margin-bottom:13px;max-height:260px;overflow-y:auto"></div><div class="ct" style="margin-bottom:7px">Nova anotação</div><div class="fg c2"><div class="f"><label>Data</label><input id="anotcd" type="date"></div><div class="f"><label>Descrição</label><input id="anotct" placeholder="O que foi feito, observado..."></div></div><div class="mft"><button class="btn" onclick="cm('m-anot-cham')">Fechar</button><button class="btn p" onclick="addAnotCham()">Adicionar</button></div></div></div>
 
@@ -1317,7 +1333,7 @@ tbody tr:hover td:first-child{border-left:2px solid var(--ac)}
 <script>
 const ADM='adm.welliton@jscontadores.com.br';
 let U=null;
-let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],demandas:[],anotacoes:[],anotacoes_chamado:[],filtros:[],extintores:[],veiculos:[],motoristas:[],abastecimentos:[],manutencoes:[],licenciamentos:[],registros_km:[],custos:[],alertas_config:[],compras_online:[]};
+let C={itens:[],movimentos:[],pedidos:[],usuarios:[],aparelhos:[],chamados:[],demandas:[],anotacoes:[],anotacoes_chamado:[],filtros:[],extintores:[],fossa_config:null,fossa_historico:[],veiculos:[],motoristas:[],abastecimentos:[],manutencoes:[],licenciamentos:[],registros_km:[],custos:[],alertas_config:[],compras_online:[]};
 let MF=[];
 
 // ── UTILS ─────────────────────────────────────────────────
@@ -1369,7 +1385,7 @@ function entrarModulo(mod){
 // ── LOAD ───────────────────────────────────────────────────
 async function load(){const d=await A('GET','/dados');C.itens=d.itens||[];C.movimentos=d.movimentos||[];C.pedidos=d.pedidos||[];C.usuarios=d.usuarios||[];C.compras_online=d.compras_online||[];MF=C.movimentos;}
 async function loadCli(){const d=await A('GET','/clima');C.aparelhos=d.aparelhos||[];C.chamados=d.chamados||[];}
-async function loadAdm(){const d=await A('GET','/admin');C.demandas=d.demandas||[];C.anotacoes=d.anotacoes||[];C.filtros=d.filtros||[];C.extintores=d.extintores||[];C.anotacoes_chamado=d.anotacoes_chamado||[];rVencsNavBadge();}
+async function loadAdm(){const d=await A('GET','/admin');C.demandas=d.demandas||[];C.anotacoes=d.anotacoes||[];C.filtros=d.filtros||[];C.extintores=d.extintores||[];C.anotacoes_chamado=d.anotacoes_chamado||[];C.fossa_config=d.fossa_config||null;C.fossa_historico=d.fossa_historico||[];rVencsNavBadge();}
 async function loadFrota(){const d=await A('GET','/frota');C.veiculos=d.veiculos||[];C.motoristas=d.motoristas||[];C.abastecimentos=d.abastecimentos||[];C.manutencoes=d.manutencoes||[];C.licenciamentos=d.licenciamentos||[];C.registros_km=d.registros_km||[];C.custos=d.custos||[];C.alertas_config=d.alertas_config||[];}
 
 // ── PAINEL ─────────────────────────────────────────────────
@@ -2025,34 +2041,8 @@ function rDems(){
   }
   l.sort((a,b)=>{const ua=URGORD[a.urgencia]??2,ub=URGORD[b.urgencia]??2;return ua!==ub?ua-ub:(a.data_solicitacao||'').localeCompare(b.data_solicitacao||'');});
   const cont=document.getElementById('ldems');
-
-  // --- Card colapsível: aguardando início (só quando filtro não é já "aguardo") ---
-  let peekHtml = '';
-  if(fil !== 'aguardo'){
-    const aguardando = C.demandas.filter(d => demStatus(d) === 'aguardo');
-    aguardando.sort((a,b)=>{const ua=URGORD[a.urgencia]??2,ub=URGORD[b.urgencia]??2;return ua!==ub?ua-ub:(a.data_solicitacao||'').localeCompare(b.data_solicitacao||'');});
-    if(aguardando.length > 0){
-      const peekItems = aguardando.map(d => {
-        const autpagPend = demAutpagPendente(d);
-        const autpagBdg = autpagPend?`<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#fff3cd;color:#856404;border:1px solid #ffc107">💰 AUTPAG pendente</span>`:'';
-        const anots = C.anotacoes.filter(a=>a.demanda_id===d.id);
-        const anotId = 'peek-anots-'+d.id;
-        const anotSecao = `<div style="margin-top:6px;border-top:1px solid var(--bd);padding-top:6px"><div onclick="toggleDemandasAnots('${anotId}')" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0;user-select:none"><span id="${anotId}-btn" style="font-size:10px;color:var(--tm)">▶</span><span style="font-size:12px;color:var(--tm);font-weight:500">Anotações (${anots.length})</span></div><div id="${anotId}" style="display:none;padding-top:4px">${anots.length?anots.map(a=>`<div class="anot"><div style="display:flex;align-items:center;gap:8px"><div class="anot-d">${fd(a.data)} · <strong>${a.autor||'—'}</strong> · ${fhora(a.criado_em)}</div><div style="margin-left:auto;display:flex;gap:4px"><button class="btn sm e" onclick="opEditAnot(${a.id})" style="padding:2px 7px;font-size:11px">✏ Editar</button><button class="btn sm d" onclick="delAnot(${a.id})" style="padding:2px 7px;font-size:11px">✕</button></div></div><div class="anot-t">${a.texto}</div></div>`).join(''):'<div style="font-size:12px;color:var(--th);padding:4px 0">Nenhuma anotação ainda.</div>'}</div></div>`;
-        return `<div class="card" style="margin-bottom:9px;margin-top:4px;border-left:4px solid var(--th)"><div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:9px"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">${URGBDG[d.urgencia||'normal']||''}<span class="bdg" style="background:#f0ede8;color:var(--tm)">Aguardando início</span>${autpagBdg}</div><div style="font-weight:600;font-size:15px">${d.titulo}</div><div style="font-size:12px;color:var(--tm);margin-top:2px">Iniciado por <strong>${d.iniciado_por||'—'}</strong> · Solicitante: ${d.solicitante||'—'} · ${fd(d.data_solicitacao)}</div></div><div style="display:flex;gap:5px;flex-shrink:0"><button class="btn sm s" onclick="opCnDem(${d.id})">Concluir</button><button class="btn sm e" onclick="opEditDem(${d.id})">Editar</button><button class="btn sm e" onclick="opAnots(${d.id})">+ Anotação</button><button class="btn sm d" onclick="delDem(${d.id})">✕</button></div></div>${d.descricao?`<div style="font-size:13px;color:var(--tm);margin-bottom:7px">${d.descricao}</div>`:''}${anotSecao}</div>`;
-      }).join('');
-      peekHtml = `<div class="aguardo-peek" id="aguardo-peek-wrap">
-        <div class="aguardo-peek-header" onclick="toggleAguardoPeek()">
-          <span class="aguardo-peek-arrow" id="aguardo-peek-arrow">▶</span>
-          <span class="aguardo-peek-title">⏳ Aguardando início</span>
-          <span class="aguardo-peek-count">${aguardando.length}</span>
-        </div>
-        <div class="aguardo-peek-body" id="aguardo-peek-body">${peekItems}</div>
-      </div>`;
-    }
-  }
-
-  if(!l.length){cont.innerHTML=peekHtml+'<div class="empty">Nenhuma demanda encontrada</div>';return;}
-  cont.innerHTML=peekHtml+l.map(d=>{
+  if(!l.length){cont.innerHTML='<div class="empty">Nenhuma demanda encontrada</div>';return;}
+  cont.innerHTML=l.map(d=>{
     const anots=C.anotacoes.filter(a=>a.demanda_id===d.id).sort((a,b)=>(a.criado_em||'').localeCompare(b.criado_em||''));
     const st=demStatus(d);
     const cn=st==='concluido';
@@ -2070,13 +2060,6 @@ function rDems(){
     const anotSecao=`<div style="margin-top:6px;border-top:1px solid var(--bd);padding-top:6px"><div onclick="toggleDemandasAnots('${anotId}')" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0;user-select:none"><span id="${anotId}-btn" style="font-size:10px;color:var(--tm)">\u25b6</span><span style="font-size:12px;color:var(--tm);font-weight:500">Anota\u00e7\u00f5es (${anots.length})</span></div><div id="${anotId}" style="display:none;padding-top:4px">${anots.length?anots.map(a=>`<div class="anot"><div style="display:flex;align-items:center;gap:8px"><div class="anot-d">${fd(a.data)} \u00b7 <strong>${a.autor||'\u2014'}</strong> \u00b7 ${fhora(a.criado_em)}</div><div style="margin-left:auto;display:flex;gap:4px"><button class="btn sm e" onclick="opEditAnot(${a.id})" style="padding:2px 7px;font-size:11px">\u270f Editar</button><button class="btn sm d" onclick="delAnot(${a.id})" style="padding:2px 7px;font-size:11px">\u2715</button></div></div><div class="anot-t">${a.texto}</div></div>`).join(''):'<div style="font-size:12px;color:var(--th);padding:4px 0">Nenhuma anota\u00e7\u00e3o ainda.</div>'}</div></div>`;
     return`<div class="card" style="margin-bottom:11px;${bord}"><div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:9px"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">${URGBDG[d.urgencia||'normal']||''}${stBdg}${autpagBdg}</div><div style="font-weight:600;font-size:15px">${d.titulo}</div><div style="font-size:12px;color:var(--tm);margin-top:2px">Iniciado por <strong>${d.iniciado_por||'\u2014'}</strong> \u00b7 Solicitante: ${d.solicitante||'\u2014'} \u00b7 ${fd(d.data_solicitacao)}${cn?' \u00b7 <span style="color:var(--gn)">\u2713 Conclu\u00eddo em '+fd(d.data_conclusao)+'</span>':''}</div></div><div style="display:flex;gap:5px;flex-shrink:0">${!cn?`<button class="btn sm s" onclick="opCnDem(${d.id})">Concluir</button>`:`<button class="btn sm e" onclick="reverterDem(${d.id})">Reabrir</button>`}<button class="btn sm e" onclick="opEditDem(${d.id})">Editar</button><button class="btn sm e" onclick="opAnots(${d.id})">+ Anota\u00e7\u00e3o</button><button class="btn sm d" onclick="delDem(${d.id})">\u2715</button></div></div>${d.precisa_aprovacao?`<div style="font-size:12px;color:var(--tm);padding:7px 11px;background:${autpagPend?'#fff3cd':'var(--acb)'};border-radius:8px;margin-bottom:7px;border:1px solid ${autpagPend?'#ffc107':'transparent'}">${autpagPend?'\ud83d\udcb0':'\u2713'} Valor: ${fm(d.valor_solicitado)} \u00b7 Sol.Or\u00e7.: ${fd(d.data_sol_orcamento)} \u00b7 Aprova\u00e7\u00e3o: ${d.data_aprov_orcamento?fd(d.data_aprov_orcamento):'<strong style="color:#856404">Pendente</strong>'} \u00b7 Prazo: ${dap}</div>`:''}${d.descricao?`<div style="font-size:13px;color:var(--tm);margin-bottom:7px">${d.descricao}</div>`:''}${anotSecao}</div>`;
   }).join('');
-}
-function toggleAguardoPeek(){
-  const body=document.getElementById('aguardo-peek-body');
-  const arrow=document.getElementById('aguardo-peek-arrow');
-  if(!body)return;
-  const open=body.classList.toggle('open');
-  if(arrow) arrow.classList.toggle('open',open);
 }
 const fhora=ts=>{if(!ts)return'—';try{const d=new Date(ts);return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return ts;}};
 let danot=null;
@@ -2169,8 +2152,37 @@ async function addAnotCham(){if(!dchamAnot)return;const t=document.getElementByI
 async function delAnotCham(id){if(!confirm('Remover esta anotação?'))return;try{await A('DELETE',`/anotacoes-chamado/${id}`);await loadAdm();rListAnotsCham();rChams();}catch(e){alert('Erro: '+e.message);}}
 function stFilt(f){const prox=new Date(f.data_troca+'T00:00:00');prox.setMonth(prox.getMonth()+parseInt(f.meses_validade));const dias=Math.round((prox-new Date())/(864e5));if(dias<0)return{s:'al',l:'Vencido'};if(dias<=7)return{s:'al',l:`Vence em ${dias}d`};if(dias<=21)return{s:'av',l:`Vence em ${dias}d`};return{s:'ok',l:`OK — ${dias}d`};}
 function stExt(e){const dias=da(e.data_vencimento);if(dias<0)return{s:'al',l:'Vencido'};if(dias<=30)return{s:'al',l:`Vence em ${dias}d`};if(dias<=60)return{s:'av',l:`Vence em ${dias}d`};return{s:'ok',l:`OK — ${dias}d`};}
-function rVencsNavBadge(){const badge=document.getElementById('nav-vencs-badge');if(!badge)return;const temAlerta=C.filtros.some(f=>stFilt(f).s==='al')||C.extintores.some(e=>stExt(e).s==='al');badge.style.display=temAlerta?'inline':'none';}
-function rVencs(){rVencsNavBadge();const al=document.getElementById('valerts');const fa=C.filtros.filter(f=>stFilt(f).s==='al'),ea=C.extintores.filter(e=>stExt(e).s==='al');let h='';if(fa.length)h+=`<div class="ab2 rd" style="margin-bottom:8px">⚠️ ${fa.length} filtro(s) de água vencido(s) ou próximo do vencimento — solicitar troca!</div>`;if(ea.length)h+=`<div class="ab2 rd" style="margin-bottom:8px">🧯 ${ea.length} extintor(es) vencido(s) ou vencendo em até 30 dias — solicitar recarga!</div>`;al.innerHTML=h;const tbf=document.getElementById('td-filt');tbf.innerHTML=C.filtros.length?C.filtros.map(f=>{const prox=new Date(f.data_troca+'T00:00:00');prox.setMonth(prox.getMonth()+parseInt(f.meses_validade));const ps=prox.toISOString().split('T')[0];const st=stFilt(f);return`<tr><td><strong>${f.local}</strong></td><td>${f.descricao||'—'}</td><td class="mn">${fd(f.data_troca)}</td><td class="mn">${f.meses_validade} meses</td><td class="mn">${fd(ps)}</td><td><span class="bdg ${st.s}">${st.l}</span></td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opFilt(${f.id})">Editar</button><button class="btn sm d" onclick="delFilt(${f.id})">Remover</button></td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">Nenhum filtro cadastrado</td></tr>';const tbe=document.getElementById('td-ext');tbe.innerHTML=C.extintores.length?C.extintores.map(e=>{const st=stExt(e);return`<tr><td><strong>${e.local}</strong></td><td>${e.tipo||'—'}</td><td class="mn">${e.numero_serie||'—'}</td><td class="mn">${fd(e.data_vencimento)}</td><td><span class="bdg ${st.s}">${st.l}</span></td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opExt(${e.id})">Editar</button><button class="btn sm d" onclick="delExt(${e.id})">Remover</button></td></tr>`;}).join(''):'<tr><td colspan="6" class="empty">Nenhum extintor cadastrado</td></tr>';}
+function stFossa(){
+  if(!C.fossa_config||!C.fossa_config.ultima_limpeza)return{s:'nd',l:'Não cadastrada'};
+  const prox=new Date(C.fossa_config.ultima_limpeza+'T00:00:00');
+  prox.setFullYear(prox.getFullYear()+1);
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const dias=Math.round((prox-hoje)/864e5);
+  if(dias<0)return{s:'al',l:`Vencida há ${Math.abs(dias)}d`,prox};
+  if(dias<=30)return{s:'al',l:`Vence em ${dias}d`,prox};
+  return{s:'ok',l:`OK — ${dias}d`,prox};
+}
+function rVencsNavBadge(){const badge=document.getElementById('nav-vencs-badge');if(!badge)return;const temAlerta=C.filtros.some(f=>stFilt(f).s==='al')||C.extintores.some(e=>stExt(e).s==='al')||stFossa().s==='al';badge.style.display=temAlerta?'inline':'none';}
+function rVencs(){rVencsNavBadge();const al=document.getElementById('valerts');const fa=C.filtros.filter(f=>stFilt(f).s==='al'),ea=C.extintores.filter(e=>stExt(e).s==='al'),foss=stFossa();let h='';if(fa.length)h+=`<div class="ab2 rd" style="margin-bottom:8px">⚠️ ${fa.length} filtro(s) de água vencido(s) ou próximo do vencimento — solicitar troca!</div>`;if(ea.length)h+=`<div class="ab2 rd" style="margin-bottom:8px">🧯 ${ea.length} extintor(es) vencido(s) ou vencendo em até 30 dias — solicitar recarga!</div>`;if(foss.s==='al')h+=`<div class="ab2 rd" style="margin-bottom:8px">🪣 Fossa séptica — ${foss.l}. Agendar limpeza!</div>`;al.innerHTML=h;const tbf=document.getElementById('td-filt');tbf.innerHTML=C.filtros.length?C.filtros.map(f=>{const prox=new Date(f.data_troca+'T00:00:00');prox.setMonth(prox.getMonth()+parseInt(f.meses_validade));const ps=prox.toISOString().split('T')[0];const st=stFilt(f);return`<tr><td><strong>${f.local}</strong></td><td>${f.descricao||'—'}</td><td class="mn">${fd(f.data_troca)}</td><td class="mn">${f.meses_validade} meses</td><td class="mn">${fd(ps)}</td><td><span class="bdg ${st.s}">${st.l}</span></td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opFilt(${f.id})">Editar</button><button class="btn sm d" onclick="delFilt(${f.id})">Remover</button></td></tr>`;}).join(''):'<tr><td colspan="7" class="empty">Nenhum filtro cadastrado</td></tr>';const tbe=document.getElementById('td-ext');tbe.innerHTML=C.extintores.length?C.extintores.map(e=>{const st=stExt(e);return`<tr><td><strong>${e.local}</strong></td><td>${e.tipo||'—'}</td><td class="mn">${e.numero_serie||'—'}</td><td class="mn">${fd(e.data_vencimento)}</td><td><span class="bdg ${st.s}">${st.l}</span></td><td style="display:flex;gap:5px"><button class="btn sm e" onclick="opExt(${e.id})">Editar</button><button class="btn sm d" onclick="delExt(${e.id})">Remover</button></td></tr>`;}).join(''):'<tr><td colspan="6" class="empty">Nenhum extintor cadastrado</td></tr>';
+  // Fossa status box
+  const fsb=document.getElementById('fossa-status-box');
+  if(fsb){
+    const fs=stFossa();
+    if(fs.s==='nd'){fsb.innerHTML='<div style="font-size:13px;color:var(--th)">Nenhuma limpeza registrada ainda. Cadastre a data da última limpeza.</div>';}
+    else{
+      const proxStr=fs.prox?fd(fs.prox.toISOString().split('T')[0]):'—';
+      const cor=fs.s==='al'?'var(--rd)':'var(--gn)';
+      const bg=fs.s==='al'?'var(--rdb)':'var(--gnb)';
+      fsb.innerHTML=`<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><div style="background:${bg};border-radius:10px;padding:11px 16px;flex:1;min-width:180px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:${cor};margin-bottom:3px">Última limpeza</div><div style="font-size:15px;font-weight:600">${fd(C.fossa_config.ultima_limpeza)}</div></div><div style="background:${bg};border-radius:10px;padding:11px 16px;flex:1;min-width:180px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:${cor};margin-bottom:3px">Próxima limpeza</div><div style="font-size:15px;font-weight:600">${proxStr}</div></div><div style="padding:8px 14px;border-radius:10px;background:${bg};border:1px solid ${cor}40"><span class="bdg ${fs.s}">${fs.l}</span></div></div>`;
+    }
+  }
+  // Histórico fossa
+  const tbfossa=document.getElementById('td-fossa-hist');
+  if(tbfossa){tbfossa.innerHTML=C.fossa_historico.length?C.fossa_historico.map(h=>`<tr><td class="mn"><strong>${fd(h.data_limpeza)}</strong></td><td>${h.responsavel||'—'}</td><td class="mn">${h.custo!=null?fm(h.custo):'—'}</td><td>${h.obs||'—'}</td><td>${h.registrado_por||'—'}</td><td><button class="btn sm d" onclick="delFossaHist(${h.id})">Remover</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">Nenhuma limpeza registrada</td></tr>';}
+}
+function opRegistrarFossa(){document.getElementById('fossa-data').value=hj();document.getElementById('fossa-resp').value='';document.getElementById('fossa-custo').value='';document.getElementById('fossa-obs').value='';document.getElementById('fossa-regpor').value=U?U.nome:'';document.getElementById('m-fossa').classList.add('op');}
+async function salvarFossa(){const data=document.getElementById('fossa-data').value;if(!data){alert('Informe a data da limpeza.');return;}const body={data_limpeza:data,responsavel:document.getElementById('fossa-resp').value.trim(),custo:parseFloat(document.getElementById('fossa-custo').value)||null,obs:document.getElementById('fossa-obs').value.trim(),registrado_por:document.getElementById('fossa-regpor').value.trim()};try{await A('POST','/fossa',body);await loadAdm();cm('m-fossa');rVencs();}catch(e){alert('Erro: '+e.message);}}
+async function delFossaHist(id){if(!confirm('Remover este registro do histórico?'))return;try{await A('DELETE',`/fossa/historico/${id}`);await loadAdm();rVencs();}catch(e){alert('Erro: '+e.message);}}
 async function addFilt(){const l=document.getElementById('ftl').value.trim(),d=document.getElementById('ftd').value.trim(),dt=document.getElementById('ftdt').value,v=parseInt(document.getElementById('ftv').value)||6;if(!l||!dt){alert('Local e data são obrigatórios.');return;}try{await A('POST','/filtros',{local:l,descricao:d,data_troca:dt,meses_validade:v});await loadAdm();rVencs();['ftl','ftd','ftdt'].forEach(id=>document.getElementById(id).value='');document.getElementById('ftv').value='6';}catch(e){alert('Erro: '+e.message);}}
 async function addExt(){const l=document.getElementById('exl').value.trim(),t=document.getElementById('ext').value.trim(),d=document.getElementById('exd').value,s=document.getElementById('exs').value.trim();if(!l||!d){alert('Local e data de vencimento são obrigatórios.');return;}try{await A('POST','/extintores',{local:l,tipo:t,data_vencimento:d,numero_serie:s});await loadAdm();rVencs();['exl','ext','exd','exs'].forEach(id=>document.getElementById(id).value='');}catch(e){alert('Erro: '+e.message);}}
 let efid=null,eeid=null;
