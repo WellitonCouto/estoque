@@ -421,6 +421,22 @@ async function iniciarBanco() {
     criado_em TIMESTAMP DEFAULT NOW()
   )`);
 
+  await pool.query(`CREATE TABLE IF NOT EXISTS fossa_config (
+    id SERIAL PRIMARY KEY,
+    ultima_limpeza TEXT NOT NULL,
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+
+  await pool.query(`CREATE TABLE IF NOT EXISTS fossa_historico (
+    id SERIAL PRIMARY KEY,
+    data_limpeza TEXT NOT NULL,
+    responsavel TEXT DEFAULT '',
+    custo NUMERIC(10,2),
+    obs TEXT DEFAULT '',
+    registrado_por TEXT DEFAULT '',
+    criado_em TIMESTAMP DEFAULT NOW()
+  )`);
+
   console.log('Banco pronto.');
 }
 
@@ -838,14 +854,16 @@ const server = http.createServer(async (req, res) => {
         }
 
         if (req.method === 'GET' && pth === '/api/admin') {
-          const [dem, anot, filt, ext, anotch] = await Promise.all([
+          const [dem, anot, filt, ext, anotch, fossaCfg, fossaHist] = await Promise.all([
             pool.query('SELECT * FROM demandas ORDER BY criado_em DESC'),
             pool.query('SELECT * FROM anotacoes ORDER BY criado_em ASC'),
             pool.query('SELECT * FROM filtros_agua ORDER BY data_troca ASC'),
             pool.query('SELECT * FROM extintores ORDER BY data_vencimento ASC'),
             pool.query('SELECT * FROM anotacoes_chamado ORDER BY criado_em ASC'),
+            pool.query('SELECT * FROM fossa_config ORDER BY id DESC LIMIT 1'),
+            pool.query('SELECT * FROM fossa_historico ORDER BY data_limpeza DESC'),
           ]);
-          return ok(res, { demandas: dem.rows, anotacoes: anot.rows, filtros: filt.rows, extintores: ext.rows, anotacoes_chamado: anotch.rows });
+          return ok(res, { demandas: dem.rows, anotacoes: anot.rows, filtros: filt.rows, extintores: ext.rows, anotacoes_chamado: anotch.rows, fossa_config: fossaCfg.rows[0] || null, fossa_historico: fossaHist.rows });
         }
 
         // ── DEMANDAS ──────────────────────────────────────────
@@ -919,8 +937,34 @@ const server = http.createServer(async (req, res) => {
           return ok(res, { ok: true });
         }
 
-
-        // ── FROTA ─────────────────────────────────────────────
+        // ── FOSSA SÉPTICA ─────────────────────────────────────
+        if (req.method === 'POST' && pth === '/api/fossa') {
+          // Registra limpeza: insere no histórico e atualiza (ou insere) config
+          const { data_limpeza, responsavel, custo, obs, registrado_por } = b;
+          if (!data_limpeza) return err(res, 400, 'Data obrigatória');
+          await pool.query(
+            'INSERT INTO fossa_historico (data_limpeza,responsavel,custo,obs,registrado_por) VALUES ($1,$2,$3,$4,$5)',
+            [data_limpeza, responsavel||'', custo||null, obs||'', registrado_por||'']
+          );
+          // Mantém apenas o registro mais recente de config
+          await pool.query('DELETE FROM fossa_config');
+          const r = await pool.query(
+            'INSERT INTO fossa_config (ultima_limpeza) VALUES ($1) RETURNING *',
+            [data_limpeza]
+          );
+          return ok(res, r.rows[0], 201);
+        }
+        if (req.method === 'DELETE' && pth.startsWith('/api/fossa/historico/')) {
+          const id = parseInt(pth.split('/')[4]);
+          await pool.query('DELETE FROM fossa_historico WHERE id=$1', [id]);
+          // Recalcula ultima_limpeza
+          const latest = await pool.query('SELECT data_limpeza FROM fossa_historico ORDER BY data_limpeza DESC LIMIT 1');
+          await pool.query('DELETE FROM fossa_config');
+          if (latest.rows.length) {
+            await pool.query('INSERT INTO fossa_config (ultima_limpeza) VALUES ($1)', [latest.rows[0].data_limpeza]);
+          }
+          return ok(res, { ok: true });
+        }
         if (req.method === 'GET' && pth === '/api/frota') {
           const [vei, mot, abas, mans, lics, kms, cus, alts] = await Promise.all([
             pool.query('SELECT * FROM veiculos ORDER BY placa'),
@@ -1156,19 +1200,10 @@ const server = http.createServer(async (req, res) => {
             const r = await pool.query('UPDATE contas_pagar SET entrega_recebida=$1 WHERE id=$2 RETURNING *', [b.entrega_recebida, id]);
             return ok(res, r.rows[0]);
           }
-          // Atualização parcial: vencimento apenas
-          if (b.vencimento && !b.status && typeof b.fornecedor_id === 'undefined') {
+          if (b.vencimento && !b.status) {
             const r = await pool.query('UPDATE contas_pagar SET vencimento=$1 WHERE id=$2 RETURNING *', [b.vencimento, id]);
             return ok(res, r.rows[0]);
           }
-          // Edição completa da conta (fornecedor, descrição, valor, vencimento, obs)
-          if (typeof b.fornecedor_id !== 'undefined') {
-            const r = await pool.query(
-              'UPDATE contas_pagar SET fornecedor_id=$1,descricao=$2,valor=$3,vencimento=$4,obs=$5 WHERE id=$6 RETURNING *',
-              [b.fornecedor_id, b.descricao, b.valor, b.vencimento||null, b.obs||'', id]);
-            return ok(res, r.rows[0]);
-          }
-          // Marcar como pago / atualizar status
           const r = await pool.query(
             'UPDATE contas_pagar SET status=$1,data_pagamento=$2,valor_pago=$3,obs_pagamento=$4 WHERE id=$5 RETURNING *',
             [b.status, b.data_pagamento||null, b.valor_pago||null, b.obs_pagamento||'', id]);
