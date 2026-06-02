@@ -1186,24 +1186,28 @@ const server = http.createServer(async (req, res) => {
         if (req.method === 'PUT' && pth.startsWith('/api/contas-pagar/') && !pth.endsWith('/pagar')) {
           const id = parseInt(pth.split('/')[3]);
           // Atualização parcial: nf_recebida apenas
-          if (typeof b.nf_recebida !== 'undefined' && !b.status) {
+          if (typeof b.nf_recebida !== 'undefined' && !b.status && !b.descricao) {
             const r = await pool.query('UPDATE contas_pagar SET nf_recebida=$1 WHERE id=$2 RETURNING *', [b.nf_recebida, id]);
             return ok(res, r.rows[0]);
           }
           // Atualização parcial: email_enviado apenas
-          if (typeof b.email_enviado !== 'undefined' && !b.status) {
+          if (typeof b.email_enviado !== 'undefined' && !b.status && !b.descricao) {
             const r = await pool.query('UPDATE contas_pagar SET email_enviado=$1 WHERE id=$2 RETURNING *', [b.email_enviado, id]);
             return ok(res, r.rows[0]);
           }
-          // AtualizaÃ§Ã£o parcial: entrega_recebida apenas
-          if (typeof b.entrega_recebida !== 'undefined' && !b.status) {
+          // Atualização parcial: entrega_recebida apenas
+          if (typeof b.entrega_recebida !== 'undefined' && !b.status && !b.descricao) {
             const r = await pool.query('UPDATE contas_pagar SET entrega_recebida=$1 WHERE id=$2 RETURNING *', [b.entrega_recebida, id]);
             return ok(res, r.rows[0]);
           }
-          if (b.vencimento && !b.status) {
-            const r = await pool.query('UPDATE contas_pagar SET vencimento=$1 WHERE id=$2 RETURNING *', [b.vencimento, id]);
+          // Edição completa de conta (fornecedor, descrição, valor, vencimento, obs)
+          if (b.descricao && typeof b.valor !== 'undefined' && !b.status) {
+            const r = await pool.query(
+              'UPDATE contas_pagar SET fornecedor_id=$1,descricao=$2,valor=$3,vencimento=$4,obs=$5 WHERE id=$6 RETURNING *',
+              [b.fornecedor_id, b.descricao, b.valor, b.vencimento||null, b.obs||'', id]);
             return ok(res, r.rows[0]);
           }
+          // Confirmação de pagamento
           const r = await pool.query(
             'UPDATE contas_pagar SET status=$1,data_pagamento=$2,valor_pago=$3,obs_pagamento=$4 WHERE id=$5 RETURNING *',
             [b.status, b.data_pagamento||null, b.valor_pago||null, b.obs_pagamento||'', id]);
