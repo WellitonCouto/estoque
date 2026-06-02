@@ -3967,8 +3967,7 @@ async function salvarEditConta() {
   const obs = document.getElementById('ec-obs').value.trim();
   if (!fid || !desc || isNaN(valor)) { alert('Preencha fornecedor, descrição e valor.'); return; }
   try {
-    const contaAtual = PAG.contas.find(x => x.id === ecEditId) || {};
-    await fetch(`/api/contas-pagar/${ecEditId}`, { method: 'PUT', headers: pagHdrs(), body: JSON.stringify({ ...contaAtual, fornecedor_id: fid, descricao: desc, valor, vencimento: venc, obs }) });
+    await fetch(`/api/contas-pagar/${ecEditId}`, { method: 'PUT', headers: pagHdrs(), body: JSON.stringify({ fornecedor_id: fid, descricao: desc, valor, vencimento: venc, obs }) });
     const abertos = getPaneisAbertos();
     await pagLoad();
     rPagAlertas();
