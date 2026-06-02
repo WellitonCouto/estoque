@@ -2045,33 +2045,8 @@ function rDems(){
   }
   l.sort((a,b)=>{const ua=URGORD[a.urgencia]??2,ub=URGORD[b.urgencia]??2;return ua!==ub?ua-ub:(a.data_solicitacao||'').localeCompare(b.data_solicitacao||'');});
   const cont=document.getElementById('ldems');
-  // Card colapsável de "Aguardando início" (aparece em todos os filtros exceto o próprio aguardo)
-  let aguardoHtml='';
-  if(fil!=='aguardo'){
-    const aguardando=C.demandas.filter(d=>demStatus(d)==='aguardo');
-    aguardando.sort((a,b)=>{const ua=URGORD[a.urgencia]??2,ub=URGORD[b.urgencia]??2;return ua!==ub?ua-ub:(a.data_solicitacao||'').localeCompare(b.data_solicitacao||'');});
-    if(aguardando.length){
-      const demsHtml=aguardando.map(d=>{
-        const autpagPend=demAutpagPendente(d);
-        const autpagBdg=autpagPend?`<span title="AUTPAG pendente" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:#fff3cd;color:#856404;border:1px solid #ffc107">\ud83d\udcb0 AUTPAG pendente</span>`:'';
-        const anots=C.anotacoes.filter(a=>a.demanda_id===d.id).sort((a,b)=>(a.criado_em||'').localeCompare(b.criado_em||''));
-        const anotId='dem-anots-ag-'+d.id;
-        const anotSecao=`<div style="margin-top:6px;border-top:1px solid var(--bd);padding-top:6px"><div onclick="toggleDemandasAnots('${anotId}')" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0;user-select:none"><span id="${anotId}-btn" style="font-size:10px;color:var(--tm)">\u25b6</span><span style="font-size:12px;color:var(--tm);font-weight:500">Anota\u00e7\u00f5es (${anots.length})</span></div><div id="${anotId}" style="display:none;padding-top:4px">${anots.length?anots.map(a=>`<div class="anot"><div style="display:flex;align-items:center;gap:8px"><div class="anot-d">${fd(a.data)} \u00b7 <strong>${a.autor||'\u2014'}</strong> \u00b7 ${fhora(a.criado_em)}</div><div style="margin-left:auto;display:flex;gap:4px"><button class="btn sm e" onclick="opEditAnot(${a.id})" style="padding:2px 7px;font-size:11px">\u270f Editar</button><button class="btn sm d" onclick="delAnot(${a.id})" style="padding:2px 7px;font-size:11px">\u2715</button></div></div><div class="anot-t">${a.texto}</div></div>`).join(''):'<div style="font-size:12px;color:var(--th);padding:4px 0">Nenhuma anota\u00e7\u00e3o ainda.</div>'}</div></div>`;
-        return`<div style="padding:10px 14px;border-bottom:1px solid var(--bd);border-left:4px solid var(--th)"><div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:6px"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">${URGBDG[d.urgencia||'normal']||''}${autpagBdg}</div><div style="font-weight:600;font-size:14px">${d.titulo}</div><div style="font-size:12px;color:var(--tm);margin-top:2px">Solicitante: ${d.solicitante||'\u2014'} \u00b7 ${fd(d.data_solicitacao)}</div>${d.descricao?`<div style="font-size:12px;color:var(--tm);margin-top:3px">${d.descricao}</div>`:''}</div><div style="display:flex;gap:5px;flex-shrink:0"><button class="btn sm s" onclick="opCnDem(${d.id})">Concluir</button><button class="btn sm e" onclick="opEditDem(${d.id})">Editar</button><button class="btn sm e" onclick="opAnots(${d.id})">+ Anota\u00e7\u00e3o</button><button class="btn sm d" onclick="delDem(${d.id})">\u2715</button></div></div>${anotSecao}</div>`;
-      }).join('');
-      aguardoHtml=`<div style="border:1px solid var(--bds);border-radius:var(--r);margin-bottom:12px;overflow:hidden">
-        <div onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none';const ic=document.getElementById('ag-collapse-icon');if(ic)ic.textContent=el.style.display==='none'?'▶':'▼';})(document.getElementById('dem-aguardo-list'))" style="display:flex;align-items:center;gap:10px;padding:11px 16px;background:#f7f6f3;cursor:pointer;user-select:none;border-bottom:1px solid var(--bds)">
-          <span style="font-size:13px">⏳</span>
-          <span style="font-size:13px;font-weight:600;color:var(--tm)">Aguardando início</span>
-          <span style="display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;background:var(--th);color:#fff;border-radius:99px;font-size:11px;font-weight:700;font-family:var(--mn)">${aguardando.length}</span>
-          <span id="ag-collapse-icon" style="margin-left:auto;font-size:11px;color:var(--th)">▶</span>
-        </div>
-        <div id="dem-aguardo-list" style="display:none;background:var(--sf)">${demsHtml}</div>
-      </div>`;
-    }
-  }
-  if(!l.length){cont.innerHTML=aguardoHtml+'<div class="empty">Nenhuma demanda encontrada</div>';return;}
-  cont.innerHTML=aguardoHtml+l.map(d=>{
+  if(!l.length){cont.innerHTML='<div class="empty">Nenhuma demanda encontrada</div>';return;}
+  cont.innerHTML=l.map(d=>{
     const anots=C.anotacoes.filter(a=>a.demanda_id===d.id).sort((a,b)=>(a.criado_em||'').localeCompare(b.criado_em||''));
     const st=demStatus(d);
     const cn=st==='concluido';
@@ -3975,7 +3950,8 @@ async function salvarEditConta() {
   const obs = document.getElementById('ec-obs').value.trim();
   if (!fid || !desc || isNaN(valor)) { alert('Preencha fornecedor, descrição e valor.'); return; }
   try {
-    await fetch(`/api/contas-pagar/${ecEditId}`, { method: 'PUT', headers: pagHdrs(), body: JSON.stringify({ fornecedor_id: fid, descricao: desc, valor, vencimento: venc, obs }) });
+    const contaAtual = PAG.contas.find(x => x.id === ecEditId) || {};
+    await fetch(`/api/contas-pagar/${ecEditId}`, { method: 'PUT', headers: pagHdrs(), body: JSON.stringify({ ...contaAtual, fornecedor_id: fid, descricao: desc, valor, vencimento: venc, obs }) });
     const abertos = getPaneisAbertos();
     await pagLoad();
     rPagAlertas();
