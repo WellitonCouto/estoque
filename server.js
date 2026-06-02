@@ -1202,9 +1202,18 @@ const server = http.createServer(async (req, res) => {
           }
           // Edição completa de conta (fornecedor, descrição, valor, vencimento, obs)
           if (b.descricao && typeof b.valor !== 'undefined' && !b.status) {
+            // Garante que vencimento null não quebre o NOT NULL do banco — mantém valor atual nesse caso
+            const vencUpdate = b.vencimento
+              ? 'vencimento=$4,'
+              : '';
+            const params = b.vencimento
+              ? [b.fornecedor_id, b.descricao, b.valor, b.vencimento, b.obs||'', id]
+              : [b.fornecedor_id, b.descricao, b.valor, b.obs||'', id];
+            const obsIdx = b.vencimento ? 5 : 4;
+            const idIdx = b.vencimento ? 6 : 5;
             const r = await pool.query(
-              'UPDATE contas_pagar SET fornecedor_id=$1,descricao=$2,valor=$3,vencimento=$4,obs=$5 WHERE id=$6 RETURNING *',
-              [b.fornecedor_id, b.descricao, b.valor, b.vencimento||null, b.obs||'', id]);
+              `UPDATE contas_pagar SET fornecedor_id=$1,descricao=$2,valor=$3,${vencUpdate}obs=$${obsIdx} WHERE id=$${idIdx} RETURNING *`,
+              params);
             return ok(res, r.rows[0]);
           }
           // Confirmação de pagamento
