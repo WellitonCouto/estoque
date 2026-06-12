@@ -568,7 +568,7 @@ const server = http.createServer(async (req, res) => {
             'usuarios', 'itens', 'movimentos', 'pedidos', 'aparelhos', 'chamados',
             'anotacoes_chamado', 'demandas', 'anotacoes', 'filtros_agua', 'extintores',
             'veiculos', 'motoristas', 'abastecimentos', 'manutencoes', 'licenciamentos',
-            'registros_km', 'custos_frota', 'alertas_config', 'fornecedores_pag',
+            'registros_km', 'custos', 'alertas_config', 'fornecedores_pag',
             'contas_pagar', 'gerador_registros', 'gerador_revisoes', 'compras_online',
             'sessoes', 'tokens_recuperacao'
           ];
